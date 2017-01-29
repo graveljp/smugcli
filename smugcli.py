@@ -12,6 +12,7 @@ import webbrowser
 from wsgiref.simple_server import make_server
 import os
 import json
+import socket
 
 OAUTH_ORIGIN = 'https://secure.smugmug.com'
 REQUEST_TOKEN_URL = OAUTH_ORIGIN + '/services/oauth/1.0a/getRequestToken'
@@ -36,7 +37,6 @@ class SmugMugConfig(dict):
     self.update(self._read_config())
 
   def _read_config(self):
-    print 'Using config file: %s' % self._path
     try:
       return json.load(open(self._path))
     except IOError:
@@ -51,7 +51,6 @@ class SmugMugConfig(dict):
       return {}
 
   def _save_config(self):
-    print 'Saving configs to file: %s' % self._path
     with open(self._path, 'w') as handle:
       json.dump(self, handle, sort_keys=True, indent=2, separators=(',', ': '))
     
@@ -68,12 +67,20 @@ class SmugMugOAuth(object):
   def __init__(self, api_key):
     self._service = self._create_service(api_key)
 
+  def _get_free_port(self):
+    s = socket.socket()
+    s.bind(('', 0))
+    port = s.getsockname()[1]
+    s.close()
+    return port
+  
   def request_access_token(self):
-    state = {'running': True}
+    port = self._get_free_port()
+    state = {'running': True, 'port': port}
     app = bottle.Bottle()
     app.route('/', callback=lambda s=state: self._index(s))
     app.route('/callback', callback=lambda s=state: self._callback(s))
-    httpd = make_server('localhost', 8080, app)
+    httpd = make_server('', port, app)
 
     def _handle_requests(httpd, state):
       try:
@@ -86,7 +93,7 @@ class SmugMugOAuth(object):
     thread.daemon = True
     try:
       thread.start()
-      webbrowser.open('http://localhost:8080/')
+      webbrowser.open('http://localhost:%d/' % port)
       while thread.isAlive():
         thread.join(1)
     finally:
@@ -115,7 +122,7 @@ class SmugMugOAuth(object):
     """This route is where our client goes to begin the authorization process."""
     (state['request_token'],
      state['request_token_secret']) = self._service.get_request_token(
-       params={'oauth_callback': 'http://localhost:8080/callback'})
+       params={'oauth_callback': 'http://localhost:%d/callback' % state['port']})
 
     auth_url = self._service.get_authorize_url(state['request_token'])
     auth_url = self._add_auth_params(auth_url, access='Full', permissions='Modify')
@@ -185,7 +192,6 @@ class SmugMug(object):
     
 
 def do_login(smugmug, args):
-  print 'do_login %s' % args
   parser = argparse.ArgumentParser(
     description='Login onto the SmugMug service')
   parser.add_argument('--key', type=str, required=True, help='SmugMug API key')

@@ -70,5 +70,11 @@ class TestSmugCLI(unittest.TestCase):
                      u'DSC_4933.jpg\n'
                      u'Logan Leia wave pool.jpg\n')
 
+  def test_ls_invalid_sub_folder(self):
+    smugcli.Commands.ls(self._smugmug,
+                  ['/Photography/invalid'])
+    self.assertEqual(self._cmd_output.getvalue(),
+                     '"invalid" not found in folder "Photography"\n')
+
 if __name__ == '__main__':
   unittest.main()

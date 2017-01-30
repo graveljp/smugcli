@@ -51,7 +51,7 @@ class Commands(object):
     authuser = smugmug.get('/api/v2!authuser')['NickName']
     node, matched, unmatched = smugmug.fs.path_to_node(authuser, parsed.path)
     if unmatched:
-      print '%s not found in folder %s' % (unmatched[0], os.sep.join(matched))
+      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
       return
 
     if node['Type'] == 'Album':

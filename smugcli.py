@@ -55,10 +55,10 @@ class Commands(object):
       return
 
     if node['Type'] == 'Album':
-      children = node.get('Album').get('AlbumImages')
+      children = node.get('Album').get('AlbumImages') or []
       names = [child['FileName'] for child in children]
     else:
-      children = node.get('ChildNodes')
+      children = node.get('ChildNodes') or []
       names = [child['Name'] for child in children]
 
     if parsed.l:

@@ -43,20 +43,43 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertIsNone(invalid_child)
 
   def test_path_to_node(self):
-    self.assertTrue(self._fs.path_to_node('cmac', '')['IsRoot'])
-    self.assertTrue(self._fs.path_to_node('cmac', '/')['IsRoot'])
+    node, matched, unmatched = self._fs.path_to_node('cmac', '')
+    self.assertTrue(node['IsRoot'])
+    self.assertEquals(matched, [])
+    self.assertEquals(unmatched, [])
 
-    self.assertEquals(self._fs.path_to_node('cmac', 'Photography')['Name'],
-                      'Photography')
-    self.assertEquals(self._fs.path_to_node('cmac', '/Photography')['Name'],
-                      'Photography')
+    node, matched, ummatched = self._fs.path_to_node('cmac', '/')
+    self.assertTrue(node['IsRoot'])
+    self.assertEquals(matched, [])
+    self.assertEquals(unmatched, [])
 
-    self.assertEquals(
-      self._fs.path_to_node(
-        'cmac', '/Photography/San Francisco by helicopter 2014')['Name'],
-      'San Francisco by helicopter 2014')
+    node, matched, ummatched = self._fs.path_to_node('cmac', 'Photography')
+    self.assertEquals(node['Name'],'Photography')
+    self.assertEquals(matched, ['Photography'])
+    self.assertEquals(unmatched, [])
 
-    self.assertIsNone(self._fs.path_to_node('cmac', '/invalid'))
+    node, matched, ummatched = self._fs.path_to_node('cmac', '/Photography')
+    self.assertEquals(node['Name'], 'Photography')
+    self.assertEquals(matched, ['Photography'])
+    self.assertEquals(unmatched, [])
+
+    node, matched, unmatched = self._fs.path_to_node(
+        'cmac', '/Photography/San Francisco by helicopter 2014')
+    self.assertEquals(node['Name'], 'San Francisco by helicopter 2014')
+    self.assertEquals(matched, ['Photography',
+                                'San Francisco by helicopter 2014'])
+    self.assertEquals(unmatched, [])
+
+    node, matched, unmatched = self._fs.path_to_node('cmac', '/invalid1')
+    self.assertTrue(node['IsRoot'])
+    self.assertEquals(matched, [])
+    self.assertEquals(unmatched, ['invalid1'])
+
+    node, matched, unmatched = self._fs.path_to_node(
+      'cmac', '/Photography/invalid2')
+    self.assertEquals(node['Name'], 'Photography')
+    self.assertEquals(matched, ['Photography'])
+    self.assertEquals(unmatched, ['invalid2'])
 
 if __name__ == '__main__':
   unittest.main()

@@ -49,7 +49,11 @@ class Commands(object):
     parsed = parser.parse_args(args)
 
     authuser = smugmug.get('/api/v2!authuser')['NickName']
-    node = smugmug.fs.path_to_node(authuser, parsed.path)
+    node, matched, unmatched = smugmug.fs.path_to_node(authuser, parsed.path)
+    if unmatched:
+      print '%s not found in folder %s' % (unmatched[0], os.sep.join(matched))
+      return
+
     if node['Type'] == 'Album':
       children = node.get('Album').get('AlbumImages')
       names = [child['FileName'] for child in children]

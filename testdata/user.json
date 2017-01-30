@@ -1,0 +1,116 @@
+{
+    "Code": 200,
+    "Message": "Ok",
+    "Response": {
+        "DocUri": "https://api.smugmug.com/api/v2/doc/reference/user.html",
+        "EndpointType": "User",
+        "Locator": "User",
+        "LocatorType": "Object",
+        "Uri": "/api/v2/user/cmac",
+        "UriDescription": "User By Nickname",
+        "User": {
+            "Name": "Chris MacAskill (Baldy)",
+            "NickName": "cmac",
+            "QuickShare": true,
+            "RefTag": "TEjaxa2MF2LJ6",
+            "ResponseLevel": "Public",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname",
+            "Uris": {
+                "BioImage": {
+                    "EndpointType": "BioImage",
+                    "Locator": "BioImage",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!bioimage",
+                    "UriDescription": "User BioImage"
+                },
+                "CoverImage": {
+                    "EndpointType": "CoverImage",
+                    "Locator": "CoverImage",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!coverimage",
+                    "UriDescription": "User CoverImage"
+                },
+                "Folder": {
+                    "EndpointType": "Folder",
+                    "Locator": "Folder",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/folder/user/cmac",
+                    "UriDescription": "A folder or legacy (sub)category by UrlPath"
+                },
+                "Node": {
+                    "EndpointType": "Node",
+                    "Locator": "Node",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/node/zx4Fx",
+                    "UriDescription": "Node with the given id."
+                },
+                "UrlPathLookup": {
+                    "EndpointType": "UrlPathLookup",
+                    "Locator": "Folder,Album,Page",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!urlpathlookup",
+                    "UriDescription": "Lookup user's folder, album, or page by path"
+                },
+                "UserAlbums": {
+                    "EndpointType": "UserAlbums",
+                    "Locator": "Album",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!albums",
+                    "UriDescription": "All of user's albums"
+                },
+                "UserFeaturedAlbums": {
+                    "EndpointType": "UserFeaturedAlbums",
+                    "Locator": "Album",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!featuredalbums",
+                    "UriDescription": "User's featured albums"
+                },
+                "UserGeoMedia": {
+                    "EndpointType": "UserGeoMedia",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!geomedia",
+                    "UriDescription": "Geotagged images for user"
+                },
+                "UserImageSearch": {
+                    "EndpointType": "UserImageSearch",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!imagesearch",
+                    "UriDescription": "Search for user images"
+                },
+                "UserPopularMedia": {
+                    "EndpointType": "UserPopularMedia",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!popularmedia",
+                    "UriDescription": "User's popular images"
+                },
+                "UserProfile": {
+                    "EndpointType": "UserProfile",
+                    "Locator": "UserProfile",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!profile",
+                    "UriDescription": "User's profile information"
+                },
+                "UserRecentImages": {
+                    "EndpointType": "UserRecentImages",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!recentimages",
+                    "UriDescription": "User's recent images"
+                },
+                "UserTopKeywords": {
+                    "EndpointType": "UserTopKeywords",
+                    "Locator": "UserTopKeywords",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!topkeywords",
+                    "UriDescription": "User's top keywords"
+                }
+            },
+            "ViewPassHint": "",
+            "WebUri": "https://cmac.smugmug.com"
+        }
+    }
+}

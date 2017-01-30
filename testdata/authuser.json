@@ -1,0 +1,250 @@
+{
+    "Code": 200,
+    "Message": "Ok",
+    "Response": {
+        "EndpointType": "AuthUser",
+        "Locator": "User",
+        "LocatorType": "Object",
+        "Uri": "/api/v2!authuser",
+        "UriDescription": "Currently authenticated user",
+        "User": {
+            "AccountStatus": "Active",
+            "Domain": "",
+            "DomainOnly": "",
+            "FirstName": "",
+            "FriendsView": false,
+            "ImageCount": 8,
+            "IsTrial": false,
+            "LastName": "",
+            "Name": "Chris MacAskill (Baldy)",
+            "NickName": "cmac",
+            "Plan": "Business $35/mo",
+            "QuickShare": true,
+            "RefTag": "TEjaxa2MF2LJ6",
+            "ResponseLevel": "Public",
+            "SortBy": "LastUpdated",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname",
+            "Uris": {
+                "BioImage": {
+                    "EndpointType": "BioImage",
+                    "Locator": "BioImage",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!bioimage",
+                    "UriDescription": "User BioImage"
+                },
+                "CoverImage": {
+                    "EndpointType": "CoverImage",
+                    "Locator": "CoverImage",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!coverimage",
+                    "UriDescription": "User CoverImage"
+                },
+                "DuplicateImageSearch": {
+                    "EndpointType": "DuplicateImageSearch",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!duplicateimagesearch",
+                    "UriDescription": "Searches for duplicate images for a user."
+                },
+                "Features": {
+                    "EndpointType": "Features",
+                    "Locator": "Features",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!features",
+                    "UriDescription": "User's account features information"
+                },
+                "Folder": {
+                    "EndpointType": "Folder",
+                    "Locator": "Folder",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/folder/user/cmac",
+                    "UriDescription": "A folder or legacy (sub)category by UrlPath"
+                },
+                "Node": {
+                    "EndpointType": "Node",
+                    "Locator": "Node",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/node/zx4Fx",
+                    "UriDescription": "Node with the given id."
+                },
+                "SortUserFeaturedAlbums": {
+                    "EndpointType": "SortUserFeaturedAlbums",
+                    "Uri": "/api/v2/user/cmac!sortfeaturedalbums",
+                    "UriDescription": "Change the ordering of the user's featured albums"
+                },
+                "UrlPathLookup": {
+                    "EndpointType": "UrlPathLookup",
+                    "Locator": "Folder,Album,Page",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!urlpathlookup",
+                    "UriDescription": "Lookup user's folder, album, or page by path"
+                },
+                "UserAlbumTemplates": {
+                    "EndpointType": "UserAlbumTemplates",
+                    "Locator": "AlbumTemplate",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!albumtemplates",
+                    "UriDescription": "User's album templates"
+                },
+                "UserAlbums": {
+                    "EndpointType": "UserAlbums",
+                    "Locator": "Album",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!albums",
+                    "UriDescription": "All of user's albums"
+                },
+                "UserAssetsAlbum": {
+                    "EndpointType": "UserAssetsAlbum",
+                    "Locator": "Album",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!assetsalbum",
+                    "UriDescription": "User Site Assets Albums"
+                },
+                "UserContacts": {
+                    "EndpointType": "UserContacts",
+                    "Locator": "Contact",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!contacts",
+                    "UriDescription": "User's contacts"
+                },
+                "UserCoupons": {
+                    "EndpointType": "UserCoupons",
+                    "Locator": "UserCoupon",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!coupons",
+                    "UriDescription": "List User Coupons"
+                },
+                "UserDeletedAlbums": {
+                    "EndpointType": "UserDeletedAlbums",
+                    "Locator": "DeletedAlbum",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!deletedalbums",
+                    "UriDescription": "User's deleted albums"
+                },
+                "UserDeletedFolders": {
+                    "EndpointType": "UserDeletedFolders",
+                    "Locator": "DeletedFolder",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!deletedfolders",
+                    "UriDescription": "User's deleted folders"
+                },
+                "UserDeletedPages": {
+                    "EndpointType": "UserDeletedPages",
+                    "Locator": "DeletedPage",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!deletedpages",
+                    "UriDescription": "User's deleted pages"
+                },
+                "UserFeaturedAlbums": {
+                    "EndpointType": "UserFeaturedAlbums",
+                    "Locator": "Album",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!featuredalbums",
+                    "UriDescription": "User's featured albums"
+                },
+                "UserGeoMedia": {
+                    "EndpointType": "UserGeoMedia",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!geomedia",
+                    "UriDescription": "Geotagged images for user"
+                },
+                "UserGrants": {
+                    "EndpointType": "UserGrants",
+                    "Locator": "Grant",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!grants",
+                    "UriDescription": "User's grants"
+                },
+                "UserGuideStates": {
+                    "EndpointType": "UserGuideStates",
+                    "Locator": "UserGuideState",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!guides",
+                    "UriDescription": "User's progress through walkthrough guides"
+                },
+                "UserHideGuides": {
+                    "EndpointType": "UserHideGuides",
+                    "Locator": "UserHideGuides",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!hideguides",
+                    "UriDescription": "Hide guides from the user for a period of time"
+                },
+                "UserImageSearch": {
+                    "EndpointType": "UserImageSearch",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!imagesearch",
+                    "UriDescription": "Search for user images"
+                },
+                "UserLatestQuickNews": {
+                    "EndpointType": "UserLatestQuickNews",
+                    "Locator": "QuickNews",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!latestquicknews",
+                    "UriDescription": "List Lastest QuickNews for User"
+                },
+                "UserPopularMedia": {
+                    "EndpointType": "UserPopularMedia",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!popularmedia",
+                    "UriDescription": "User's popular images"
+                },
+                "UserPrintmarks": {
+                    "EndpointType": "UserPrintmarks",
+                    "Locator": "Printmark",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!printmarks",
+                    "UriDescription": "User's printmarks"
+                },
+                "UserProfile": {
+                    "EndpointType": "UserProfile",
+                    "Locator": "UserProfile",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!profile",
+                    "UriDescription": "User's profile information"
+                },
+                "UserRecentImages": {
+                    "EndpointType": "UserRecentImages",
+                    "Locator": "Image",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!recentimages",
+                    "UriDescription": "User's recent images"
+                },
+                "UserTasks": {
+                    "EndpointType": "UserTasks",
+                    "Locator": "Task",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!tasks",
+                    "UriDescription": "Background tasks associated with a user"
+                },
+                "UserTopKeywords": {
+                    "EndpointType": "UserTopKeywords",
+                    "Locator": "UserTopKeywords",
+                    "LocatorType": "Object",
+                    "Uri": "/api/v2/user/cmac!topkeywords",
+                    "UriDescription": "User's top keywords"
+                },
+                "UserUploadLimits": {
+                    "EndpointType": "UserUploadLimits",
+                    "Locator": "UserUploadLimits",
+                    "LocatorType": "List",
+                    "Uri": "/api/v2/user/cmac!uploadlimits",
+                    "UriDescription": "User's upload limits"
+                },
+                "UserWatermarks": {
+                    "EndpointType": "UserWatermarks",
+                    "Locator": "Watermark",
+                    "LocatorType": "Objects",
+                    "Uri": "/api/v2/user/cmac!watermarks",
+                    "UriDescription": "User's watermarks"
+                }
+            },
+            "ViewPassHint": "",
+            "ViewPassword": "",
+            "WebUri": "https://cmac.smugmug.com"
+        }
+    }
+}

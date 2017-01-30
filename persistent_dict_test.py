@@ -39,6 +39,6 @@ class TestPersistentDict(unittest.TestCase):
     pdict = persistent_dict.PersistentDict(filename)
     del pdict['a']
     self.assertEqual(json.load(open(filename)), {'b': 20})
-    
+
 if __name__ == '__main__':
   unittest.main()

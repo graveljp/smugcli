@@ -20,6 +20,6 @@ class SmugMugShell(cmd.Cmd):
         except:
           pass
       return handler
-    
+
     for command, callback in commands.iteritems():
       setattr(cls, 'do_' + command, build_handler(callback))

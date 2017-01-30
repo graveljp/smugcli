@@ -26,7 +26,7 @@ class SmugMugOAuth(object):
     port = s.getsockname()[1]
     s.close()
     return port
-  
+
   def request_access_token(self):
     port = self._get_free_port()
     state = {'running': True, 'port': port}
@@ -53,7 +53,7 @@ class SmugMugOAuth(object):
       httpd.server_close()
 
     return state['access_token'], state['access_token_secret']
-  
+
   def open_session(self, access_token):
     return rauth.OAuth1Session(
       self._service.consumer_key,
@@ -70,7 +70,7 @@ class SmugMugOAuth(object):
       access_token_url=ACCESS_TOKEN_URL,
       authorize_url=AUTHORIZE_URL,
       base_url=API_ORIGIN + '/api/v2')
-  
+
   def _index(self, state):
     """This route is where our client goes to begin the authorization process."""
     (state['request_token'],
@@ -88,7 +88,7 @@ class SmugMugOAuth(object):
      state['access_token_secret']) = self._service.get_access_token(
        state['request_token'], state['request_token_secret'],
        params={'oauth_verifier': bottle.request.query['oauth_verifier']})
-  
+
     state['running'] = False
     return 'Success'
 

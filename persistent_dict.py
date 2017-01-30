@@ -1,4 +1,4 @@
-# dict implementation that automatically saves it's state to a file on disk. 
+# dict implementation that automatically saves it's state to a file on disk.
 
 import json
 
@@ -29,7 +29,7 @@ class PersistentDict(dict):
   def _save_to_disk(self):
     with open(self._path, 'w') as handle:
       json.dump(self, handle, sort_keys=True, indent=2, separators=(',', ': '))
-    
+
   def __delitem__(self, key):
     super(PersistentDict, self).__delitem__(key)
     self._save_to_disk()

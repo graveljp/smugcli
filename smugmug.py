@@ -28,7 +28,7 @@ class Wrapper(object):
   def post(self, name, data=None, json=None, **kwargs):
     uri = self._json['Uris'].get(name, {}).get('Uri')
     if not uri:
-      print 'Can\'t find POST uri for method %s' % name
+      return None
     return self._smugmug.post(uri, data, json, **kwargs)
 
   def __getitem__(self, index):
@@ -101,9 +101,8 @@ class SmugMug(object):
     return Wrapper(self, response[locator]) if locator in response else None
 
   def post(self, path, data=None, json=None, **kwargs):
-    print 'Posting to %s: %s' % (path, str(data))
     return self.session.post(API_ROOT + path,
-                             data=data or {}, json=json,
+                             data=data, json=json,
                              headers={'Accept': 'application/json'},
                              **kwargs)
 

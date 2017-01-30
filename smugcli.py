@@ -75,6 +75,9 @@ class Commands(object):
                         help='Folder to create.')
     parser.add_argument('-p', action='store_true',
                         help='Create parents if they are missing.')
+    parser.add_argument('--privacy', type=str, default='public',
+                        choices=['public', 'private', 'unlisted'],
+                        help='Access control for the created folders.')
     parsed = parser.parse_args(args)
 
     authuser = smugmug.get('/api/v2!authuser')['NickName']
@@ -83,17 +86,39 @@ class Commands(object):
       print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
       return
 
+    if not len(unmatched):
+      print 'Folder "%s" already exists.' % parsed.folder
+      return
+
+    if node['Type'] != 'Folder':
+      print 'Sub-folders can only be created in folders.'
+      print '"%s" is of type "%s".' % (os.sep.join(matched), node['Type'])
+      return
+
     for part in unmatched:
-      print node.post('ChildNodes',
+      response = node.post('ChildNodes',
                       data={
                         'Name': part,
                         'UrlName': part.replace(' ', '-').title(),
-                        'Privacy': 'Public',
+                        'Privacy': parsed.privacy.title(),
                         'Type': 'Folder',
                       })
+      if response is None:
+        print 'Cannot create child nodes under folder "%s"' % (
+          os.sep.join(matched))
+        return
+
+      matched.append(part)
+
+      if response.status_code != 201:
+        print 'Error creating folder "%s".' % os.sep.join(matched)
+        print 'Server responded with %s' % str(response)
+        return
+
       node = smugmug.fs.get_child(node, part)
       if not node:
-        print 'Failed creating folder "%s"' % part
+        print 'Cannot find newly created folder "%s"' % os.sep.join(matched)
+        return
 
   @staticmethod
   def shell(smugmug, args):

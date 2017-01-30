@@ -21,9 +21,15 @@ class Wrapper(object):
     self._smugmug = smugmug
     self._json = json
 
-  def get(self, name, params=None):
+  def get(self, name, **kwargs):
     uri = self._json['Uris'].get(name, {}).get('Uri')
-    return self._smugmug.get(uri, params) if uri else None
+    return self._smugmug.get(uri, **kwargs) if uri else None
+
+  def post(self, name, data=None, json=None, **kwargs):
+    uri = self._json['Uris'].get(name, {}).get('Uri')
+    if not uri:
+      print 'Can\'t find POST uri for method %s' % name
+    return self._smugmug.post(uri, data, json, **kwargs)
 
   def __getitem__(self, index):
     item = self._json[index]
@@ -82,17 +88,24 @@ class SmugMug(object):
   def fs(self):
     return self._fs
 
-  def get_json(self, path, params=None):
-    return json.loads(
-        self.session.get(API_ROOT + path,
-                         params=params or {},
-                         headers={'Accept': 'application/json'}).text)
+  def get_json(self, path, **kwargs):
+    return self.session.get(
+      API_ROOT + path,
+      headers={'Accept': 'application/json'},
+      **kwargs).json()
 
-  def get(self, path, params=None):
-    reply = self.get_json(path, params)
+  def get(self, path, **kwargs):
+    reply = self.get_json(path, **kwargs)
     response = reply['Response']
     locator = response['Locator']
-    return Wrapper(self, response[locator])
+    return Wrapper(self, response[locator]) if locator in response else None
+
+  def post(self, path, data=None, json=None, **kwargs):
+    print 'Posting to %s: %s' % (path, str(data))
+    return self.session.post(API_ROOT + path,
+                             data=data or {}, json=json,
+                             headers={'Accept': 'application/json'},
+                             **kwargs)
 
   def logout(self):
     if 'api_key' in self.config:

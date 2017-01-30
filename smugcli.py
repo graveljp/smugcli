@@ -68,6 +68,34 @@ class Commands(object):
         print name
 
   @staticmethod
+  def mkdir(smugmug, args):
+    parser = argparse.ArgumentParser(
+      description='List the content of a folder or album.')
+    parser.add_argument('folder', type=str, nargs='?', default='/',
+                        help='Folder to create.')
+    parser.add_argument('-p', action='store_true',
+                        help='Create parents if they are missing.')
+    parsed = parser.parse_args(args)
+
+    authuser = smugmug.get('/api/v2!authuser')['NickName']
+    node, matched, unmatched = smugmug.fs.path_to_node(authuser, parsed.folder)
+    if len(unmatched) > 1 and not parsed.p:
+      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
+      return
+
+    for part in unmatched:
+      print node.post('ChildNodes',
+                      data={
+                        'Name': part,
+                        'UrlName': part.replace(' ', '-').title(),
+                        'Privacy': 'Public',
+                        'Type': 'Folder',
+                      })
+      node = smugmug.fs.get_child(node, part)
+      if not node:
+        print 'Failed creating folder "%s"' % part
+
+  @staticmethod
   def shell(smugmug, args):
     shell = smugmug_shell.SmugMugShell(smugmug)
     shell.cmdloop()

@@ -2,6 +2,7 @@
 # Command line tool for SmugMug. Uses SmugMug API V2.
 
 import argparse
+import inspect
 import json
 import os
 import urlparse
@@ -15,62 +16,61 @@ API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
 
-def do_login(smugmug, args):
-  parser = argparse.ArgumentParser(
-    description='Login onto the SmugMug service')
-  parser.add_argument('--key', type=str, required=True, help='SmugMug API key')
-  parser.add_argument('--secret', type=str, required=True, help='SmugMug API secret')
-  parsed = parser.parse_args(args)
+class Commands(object):
+  @staticmethod
+  def login(smugmug, args):
+    parser = argparse.ArgumentParser(
+      description='Login onto the SmugMug service')
+    parser.add_argument('--key', type=str, required=True, help='SmugMug API key')
+    parser.add_argument('--secret', type=str, required=True, help='SmugMug API secret')
+    parsed = parser.parse_args(args)
 
-  smugmug.config['api_key'] = (parsed.key, parsed.secret)
-  smugmug.config['access_token'] = smugmug.service.request_access_token()
+    smugmug.config['api_key'] = (parsed.key, parsed.secret)
+    smugmug.config['access_token'] = smugmug.service.request_access_token()
 
+  @staticmethod
+  def logout(smugmug, args):
+    smugmug.logout()
 
-def do_logout(smugmug, args):
-  smugmug.logout()
+  @staticmethod
+  def get(smugmug, args):
+    url = args[0]
+    scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
+    params = urlparse.parse_qs(query)
+    result = smugmug.get_json(path, params)
+    print json.dumps(result, sort_keys=True, indent=2)
 
+  @staticmethod
+  def ls(smugmug, args):
+    parser = argparse.ArgumentParser(
+      description='List the content of a folder or album.')
+    parser.add_argument('path', type=str, nargs='?', default='/', help='Path to list.')
+    parser.add_argument('-l', help='Show details.', action='store_true')
+    parsed = parser.parse_args(args)
 
-def do_get(smugmug, args):
-  url = args[0]
-  scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-  params = urlparse.parse_qs(query)
-  result = smugmug.get_json(path, params)
-  print json.dumps(result, sort_keys=True, indent=2)
+    authuser = smugmug.get('/api/v2!authuser')['NickName']
+    node = smugmug.fs.path_to_node(authuser, parsed.path)
+    if node['Type'] == 'Album':
+      children = node.get('Album').get('AlbumImages')
+      names = [child['FileName'] for child in children]
+    else:
+      children = node.get('ChildNodes')
+      names = [child['Name'] for child in children]
 
-def do_ls(smugmug, args):
-  parser = argparse.ArgumentParser(
-    description='List the content of a folder or album.')
-  parser.add_argument('path', type=str, nargs='?', default='/', help='Path to list.')
-  parser.add_argument('-l', help='Show details.', action='store_true')
-  parsed = parser.parse_args(args)
+    if parsed.l:
+      print json.dumps(children, sort_keys=True, indent=2)
+    else:
+      for name in names:
+        print name
 
-  authuser = smugmug.get('/api/v2!authuser')['NickName']
-  node = smugmug.fs.path_to_node(authuser, parsed.path)
-  if node['Type'] == 'Album':
-    children = node.get('Album').get('AlbumImages')
-    names = [child['FileName'] for child in children]
-  else:
-    children = node.get('ChildNodes')
-    names = [child['Name'] for child in children]
-
-  if parsed.l:
-    print json.dumps(children, sort_keys=True, indent=2)
-  else:
-    for name in names:
-      print name
-
-def do_shell(smugmug, args):
-  shell = smugmug_shell.SmugMugShell(smugmug)
-  shell.cmdloop()
+  @staticmethod
+  def shell(smugmug, args):
+    shell = smugmug_shell.SmugMugShell(smugmug)
+    shell.cmdloop()
 
 def main():
-  commands = {
-    'login': do_login,
-    'logout': do_logout,
-    'get': do_get,
-    'ls': do_ls,
-    'shell': do_shell,
-  }
+  commands = {name: func for name, func in
+              inspect.getmembers(Commands, predicate=inspect.isfunction)}
 
   smugmug_shell.SmugMugShell.set_commands(commands)
 

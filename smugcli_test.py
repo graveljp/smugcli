@@ -28,13 +28,13 @@ class TestSmugCLI(unittest.TestCase):
   def tearDown(self):
     sys.stdout = self._original_stdout
 
-  def test_do_get(self):
-    smugcli.do_get(self._smugmug, ['/api/v2/node/zx4Fx'])
+  def test_get(self):
+    smugcli.Commands.get(self._smugmug, ['/api/v2/node/zx4Fx'])
     self.assertEqual(json.loads(self._cmd_output.getvalue()),
                      RESPONSES['/api/v2/node/zx4Fx'])
 
-  def test_do_ls_folder(self):
-    smugcli.do_ls(self._smugmug, ['/Photography/'])
+  def test_ls_folder(self):
+    smugcli.Commands.ls(self._smugmug, ['/Photography/'])
     self.assertEqual(self._cmd_output.getvalue(),
                      u'San Francisco by helicopter 2014\n'
                      u'SmugMug homepage slide show\n'
@@ -47,8 +47,8 @@ class TestSmugCLI(unittest.TestCase):
                      u'Testing video on the new Canon 7D\n'
                      u'Pictures I loved from the week\n')
 
-  def test_do_ls_album(self):
-    smugcli.do_ls(self._smugmug,
+  def test_ls_album(self):
+    smugcli.Commands.ls(self._smugmug,
                   ['/Photography/San Francisco by helicopter 2014'])
     self.assertEqual(self._cmd_output.getvalue(),
                      u'DSC_5752.jpg\n'

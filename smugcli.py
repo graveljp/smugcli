@@ -62,7 +62,7 @@ class Commands(object):
       names = [child['Name'] for child in children]
 
     if parsed.l:
-      print json.dumps(children, sort_keys=True, indent=2)
+      print json.dumps(children.json, sort_keys=True, indent=2)
     else:
       for name in names:
         print name

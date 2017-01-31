@@ -2,6 +2,8 @@
 
 import bottle
 import rauth
+import requests
+import requests_oauthlib
 import socket
 import threading
 import urllib
@@ -54,12 +56,12 @@ class SmugMugOAuth(object):
 
     return state['access_token'], state['access_token_secret']
 
-  def open_session(self, access_token):
-    return rauth.OAuth1Session(
-      self._service.consumer_key,
-      self._service.consumer_secret,
-      access_token=access_token[0],
-      access_token_secret=access_token[1])
+  def get_oauth(self, access_token):
+    return requests_oauthlib.OAuth1(
+        self._service.consumer_key,
+        self._service.consumer_secret,
+        resource_owner_key=access_token[0],
+        resource_owner_secret=access_token[1])
 
   def _create_service(self, key):
     return rauth.OAuth1Service(

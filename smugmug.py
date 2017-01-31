@@ -1,12 +1,12 @@
 # Main interface to the SmugMug web service.
 
 import json
-import persistent_dict
+import requests
 import smugmug_oauth
 import smugmug_fs
 
-
 API_ROOT = 'https://api.smugmug.com'
+API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
 
 
 class Error(Exception):
@@ -15,6 +15,7 @@ class Error(Exception):
 
 class NotLoggedInError(Error):
   """Error raised if the user is not logged in."""
+
 
 class Wrapper(object):
   def __init__(self, smugmug, json):
@@ -45,16 +46,12 @@ class Wrapper(object):
   def json(self):
     return self._json
 
+
 class SmugMug(object):
-  def __init__(self, config_file):
-    try:
-      self._config = persistent_dict.PersistentDict(config_file)
-    except persistent_dict.InvalidFileError:
-      print ('Config file (%s) is invalid. '
-             'Please fix or delete the file.' % config_file)
-      sys.exit(0)
+  def __init__(self, config):
+    self._config = config
     self._smugmug_oauth = None
-    self._session = None
+    self._oauth = None
     self._fs = smugmug_fs.SmugMugFS(self)
 
   @property
@@ -74,37 +71,18 @@ class SmugMug(object):
     return self._smugmug_oauth
 
   @property
-  def session(self):
-    if not self._session:
-      service = self.service
-      if 'access_token' in self.config:
-        self._session = service.open_session(self.config['access_token'])
+  def oauth(self):
+    if not self._oauth:
+      if self.service and 'access_token' in self.config:
+        self._oauth = self.service.get_oauth(self.config['access_token'])
       else:
         print 'User not logged in. Please run the "login" command'
         raise NotLoggedInError
-    return self._session
+    return self._oauth
 
-  @property
-  def fs(self):
-    return self._fs
-
-  def get_json(self, path, **kwargs):
-    return self.session.get(
-      API_ROOT + path,
-      headers={'Accept': 'application/json'},
-      **kwargs).json()
-
-  def get(self, path, **kwargs):
-    reply = self.get_json(path, **kwargs)
-    response = reply['Response']
-    locator = response['Locator']
-    return Wrapper(self, response[locator]) if locator in response else None
-
-  def post(self, path, data=None, json=None, **kwargs):
-    return self.session.post(API_ROOT + path,
-                             data=data, json=json,
-                             headers={'Accept': 'application/json'},
-                             **kwargs)
+  def login(self, api_key):
+    self.config['api_key'] = api_key
+    self.config['access_token'] = self.service.request_access_token()
 
   def logout(self):
     if 'api_key' in self.config:
@@ -114,21 +92,41 @@ class SmugMug(object):
     self._service = None
     self._session = None
 
-
-class FakeSmugMug(object):
-  def __init__(self, responses):
-    self._responses = responses
-    self._fs = smugmug_fs.SmugMugFS(self)
+  def get_auth_user(self):
+    return self.get('/api/v2!authuser')['NickName']
 
   @property
   def fs(self):
     return self._fs
 
-  def get_json(self, path, params=None):
-    return self._responses[path]
+  def get_json(self, path, **kwargs):
+    return requests.get(API_ROOT + path,
+                        headers={'Accept': 'application/json'},
+                        auth=self.oauth,
+                        **kwargs).json()
 
-  def get(self, path, params=None):
-    reply = self.get_json(path, params)
+  def get(self, path, **kwargs):
+    reply = self.get_json(path, **kwargs)
     response = reply['Response']
     locator = response['Locator']
-    return Wrapper(self, response[locator])
+    return Wrapper(self, response[locator]) if locator in response else None
+
+  def post(self, path, data=None, json=None, **kwargs):
+    return requests.post(API_ROOT + path,
+                         data=data, json=json,
+                         headers={'Accept': 'application/json'},
+                         auth=self.oauth,
+                         **kwargs)
+
+
+class FakeSmugMug(SmugMug):
+  def __init__(self, config=None):
+    super(FakeSmugMug, self).__init__(config or {})
+
+  @property
+  def service(self):
+    return None
+
+  @property
+  def oauth(self):
+    return None

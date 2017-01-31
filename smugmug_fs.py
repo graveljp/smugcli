@@ -11,8 +11,8 @@ class SmugMugFS(object):
   def get_children(self, node, params=None):
     return node.get('ChildNodes') or []
 
-  def get_child(self, node, child_name, params=None):
-    for node in self.get_children(node, params):
+  def get_child(self, parent, child_name, params=None):
+    for node in self.get_children(parent, params):
       if node['Name'] == child_name:
         return node
     return None

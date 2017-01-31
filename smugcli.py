@@ -4,14 +4,13 @@
 import argparse
 import inspect
 import json
+import persistent_dict
 import os
 import urlparse
 
 import smugmug as smugmug_lib
 import smugmug_shell
 
-API_ORIGIN = 'https://api.smugmug.com'
-API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
@@ -25,8 +24,7 @@ class Commands(object):
     parser.add_argument('--secret', type=str, required=True, help='SmugMug API secret')
     parsed = parser.parse_args(args)
 
-    smugmug.config['api_key'] = (parsed.key, parsed.secret)
-    smugmug.config['access_token'] = smugmug.service.request_access_token()
+    smugmug.login((parsed.key, parsed.secret))
 
   @staticmethod
   def logout(smugmug, args):
@@ -37,8 +35,8 @@ class Commands(object):
     url = args[0]
     scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
     params = urlparse.parse_qs(query)
-    result = smugmug.get_json(path, params)
-    print json.dumps(result, sort_keys=True, indent=2)
+    result = smugmug.get_json(path, params=params)
+    print json.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
   @staticmethod
   def ls(smugmug, args):
@@ -46,10 +44,13 @@ class Commands(object):
       description='List the content of a folder or album.')
     parser.add_argument('path', type=str, nargs='?', default='/', help='Path to list.')
     parser.add_argument('-l', help='Show details.', action='store_true')
+    parser.add_argument('-u', '--user', type=str, default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    authuser = smugmug.get('/api/v2!authuser')['NickName']
-    node, matched, unmatched = smugmug.fs.path_to_node(authuser, parsed.path)
+    user = parsed.user or smugmug.get_auth_user()
+    node, matched, unmatched = smugmug.fs.path_to_node(user, parsed.path)
     if unmatched:
       print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
       return
@@ -62,7 +63,8 @@ class Commands(object):
       names = [child['Name'] for child in children]
 
     if parsed.l:
-      print json.dumps(children.json, sort_keys=True, indent=2)
+      print json.dumps(children.json, sort_keys=True, indent=2,
+                       separators=(',', ': '))
     else:
       for name in names:
         print name
@@ -78,10 +80,13 @@ class Commands(object):
     parser.add_argument('--privacy', type=str, default='public',
                         choices=['public', 'private', 'unlisted'],
                         help='Access control for the created folders.')
+    parser.add_argument('-u', '--user', type=str, default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    authuser = smugmug.get('/api/v2!authuser')['NickName']
-    node, matched, unmatched = smugmug.fs.path_to_node(authuser, parsed.folder)
+    user = parsed.user or smugmug.get_auth_user()
+    node, matched, unmatched = smugmug.fs.path_to_node(user, parsed.folder)
     if len(unmatched) > 1 and not parsed.p:
       print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
       return
@@ -137,8 +142,19 @@ def main():
   parser.add_argument('args', nargs=argparse.REMAINDER)
   args = parser.parse_args()
 
-  smugmug = smugmug_lib.SmugMug(CONFIG_FILE)
-  commands[args.command](smugmug, args.args)
+  try:
+    config = persistent_dict.PersistentDict(CONFIG_FILE)
+  except persistent_dict.InvalidFileError:
+    print ('Config file (%s) is invalid. '
+           'Please fix or delete the file.' % CONFIG_FILE)
+    return
+
+  smugmug = smugmug_lib.SmugMug(config)
+
+  try:
+    commands[args.command](smugmug, args.args)
+  except smugmug_lib.NotLoggedInError:
+    return
 
 
 if __name__ == '__main__':

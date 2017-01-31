@@ -1,0 +1,625 @@
+{
+  "Code": 200,
+  "Message": "Ok",
+  "Options": {
+    "Methods": [
+      "GET"
+    ],
+    "ParameterDescription": {
+      "Select": "Select MIN_COUNT to MAX_COUNT options.  Options should pass only the \"Value\".  When passing more then one value, use an array."
+    },
+    "Parameters": {
+      "GET": [
+        {
+          "Default": "All",
+          "MAX_COUNT": "ALL",
+          "MIN_COUNT": 1,
+          "Name": "Type",
+          "OPTIONS": [
+            "All",
+            "Folder",
+            "Album",
+            "Page",
+            "System Album"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        },
+        {
+          "Default": "Organizer",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortMethod",
+          "OPTIONS": [
+            "DateAdded",
+            "DateModified",
+            "Name",
+            "Organizer"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        },
+        {
+          "Default": "Ascending",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortDirection",
+          "OPTIONS": [
+            "Ascending",
+            "Descending"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        }
+      ]
+    }
+  },
+  "Response": {
+    "EndpointType": "ChildNodes",
+    "Locator": "Node",
+    "LocatorType": "Objects",
+    "Node": [
+      {
+        "DateAdded": "2013-08-02T23:29:01+00:00",
+        "DateModified": "2017-01-03T21:59:49+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Heroes"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Heroes",
+        "NodeID": "KP9T9",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 19,
+        "SortMethod": "SortIndex",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/KP9T9",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/KP9T9!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/KP9T9",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/KP9T9",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/KP9T9!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/KP9T9!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/KP9T9!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/KP9T9!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Heroes",
+        "UrlPath": "/SmugMug/Heroes",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Heroes"
+      },
+      {
+        "DateAdded": "2013-08-02T23:32:05+00:00",
+        "DateModified": "2016-11-09T01:44:30+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Fun!"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Fun!",
+        "NodeID": "rkKZD",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 20,
+        "SortMethod": "SortIndex",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/rkKZD",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/rkKZD!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/rkKZD",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/rkKZD",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/rkKZD!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/rkKZD!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/rkKZD!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/rkKZD!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Fun",
+        "UrlPath": "/SmugMug/Fun",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Fun"
+      },
+      {
+        "DateAdded": "2013-08-02T23:26:37+00:00",
+        "DateModified": "2013-08-02T23:26:37+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Nostalgia"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [
+          "SmugMug history"
+        ],
+        "Name": "Nostalgia",
+        "NodeID": "9VsPs",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Descending",
+        "SortIndex": 21,
+        "SortMethod": "DateModified",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/9VsPs",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/9VsPs!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/9VsPs",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/9VsPs",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/9VsPs!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/9VsPs!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/9VsPs!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/9VsPs!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Nostalgia",
+        "UrlPath": "/SmugMug/Nostalgia",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Nostalgia"
+      },
+      {
+        "DateAdded": "2013-08-02T23:41:34+00:00",
+        "DateModified": "2016-11-17T04:46:59+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Prints"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Prints",
+        "NodeID": "BHsgV",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Descending",
+        "SortIndex": 22,
+        "SortMethod": "DateModified",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/BHsgV",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/BHsgV!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/BHsgV",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/BHsgV",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/BHsgV!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/BHsgV!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/BHsgV!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/BHsgV!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Prints",
+        "UrlPath": "/SmugMug/Prints",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Prints"
+      },
+      {
+        "DateAdded": "2013-07-13T22:44:28+00:00",
+        "DateModified": "2014-09-30T22:52:17+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Marketing shots"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Marketing shots",
+        "NodeID": "c8pp9",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 23,
+        "SortMethod": "SortIndex",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/c8pp9",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/c8pp9!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/c8pp9",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/c8pp9",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/c8pp9!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/c8pp9!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/c8pp9!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/c8pp9!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Marketing-shots",
+        "UrlPath": "/SmugMug/Marketing-shots",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Marketing-shots"
+      },
+      {
+        "DateAdded": "2013-08-02T23:33:27+00:00",
+        "DateModified": "2014-10-01T22:04:33+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Testing"
+          }
+        },
+        "HasChildren": true,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Testing",
+        "NodeID": "NTLLN",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Descending",
+        "SortIndex": 24,
+        "SortMethod": "DateModified",
+        "Type": "Folder",
+        "Uri": "/api/v2/node/NTLLN",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "ChildNodes": {
+            "EndpointType": "ChildNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/NTLLN!children",
+            "UriDescription": "Child nodes of the given node."
+          },
+          "FolderByID": {
+            "EndpointType": "FolderByID",
+            "Locator": "Folder",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/folder/id/NTLLN",
+            "UriDescription": "Get folder by its ID"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/NTLLN",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/NTLLN!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/NTLLN!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/NTLLN!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/NTLLN!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Testing",
+        "UrlPath": "/SmugMug/Testing",
+        "WebUri": "https://cmac.smugmug.com/SmugMug/Testing"
+      }
+    ],
+    "Pages": {
+      "Count": 6,
+      "FirstPage": "/api/v2/node/XWx8t!children?start=1&count=10",
+      "LastPage": "/api/v2/node/XWx8t!children?start=1&count=10",
+      "RequestedCount": 10,
+      "Start": 1,
+      "Total": 6
+    },
+    "Uri": "/api/v2/node/XWx8t!children",
+    "UriDescription": "Child nodes of the given node."
+  }
+}

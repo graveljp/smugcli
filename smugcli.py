@@ -73,8 +73,7 @@ class Commands(object):
   def mkdir(smugmug, args):
     parser = argparse.ArgumentParser(
       description='List the content of a folder or album.')
-    parser.add_argument('folder', type=str, nargs='?', default='/',
-                        help='Folder to create.')
+    parser.add_argument('folder', type=str, help='Folder to create.')
     parser.add_argument('-p', action='store_true',
                         help='Create parents if they are missing.')
     parser.add_argument('--privacy', type=str, default='public',

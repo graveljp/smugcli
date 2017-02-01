@@ -84,45 +84,10 @@ class Commands(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    user = parsed.user or smugmug.get_auth_user()
-    node, matched, unmatched = smugmug.fs.path_to_node(user, parsed.folder)
-    if len(unmatched) > 1 and not parsed.p:
-      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
-      return
-
-    if not len(unmatched):
-      print 'Folder "%s" already exists.' % parsed.folder
-      return
-
-    if node['Type'] != 'Folder':
-      print 'Sub-folders can only be created in folders.'
-      print '"%s" is of type "%s".' % (os.sep.join(matched), node['Type'])
-      return
-
-    for part in unmatched:
-      response = node.post('ChildNodes',
-                      data={
-                        'Name': part,
-                        'UrlName': part.replace(' ', '-').title(),
-                        'Privacy': parsed.privacy.title(),
-                        'Type': 'Folder',
-                      })
-      if response is None:
-        print 'Cannot create child nodes under folder "%s"' % (
-          os.sep.join(matched))
-        return
-
-      matched.append(part)
-
-      if response.status_code != 201:
-        print 'Error creating folder "%s".' % os.sep.join(matched)
-        print 'Server responded with %s' % str(response)
-        return
-
-      node = smugmug.fs.get_child(node, part)
-      if not node:
-        print 'Cannot find newly created folder "%s"' % os.sep.join(matched)
-        return
+    smugmug.fs.make_node(parsed.user, parsed.folder, parsed.p, {
+      'Type': 'Folder',
+      'Privacy': parsed.privacy.title(),
+    })
 
   @staticmethod
   def shell(smugmug, args):

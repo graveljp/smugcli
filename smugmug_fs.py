@@ -31,3 +31,44 @@ class SmugMugFS(object):
       matched.append(part)
       unmatched.popleft()
     return last_node, matched, list(unmatched)
+
+  def make_node(self, user, path, create_parents, params=None):
+    user = user or self._smugmug.get_auth_user()
+    node, matched, unmatched = self.path_to_node(user, path)
+    if len(unmatched) > 1 and not create_parents:
+      print '"%s" not found in "%s"' % (unmatched[0], os.sep.join(matched))
+      return
+
+    if not len(unmatched):
+      print 'Path "%s" already exists.' % path
+      return
+
+    if node['Type'] != 'Folder':
+      print 'Nodes can only be created in folders.'
+      print '"%s" is of type "%s".' % (os.sep.join(matched), node['Type'])
+      return
+
+    for part in unmatched:
+      node_params = {
+        'Name': part,
+        'UrlName': part.replace(' ', '-').title(),
+      }
+      node_params.update(params or {})
+
+      response = node.post('ChildNodes', data=node_params)
+      if response is None:
+        print 'Cannot create child nodes under "%s"' % (
+          os.sep.join(matched))
+        return
+
+      matched.append(part)
+
+      if response.status_code != 201:
+        print 'Error creating node "%s".' % os.sep.join(matched)
+        print 'Server responded with %s' % str(response)
+        return
+
+      node = self.get_child(node, part)
+      if not node:
+        print 'Cannot find newly created node "%s"' % os.sep.join(matched)
+        return

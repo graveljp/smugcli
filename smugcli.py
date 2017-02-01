@@ -54,7 +54,7 @@ class Commands(object):
   @staticmethod
   def mkdir(smugmug, args):
     parser = argparse.ArgumentParser(
-      description='List the content of a folder or album.')
+      description='Create a folder.')
     parser.add_argument('folder', type=str, help='Folder to create.')
     parser.add_argument('-p', action='store_true',
                         help='Create parents if they are missing.')

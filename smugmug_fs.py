@@ -32,6 +32,27 @@ class SmugMugFS(object):
       unmatched.popleft()
     return last_node, matched, list(unmatched)
 
+  def ls(self, user, path, details):
+    user = user or self._smugmug.get_auth_user()
+    node, matched, unmatched = self.path_to_node(user, path)
+    if unmatched:
+      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
+      return
+
+    if node['Type'] == 'Album':
+      children = node.get('Album').get('AlbumImages') or []
+      names = [child['FileName'] for child in children]
+    else:
+      children = node.get('ChildNodes') or []
+      names = [child['Name'] for child in children]
+
+    if details:
+      print json.dumps(children.json, sort_keys=True, indent=2,
+                       separators=(',', ': '))
+    else:
+      for name in names:
+        print name
+
   def make_node(self, user, path, create_parents, params=None):
     user = user or self._smugmug.get_auth_user()
     node, matched, unmatched = self.path_to_node(user, path)

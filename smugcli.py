@@ -49,25 +49,7 @@ class Commands(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    user = parsed.user or smugmug.get_auth_user()
-    node, matched, unmatched = smugmug.fs.path_to_node(user, parsed.path)
-    if unmatched:
-      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
-      return
-
-    if node['Type'] == 'Album':
-      children = node.get('Album').get('AlbumImages') or []
-      names = [child['FileName'] for child in children]
-    else:
-      children = node.get('ChildNodes') or []
-      names = [child['Name'] for child in children]
-
-    if parsed.l:
-      print json.dumps(children.json, sort_keys=True, indent=2,
-                       separators=(',', ': '))
-    else:
-      for name in names:
-        print name
+    smugmug.fs.ls(parsed.user, parsed.path, parsed.l)
 
   @staticmethod
   def mkdir(smugmug, args):

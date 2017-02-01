@@ -1,13 +1,15 @@
 # Main interface to the SmugMug web service.
 
+import base64
 import json
+import md5
 import requests
 import smugmug_oauth
 import smugmug_fs
 
 API_ROOT = 'https://api.smugmug.com'
+API_UPLOAD = 'https://upload.smugmug.com/'
 API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
-
 
 class Error(Exception):
   """Base class for all exception of this module."""
@@ -31,6 +33,10 @@ class Wrapper(object):
     if not uri:
       return None
     return self._smugmug.post(uri, data, json, **kwargs)
+
+  def upload(self, filename, data):
+    uri = self._json['Uri']
+    return self._smugmug.upload(uri, filename, data)
 
   def __getitem__(self, index):
     item = self._json[index]
@@ -117,6 +123,16 @@ class SmugMug(object):
                          headers={'Accept': 'application/json'},
                          auth=self.oauth,
                          **kwargs)
+
+  def upload(self, uri, filename, data):
+    headers = {'Content-Length': str(len(data)),
+               'Content-MD5': base64.b64encode(md5.new(data).digest()),
+               'X-Smug-AlbumUri': uri,
+               'X-Smug-FileName': filename,
+               'X-Smug-ResponseType': 'JSON',
+               'X-Smug-Version': 'v2'}
+    return requests.post(API_UPLOAD, data=data, headers=headers,
+                         auth=self.oauth)
 
 
 class FakeSmugMug(SmugMug):

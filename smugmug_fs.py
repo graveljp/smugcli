@@ -93,3 +93,14 @@ class SmugMugFS(object):
       if not node:
         print 'Cannot find newly created node "%s"' % os.sep.join(matched)
         return
+
+  def upload(self, user, filenames, album):
+    user = user or self._smugmug.get_auth_user()
+    node, matched, unmatched = self.path_to_node(user, album)
+    if unmatched:
+      print 'Album not found: "%s"' % album
+      return
+
+    for filename in filenames:
+      node.get('Album').upload(os.path.basename(filename),
+                               open(filename).read())

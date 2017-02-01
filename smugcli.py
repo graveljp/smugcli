@@ -81,6 +81,18 @@ class Commands(object):
     Helpers.mknode(smugmug, args, 'Album', parser)
 
   @staticmethod
+  def upload(smugmug, args):
+    parser = argparse.ArgumentParser(description='Upload files to SmugMug.')
+    parser.add_argument('src', type=str, nargs='+', help='Files to upload.')
+    parser.add_argument('album', type=str, help='Path to the album.')
+    parser.add_argument('-u', '--user', type=str, default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-on user by default.'))
+    parsed = parser.parse_args(args)
+
+    smugmug.fs.upload(parsed.user, parsed.src, parsed.album)
+
+  @staticmethod
   def shell(smugmug, args):
     shell = smugmug_shell.SmugMugShell(smugmug)
     shell.cmdloop()

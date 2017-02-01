@@ -15,6 +15,25 @@ import smugmug_shell
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
 
+class Helpers(object):
+  @staticmethod
+  def mknode(smugmug, args, node_type, parser):
+    parser.add_argument('path', type=str, help='%s to create.' % node_type)
+    parser.add_argument('-p', action='store_true',
+                        help='Create parents if they are missing.')
+    parser.add_argument('--privacy', type=str, default='public',
+                        choices=['public', 'private', 'unlisted'],
+                        help='Access control for the created folders.')
+    parser.add_argument('-u', '--user', type=str, default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-on user by default.'))
+    parsed = parser.parse_args(args)
+
+    smugmug.fs.make_node(parsed.user, parsed.path, parsed.p, {
+      'Type': node_type,
+      'Privacy': parsed.privacy.title(),
+    })
+
 class Commands(object):
   @staticmethod
   def login(smugmug, args):
@@ -53,23 +72,13 @@ class Commands(object):
 
   @staticmethod
   def mkdir(smugmug, args):
-    parser = argparse.ArgumentParser(
-      description='Create a folder.')
-    parser.add_argument('folder', type=str, help='Folder to create.')
-    parser.add_argument('-p', action='store_true',
-                        help='Create parents if they are missing.')
-    parser.add_argument('--privacy', type=str, default='public',
-                        choices=['public', 'private', 'unlisted'],
-                        help='Access control for the created folders.')
-    parser.add_argument('-u', '--user', type=str, default='',
-                        help=('User whose SmugMug account is to be accessed. '
-                              'Uses the logged-on user by default.'))
-    parsed = parser.parse_args(args)
+    parser = argparse.ArgumentParser(description='Create a folder.')
+    Helpers.mknode(smugmug, args, 'Folder', parser)
 
-    smugmug.fs.make_node(parsed.user, parsed.folder, parsed.p, {
-      'Type': 'Folder',
-      'Privacy': parsed.privacy.title(),
-    })
+  @staticmethod
+  def mkalbum(smugmug, args):
+    parser = argparse.ArgumentParser(description='Create a album.')
+    Helpers.mknode(smugmug, args, 'Album', parser)
 
   @staticmethod
   def shell(smugmug, args):

@@ -61,7 +61,9 @@ class SmugMugFS(object):
       for name in names:
         print name
 
-  def make_childnode(self, parent, node, name, params=None):
+  def make_childnode(self, node, path, params=None):
+    parent = os.sep.join(path.split(os.sep)[:-1])
+    name = path.split(os.sep)[-1]
     if node['Type'] != 'Folder':
       print 'Nodes can only be created in folders.'
       print '"%s" is of type "%s".' % (parent, node['Type'])
@@ -82,13 +84,13 @@ class SmugMugFS(object):
       return None
 
     if response.status_code != 201:
-      print 'Error creating node "%s".' % os.path.join(parent, name)
+      print 'Error creating node "%s".' % path
       print 'Server responded with %s' % str(response)
       return None
 
     node = self.get_child(node, name)
     if not node:
-      print 'Cannot find newly created node "%s"' % os.path.join(parent, name)
+      print 'Cannot find newly created node "%s"' % path
       return None
 
     if node['Type'] == 'Album':
@@ -110,7 +112,7 @@ class SmugMugFS(object):
       return
 
     for part in unmatched:
-      node = self.make_childnode(os.sep.join(matched), node, part, params)
+      node = self.make_childnode(node, part, params)
       if not node:
         return
       matched.append(part)
@@ -162,9 +164,8 @@ class SmugMugFS(object):
                            else 'Folder')
 
       print 'Making %s %s' % (current_node_type, current_folder)
-      current_node = self.make_childnode(current_folder,
-                                         parent_node,
-                                         current_name,
+      current_node = self.make_childnode(parent_node,
+                                         current_folder,
                                          params={
                                            'Type': current_node_type,
                                          })

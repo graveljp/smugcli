@@ -6,6 +6,7 @@ import inspect
 import json
 import persistent_dict
 import os
+import requests
 import urlparse
 
 import smugmug as smugmug_lib
@@ -93,9 +94,27 @@ class Commands(object):
     smugmug.fs.upload(parsed.user, parsed.src, parsed.album)
 
   @staticmethod
+  def sync(smugmug, args):
+    parser = argparse.ArgumentParser(
+      description='Synchronize all local albums with SmugMug.')
+    parser.add_argument('source', type=str, nargs='?', default='.',
+                        help=('Folder to sync. Defaults to the local folder. '
+                              'Uploads the current folder by default.'))
+    parser.add_argument('target', type=str, nargs='?', default='/',
+                        help=('The destination folder in which to upload data. '
+                              'Uploads to the root folder by default.'))
+    parser.add_argument('-u', '--user', type=str, default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-on user by default.'))
+    parsed = parser.parse_args(args)
+
+    smugmug.fs.sync(parsed.user, parsed.source, parsed.target)
+
+  @staticmethod
   def shell(smugmug, args):
     shell = smugmug_shell.SmugMugShell(smugmug)
     shell.cmdloop()
+
 
 def main():
   commands = {name: func for name, func in

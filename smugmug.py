@@ -24,19 +24,26 @@ class Wrapper(object):
     self._smugmug = smugmug
     self._json = json
 
-  def get(self, name, **kwargs):
-    uri = self._json['Uris'].get(name, {}).get('Uri')
+  def get(self, endpoint, **kwargs):
+    uri = self.uri(endpoint)
     return self._smugmug.get(uri, **kwargs) if uri else None
 
-  def post(self, name, data=None, json=None, **kwargs):
-    uri = self._json['Uris'].get(name, {}).get('Uri')
+  def post(self, endpoint, data=None, json=None, **kwargs):
+    uri = self.uri(endpoint)
     if not uri:
       return None
     return self._smugmug.post(uri, data, json, **kwargs)
 
-  def upload(self, filename, data):
-    uri = self._json['Uri']
-    return self._smugmug.upload(uri, filename, data)
+  def patch(self, endpoint, data=None, json=None, **kwargs):
+    uri = self.uri(endpoint)
+    return self._smugmug.patch(uri, data, json, **kwargs)
+
+  def upload(self, endpoint, filename, data, headers=None):
+    uri = self.uri(endpoint)
+    return self._smugmug.upload(uri, filename, data, headers)
+
+  def uri(self, endpoint):
+    return self._json['Uris'].get(endpoint, {}).get('Uri')
 
   def __getitem__(self, index):
     item = self._json[index]
@@ -124,13 +131,21 @@ class SmugMug(object):
                          auth=self.oauth,
                          **kwargs)
 
-  def upload(self, uri, filename, data):
+  def patch(self, path, data=None, json=None, **kwargs):
+    return requests.patch(API_ROOT + path,
+                          data=data, json=json,
+                          headers={'Accept': 'application/json'},
+                          auth=self.oauth,
+                          **kwargs)
+
+  def upload(self, uri, filename, data, additional_headers=None):
     headers = {'Content-Length': str(len(data)),
                'Content-MD5': base64.b64encode(md5.new(data).digest()),
                'X-Smug-AlbumUri': uri,
                'X-Smug-FileName': filename,
                'X-Smug-ResponseType': 'JSON',
                'X-Smug-Version': 'v2'}
+    headers.update(additional_headers or {})
     return requests.post(API_UPLOAD, data=data, headers=headers,
                          auth=self.oauth)
 

@@ -1,5 +1,13 @@
+import base64
 import collections
+import itertools
+import md5
 import os
+import smugmug
+
+Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
+
+MEDIA_EXT = ['.jpg', '.jpeg', '.mov', '.mp4']
 
 class SmugMugFS(object):
   def __init__(self, smugmug):
@@ -9,7 +17,7 @@ class SmugMugFS(object):
     return self._smugmug.get('/api/v2/user/%s' % user).get('Node')
 
   def get_children(self, node, params=None):
-    return node.get('ChildNodes') or []
+    return node.get('ChildNodes') or smugmug.Wrapper(self._smugmug, [])
 
   def get_child(self, parent, child_name, params=None):
     for node in self.get_children(parent, params):
@@ -53,6 +61,43 @@ class SmugMugFS(object):
       for name in names:
         print name
 
+  def make_childnode(self, parent, node, name, params=None):
+    if node['Type'] != 'Folder':
+      print 'Nodes can only be created in folders.'
+      print '"%s" is of type "%s".' % (parent, node['Type'])
+      return None
+
+    node_params = {
+      'Name': name,
+      'UrlName': name.replace(' ', '-').title(),
+      'Privacy': 'Public',
+      'SortDirection': 'Ascending',
+      'SortMethod': 'Name',
+    }
+    node_params.update(params or {})
+
+    response = node.post('ChildNodes', data=node_params)
+    if response is None:
+      print 'Cannot create child nodes under "%s"' % parent
+      return None
+
+    if response.status_code != 201:
+      print 'Error creating node "%s".' % os.path.join(parent, name)
+      print 'Server responded with %s' % str(response)
+      return None
+
+    node = self.get_child(node, name)
+    if not node:
+      print 'Cannot find newly created node "%s"' % os.path.join(parent, name)
+      return None
+
+    if node['Type'] == 'Album':
+      response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
+      if response.status_code != 200:
+        print 'Failed setting SortMethod on Album %s' % name
+
+    return node
+
   def make_node(self, user, path, create_parents, params=None):
     user = user or self._smugmug.get_auth_user()
     node, matched, unmatched = self.path_to_node(user, path)
@@ -64,35 +109,12 @@ class SmugMugFS(object):
       print 'Path "%s" already exists.' % path
       return
 
-    if node['Type'] != 'Folder':
-      print 'Nodes can only be created in folders.'
-      print '"%s" is of type "%s".' % (os.sep.join(matched), node['Type'])
-      return
-
     for part in unmatched:
-      node_params = {
-        'Name': part,
-        'UrlName': part.replace(' ', '-').title(),
-      }
-      node_params.update(params or {})
-
-      response = node.post('ChildNodes', data=node_params)
-      if response is None:
-        print 'Cannot create child nodes under "%s"' % (
-          os.sep.join(matched))
+      node = self.make_childnode(os.sep.join(matched), node, part, params)
+      if not node:
         return
-
       matched.append(part)
 
-      if response.status_code != 201:
-        print 'Error creating node "%s".' % os.sep.join(matched)
-        print 'Server responded with %s' % str(response)
-        return
-
-      node = self.get_child(node, part)
-      if not node:
-        print 'Cannot find newly created node "%s"' % os.sep.join(matched)
-        return
 
   def upload(self, user, filenames, album):
     user = user or self._smugmug.get_auth_user()
@@ -102,5 +124,131 @@ class SmugMugFS(object):
       return
 
     for filename in filenames:
-      node.get('Album').upload(os.path.basename(filename),
-                               open(filename).read())
+      node.upload('Album',
+                  os.path.basename(filename),
+                  open(filename).read())
+
+  def sync(self, user, source, target):
+    print 'Syncing local folder "%s" to SmugMug folder "%s"' % (source, target)
+
+    if not os.path.isdir(source):
+      print 'Source folder not found: "%s"' % source
+      return
+
+    user = user or self._smugmug.get_auth_user()
+    node, matched, unmatched = self.path_to_node(user, target)
+    if unmatched:
+      print 'Target folder not found: "%s"' % target
+      return
+
+    child_nodes = self._get_child_nodes_by_name(node)
+    self._recursive_sync(source, node, child_nodes)
+
+  def _recursive_sync(self, current_folder, parent_node, current_nodes):
+    current_name = current_folder.split(os.sep)[-1]
+    remote_matches = current_nodes.get(current_name, [])
+    if len(remote_matches) > 1:
+      print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
+      return None
+
+    folder_children = self._read_local_dir(current_folder)
+
+    if remote_matches:
+      print 'Found matching remote folder for %s' % current_folder
+      current_node = remote_matches[0]
+    else:
+      current_node_type = ('Album' if any(details.ismedia for _, details
+                                          in folder_children.iteritems())
+                           else 'Folder')
+
+      print 'Making %s %s' % (current_node_type, current_folder)
+      current_node = self.make_childnode(current_folder,
+                                         parent_node,
+                                         current_name,
+                                         params={
+                                           'Type': current_node_type,
+                                         })
+
+    if not current_node:
+      print 'Skipping %s, no matching remote node.' % current_folder
+      return None
+
+    child_nodes = self._get_child_nodes_by_name(current_node)
+
+    for child_name, child_details in folder_children.iteritems():
+      new_path = os.path.join(current_folder, child_name)
+      if current_node['Type'] == 'Folder':
+        if child_details.isdir:
+          self._recursive_sync(new_path, current_node, child_nodes)
+        else:
+          print 'Ignoring %s, can\'t be copied to a folder' % new_path
+      elif current_node['Type'] == 'Album':
+        if child_details.isdir:
+          print 'Folder "%s" found inside %s "%s".' % (
+            child_name, current_node['Type'], current_folder)
+          print 'Sub-folder\'s images will be copied to this %s.' % (
+            current_node['Type'])
+          for folder, dirs, files in os.walk(new_path):
+            for filename in [f for f in files if self._is_media(f)]:
+              self._sync_file(filename, current_node, child_nodes)
+        elif child_details.ismedia:
+          self._sync_file(new_path, current_node, child_nodes)
+
+  def _sync_file(self, file_path, album_node, album_children):
+    file_name = file_path.split(os.sep)[-1]
+    file_content = open(file_path).read()
+    remote_matches = album_children.get(file_name, [])
+    if len(remote_matches) > 1:
+      print 'Skipping %s, multiple remote nodes matches local file.' % file_path
+      return
+
+    if remote_matches:
+      remote_file = remote_matches[0]
+      file_md5 = md5.new(file_content).hexdigest()
+      if remote_file['ArchivedMD5'] == file_md5:
+        print 'File "%s" already exists on Smugmug' % file_path
+      else:
+        print 'File "%s" exists, but has changed. Re-uploading.' % file_path
+        remote_file.upload('Album', file_name, file_content,
+                           headers={'X-Smug-ImageUri': remote_file.uri('Image')})
+    else:
+      print 'Uploading %s' % file_path
+      album_node.upload('Album', file_name, file_content)
+
+  def _resursive_album_sync(self, current_folder, album_node, image_nodes):
+    current_name = current_folder.split(os.sep)[-1]
+    remote_matches = current_nodes.get(current_name, [])
+    if len(remote_matches) > 1:
+      print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
+      return None
+
+    folder_children = self._read_local_dir(current_folder)
+
+  def _is_media(self, path):
+    isfile = os.path.isfile(path)
+    extension = os.path.splitext(path)[1].lower()
+    return isfile and (extension in MEDIA_EXT)
+
+  def _read_local_dir(self, path):
+
+    def get_details(child):
+      full_path = os.path.join(path, child)
+      isdir = os.path.isdir(full_path)
+      ismedia = self._is_media(full_path)
+      return Details(path=full_path,
+                     isdir=isdir,
+                     ismedia=ismedia)
+
+    return {child: get_details(child) for child in os.listdir(path)}
+
+  def _get_child_nodes_by_name(self, node):
+    child_by_name = collections.defaultdict(list)
+
+    if node['Type'] == 'Album':
+      for child in node.get('Album').get('AlbumImages') or []:
+        child_by_name[child['FileName']].append(child)
+    else:
+      for child in node.get('ChildNodes') or []:
+        child_by_name[child['Name']].append(child)
+
+    return child_by_name

@@ -71,7 +71,6 @@ class SmugMugFS(object):
 
     node_params = {
       'Name': name,
-      'UrlName': name.replace(' ', '-').title(),
       'Privacy': 'Public',
       'SortDirection': 'Ascending',
       'SortMethod': 'Name',

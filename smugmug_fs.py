@@ -127,7 +127,7 @@ class SmugMugFS(object):
     for filename in filenames:
       node.upload('Album',
                   os.path.basename(filename),
-                  open(filename).read())
+                  open(filename, 'rb').read())
 
   def sync(self, user, source, target):
     print 'Syncing local folder "%s" to SmugMug folder "%s"' % (source, target)
@@ -196,7 +196,7 @@ class SmugMugFS(object):
 
   def _sync_file(self, file_path, album_node, album_children):
     file_name = file_path.split(os.sep)[-1]
-    file_content = open(file_path).read()
+    file_content = open(file_path, 'rb').read()
     remote_matches = album_children.get(file_name, [])
     if len(remote_matches) > 1:
       print 'Skipping %s, multiple remote nodes matches local file.' % file_path

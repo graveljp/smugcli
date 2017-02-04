@@ -189,13 +189,8 @@ class SmugMugFS(object):
           print 'Ignoring %s, can\'t be copied to a folder' % new_path
       elif current_node['Type'] == 'Album':
         if child_details.isdir:
-          print 'Folder "%s" found inside %s "%s".' % (
+          print 'Ignoring folder "%s" found inside %s "%s".' % (
             child_name, current_node['Type'], current_folder)
-          print 'Sub-folder\'s images will be copied to this %s.' % (
-            current_node['Type'])
-          for folder, dirs, files in os.walk(new_path):
-            for filename in [f for f in files if self._is_media(f)]:
-              self._sync_file(filename, current_node, child_nodes)
         elif child_details.ismedia:
           self._sync_file(new_path, current_node, child_nodes)
 

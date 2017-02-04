@@ -1,5 +1,6 @@
 import base64
 import collections
+import glob
 import itertools
 import md5
 import os
@@ -129,12 +130,10 @@ class SmugMugFS(object):
                   os.path.basename(filename),
                   open(filename, 'rb').read())
 
-  def sync(self, user, source, target):
-    print 'Syncing local folder "%s" to SmugMug folder "%s"' % (source, target)
-
-    if not os.path.isdir(source):
-      print 'Source folder not found: "%s"' % source
-      return
+  def sync(self, user, sources, target):
+    sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
+    print 'Syncing local folders %s to SmugMug folder %s' % (
+      ', '.join(sources), target)
 
     user = user or self._smugmug.get_auth_user()
     node, matched, unmatched = self.path_to_node(user, target)
@@ -143,7 +142,13 @@ class SmugMugFS(object):
       return
 
     child_nodes = self._get_child_nodes_by_name(node)
-    self._recursive_sync(source, node, child_nodes)
+
+    for source in sources:
+      if not os.path.isdir(source):
+        print 'Source folder not found: "%s"' % source
+        continue
+    
+      self._recursive_sync(source, node, child_nodes)
 
   def _recursive_sync(self, current_folder, parent_node, current_nodes):
     current_name = current_folder.split(os.sep)[-1]

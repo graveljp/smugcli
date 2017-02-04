@@ -175,7 +175,7 @@ class SmugMugFS(object):
 
     child_nodes = self._get_child_nodes_by_name(current_node)
 
-    for child_name, child_details in folder_children.iteritems():
+    for child_name, child_details in sorted(folder_children.items()):
       new_path = os.path.join(current_folder, child_name)
       if current_node['Type'] == 'Folder':
         if child_details.isdir:

@@ -39,7 +39,7 @@ class Commands(object):
   @staticmethod
   def login(smugmug, args):
     parser = argparse.ArgumentParser(
-      description='Login onto the SmugMug service')
+      prog='login', description='Login onto the SmugMug service')
     parser.add_argument('--key', type=unicode, required=True, help='SmugMug API key')
     parser.add_argument('--secret', type=unicode, required=True, help='SmugMug API secret')
     parsed = parser.parse_args(args)
@@ -61,7 +61,7 @@ class Commands(object):
   @staticmethod
   def ls(smugmug, args):
     parser = argparse.ArgumentParser(
-      description='List the content of a folder or album.')
+      prog='ls', description='List the content of a folder or album.')
     parser.add_argument('path', type=unicode, nargs='?', default=os.sep, help='Path to list.')
     parser.add_argument('-l', help='Show details.', action='store_true')
     parser.add_argument('-u', '--user', type=unicode, default='',
@@ -73,17 +73,20 @@ class Commands(object):
 
   @staticmethod
   def mkdir(smugmug, args):
-    parser = argparse.ArgumentParser(description='Create a folder.')
+    parser = argparse.ArgumentParser(
+      prog='mkdir', description='Create a folder.')
     Helpers.mknode(smugmug, args, 'Folder', parser)
 
   @staticmethod
   def mkalbum(smugmug, args):
-    parser = argparse.ArgumentParser(description='Create a album.')
+    parser = argparse.ArgumentParser(
+      prog='mkalbum', description='Create a album.')
     Helpers.mknode(smugmug, args, 'Album', parser)
 
   @staticmethod
   def upload(smugmug, args):
-    parser = argparse.ArgumentParser(description='Upload files to SmugMug.')
+    parser = argparse.ArgumentParser(
+      prog='upload', description='Upload files to SmugMug.')
     parser.add_argument('src', type=unicode, nargs='+', help='Files to upload.')
     parser.add_argument('album', type=unicode, help='Path to the album.')
     parser.add_argument('-u', '--user', type=unicode, default='',
@@ -96,6 +99,7 @@ class Commands(object):
   @staticmethod
   def sync(smugmug, args):
     parser = argparse.ArgumentParser(
+      prog='sync',
       description='Synchronize all local albums with SmugMug.')
     parser.add_argument('source', type=unicode, nargs='?', default='.',
                         help=('Folder to sync. Defaults to the local folder. '

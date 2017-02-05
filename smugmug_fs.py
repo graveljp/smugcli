@@ -65,8 +65,7 @@ class SmugMugFS(object):
         print name
 
   def make_childnode(self, node, path, params=None):
-    parent = os.sep.join(path.split(os.sep)[:-1])
-    name = path.split(os.sep)[-1]
+    parent, name = os.path.split(path)
     if node['Type'] != 'Folder':
       print 'Nodes can only be created in folders.'
       print '"%s" is of type "%s".' % (parent, node['Type'])

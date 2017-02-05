@@ -6,6 +6,8 @@ import md5
 import os
 import smugmug
 
+import persistent_dict
+
 Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
 
 MEDIA_EXT = ['.jpg', '.jpeg', '.mov', '.mp4']
@@ -147,7 +149,14 @@ class SmugMugFS(object):
       if not os.path.isdir(source):
         print 'Source folder not found: "%s"' % source
         continue
-    
+
+      folder, file = os.path.split(source)
+      configs = persistent_dict.PersistentDict(
+        os.path.join(folder, '.smugcli'))
+      if file in configs.get('ignore', []):
+        print 'Skipping ignored path %s' % source
+        continue
+
       self._recursive_sync(source, node, child_nodes)
 
   def _recursive_sync(self, current_folder, parent_node, current_nodes):
@@ -180,8 +189,16 @@ class SmugMugFS(object):
 
     child_nodes = self._get_child_nodes_by_name(current_node)
 
+    configs = persistent_dict.PersistentDict(
+      os.path.join(current_folder, '.smugcli'))
+    to_ignore = set(configs.get('ignore', []))
+
     for child_name, child_details in sorted(folder_children.items()):
       new_path = os.path.join(current_folder, child_name)
+      if child_name in to_ignore:
+        print 'Skipping ignored path %s' % new_path
+        continue
+
       if current_node['Type'] == 'Folder':
         if child_details.isdir:
           self._recursive_sync(new_path, current_node, child_nodes)

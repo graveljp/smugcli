@@ -2,6 +2,7 @@
 # Command line tool for SmugMug. Uses SmugMug API V2.
 
 import argparse
+import collections
 import inspect
 import json
 import persistent_dict
@@ -34,6 +35,31 @@ class Helpers(object):
       'Type': node_type,
       'Privacy': parsed.privacy.title(),
     })
+
+  @staticmethod
+  def ignore_or_include(smugmug, paths, ignore):
+    files_by_folder = collections.defaultdict(list)
+    for folder, file in [os.path.split(path) for path in paths]:
+      files_by_folder[folder].append(file)
+
+    for folder, files in files_by_folder.iteritems():
+      if not os.path.isdir(folder or '.'):
+        print 'Can\'t find folder %s' % folder
+        return
+      for file in files:
+        full_path = os.path.join(folder, file)
+        if not os.path.exists(full_path):
+          print '%s doesn\'t exists' % full_path
+          return
+
+      configs = persistent_dict.PersistentDict(os.path.join(folder, '.smugcli'))
+      original_ignore = configs.get('ignore', [])
+      if ignore:
+        updated_ignore = list(set(original_ignore) | set(files))
+      else:
+        updated_ignore = list(set(original_ignore) ^ set(files))
+      configs['ignore'] = updated_ignore
+
 
 class Commands(object):
   @staticmethod
@@ -113,6 +139,28 @@ class Commands(object):
     parsed = parser.parse_args(args)
 
     smugmug.fs.sync(parsed.user, parsed.source, parsed.target)
+
+  @staticmethod
+  def ignore(smugmug, args):
+    parser = argparse.ArgumentParser(
+      prog='ignore',
+      description='Mark paths to be ignored during sync.')
+    parser.add_argument('paths', type=unicode, nargs='+',
+                        help=('List of paths to ignore during sync.'))
+    parsed = parser.parse_args(args)
+    Helpers.ignore_or_include(smugmug, parsed.paths, True)
+
+  @staticmethod
+  def include(smugmug, args):
+    parser = argparse.ArgumentParser(
+      prog='include',
+      description=('Mark paths to be included during sync. '
+                   'Everything is included by default, this commands is used to '
+                   'negate the effect of the "ignore" command.'))
+    parser.add_argument('paths', type=unicode, nargs='+',
+                        help=('List of paths to include during sync.'))
+    parsed = parser.parse_args(args)
+    Helpers.ignore_or_include(smugmug, parsed.paths, False)
 
   @staticmethod
   def shell(smugmug, args):

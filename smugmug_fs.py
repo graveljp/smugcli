@@ -222,7 +222,7 @@ class SmugMugFS(object):
       remote_file = remote_matches[0]
       file_md5 = md5.new(file_content).hexdigest()
       if remote_file['ArchivedMD5'] == file_md5:
-        print 'File "%s" already exists on Smugmug' % file_path
+        pass  # File already exists on Smugmug
       else:
         print 'File "%s" exists, but has changed. Re-uploading.' % file_path
         remote_file.upload('Album', file_name, file_content,

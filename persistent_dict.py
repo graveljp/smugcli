@@ -8,11 +8,57 @@ class Error(Exception):
 class InvalidFileError(Error):
   """Error raised if the dict cannot be deserialize from disk."""
 
-class PersistentDict(dict):
+class UnknownError(Error):
+  """An unexpected error occurred."""
+
+def _maybe_wrap(persistent_dict, item):
+  if hasattr(item, '__iter__'):
+    return PersistentDictWrapper(persistent_dict, item)
+  else:
+    return item
+
+class PersistentDictWrapper(object):
+  def __init__(self, persistent_dict, value):
+    self._persistent_dict = persistent_dict
+    self._value = value
+
+  def __getattr__(self, name):
+    attribute = self._value.__getattribute__(name)
+    if hasattr(attribute, '__call__'):
+      def wrapped_function(*args, **kwargs):
+        result = attribute(*args, **kwargs)
+        self._persistent_dict._save_to_disk()
+        return _maybe_wrap(self._persistent_dict, result)
+      return wrapped_function
+    else:
+      return _maybe_wrap(self._persistent_dict, attribute)
+
+  def __delitem__(self, key):
+    self._value.__delitem__(key)
+    self._persistent_dict._save_to_disk()
+
+  def __setitem__(self, key, value):
+    self._value.__setitem__(key, value)
+    self._persistent_dict._save_to_disk()
+
+  def __getitem__(self, key):
+    value = self._value.__getitem__(key)
+    return _maybe_wrap(self._persistent_dict, value)
+
+  def __len__(self):
+    return self._value.__len__()
+
+  def __contains__(self, item):
+    return self._value.__contains__(item)
+
+  def __iter__(self):
+    return self._value.__iter__()
+
+
+class PersistentDict(object):
   def __init__(self, path):
-    super(PersistentDict, self).__init__()
     self._path = path
-    self.update(self._read_from_disk())
+    self._dict = self._read_from_disk()
 
   def _read_from_disk(self):
     try:
@@ -23,17 +69,40 @@ class PersistentDict(dict):
     except ValueError:
       raise InvalidFileError
 
-    if not isinstance(config, dict):
-      raise InvalidFileError
+    raise UnknownError
 
   def _save_to_disk(self):
     with open(self._path, 'w') as handle:
-      json.dump(self, handle, sort_keys=True, indent=2, separators=(',', ': '))
+      json.dump(self._dict, handle, sort_keys=True, indent=2, separators=(',', ': '))
+
+  def __getattr__(self, name):
+    attribute = self._dict.__getattribute__(name)
+    if hasattr(attribute, '__call__'):
+      def wrapped_function(*args, **kwargs):
+        result = attribute(*args, **kwargs)
+        self._save_to_disk()
+        return _maybe_wrap(self, result)
+      return wrapped_function
+    else:
+      return _maybe_wrap(self, attribute)
 
   def __delitem__(self, key):
-    super(PersistentDict, self).__delitem__(key)
+    self._dict.__delitem__(key)
     self._save_to_disk()
 
   def __setitem__(self, key, value):
-    super(PersistentDict, self).__setitem__(key, value)
+    self._dict.__setitem__(key, value)
     self._save_to_disk()
+
+  def __getitem__(self, key):
+    value = self._dict.__getitem__(key)
+    return _maybe_wrap(self, value)
+
+  def __len__(self):
+    return self._dict.__len__()
+
+  def __contains__(self, item):
+    return self._dict.__contains__(item)
+
+  def __iter__(self):
+    return self._dict.__iter__()

@@ -28,7 +28,7 @@ $ ./smugcli.py ls Photography
 $ ./smugcli.py ls Photography/2015
  Photoshoot with Dave
 ```
-All commands can also be executed against another user's account. For instance:
+Note that smugcli can also be used to access other public SmugMug account by using the `--user` argument:
 ```
 $ ./smugcli.py ls -u <username>
 ```
@@ -63,7 +63,7 @@ Uploading local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0052.JPG
 ...
 ```
 
-The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded. To exclute files from the sync operation, run the command:
+The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded. To exclute paths from the sync operation, run the command:
 ```
 $ ./smugcli.py ignore local/folder/export-tmp
 ```

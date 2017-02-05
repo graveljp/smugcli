@@ -119,7 +119,7 @@ class SmugMug(object):
                         **kwargs).json()
 
   def get(self, path, **kwargs):
-    reply = self.get_json(path, **kwargs)
+    reply = self.get_json(path + '?count=100000', **kwargs)
     response = reply['Response']
     locator = response['Locator']
     return Wrapper(self, response[locator]) if locator in response else None

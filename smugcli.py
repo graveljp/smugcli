@@ -127,7 +127,7 @@ class Commands(object):
     parser = argparse.ArgumentParser(
       prog='sync',
       description='Synchronize all local albums with SmugMug.')
-    parser.add_argument('source', type=unicode, nargs='*', default='.',
+    parser.add_argument('source', type=unicode, nargs='*', default=u'*',
                         help=('Folder to sync. Defaults to the local folder. '
                               'Uploads the current folder by default.'))
     parser.add_argument('-t', '--target', type=unicode, default=os.sep,

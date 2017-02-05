@@ -201,7 +201,7 @@ class SmugMugFS(object):
       if current_node['Type'] == 'Folder':
         if child_details.isdir:
           self._recursive_sync(new_path, current_node, child_nodes)
-        else:
+        elif child_details.ismedia:
           print 'Ignoring %s, can\'t be copied to a folder' % new_path
       elif current_node['Type'] == 'Album':
         if child_details.isdir:

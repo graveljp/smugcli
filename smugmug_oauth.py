@@ -5,6 +5,7 @@ import rauth
 import requests
 import requests_oauthlib
 import socket
+import subprocess
 import threading
 import urllib
 import urlparse
@@ -48,7 +49,26 @@ class SmugMugOAuth(object):
     thread.daemon = True
     try:
       thread.start()
-      webbrowser.open('http://localhost:%d/' % port)
+
+      login_url = 'http://localhost:%d/' % port
+      print 'Started local server.'
+      print 'Visit %s to grant SmugCli access to your SmugMug account.' % login_url
+      print 'Opening page in default browser...'
+      if self._is_cygwin():
+        try:
+          return_code = subprocess.call(['cygstart', login_url],
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
+          success = (return_code == 0)
+        except:
+          success = False
+      else:
+        success = webbrowser.open(login_url)
+
+      if not success:
+        print 'Could not start default browser automatically.'
+        print 'Please visit %s to complete login process.' % login_url
+
       while thread.isAlive():
         thread.join(1)
     finally:
@@ -92,7 +112,7 @@ class SmugMugOAuth(object):
        params={'oauth_verifier': bottle.request.query['oauth_verifier']})
 
     state['running'] = False
-    return 'Success'
+    return 'Login succesful. You may close this window.'
 
   def _add_auth_params(self, auth_url, access, permissions):
     parts = urlparse.urlsplit(auth_url)
@@ -102,3 +122,12 @@ class SmugMugOAuth(object):
     new_query = urllib.urlencode(query, True)
     return urlparse.urlunsplit(
       (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
+
+  def _is_cygwin(self):
+    try:
+      return_code = subprocess.call(['which', 'cygstart'],
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
+      return (return_code == 0)
+    except:
+      return False

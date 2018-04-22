@@ -55,6 +55,12 @@ class Wrapper(object):
   def __len__(self):
     return len(self._json)
 
+  def __eq__(self, other):
+    return self._json == other
+
+  def __ne__(self, other):
+    return self._json != other
+
   @property
   def json(self):
     return self._json

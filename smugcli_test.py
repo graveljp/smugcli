@@ -128,9 +128,12 @@ class TestSmugCLI(unittest.TestCase):
                json=json.load(open('testdata/smugmug_node_children.json')))
 
       def post_handler(request):
-        self.assertEquals(urlparse.parse_qs(request.body),
-                          {'Name': ['smugcli-test'], 'UrlName': ['Smugcli-Test'],
-                           'Privacy': ['Public'], 'Type': ['Folder']})
+        self.assertDictEqual(urlparse.parse_qs(request.body),
+                             {'Name': ['smugcli-test'],
+                              'Privacy': ['Public'],
+                              'SortDirection': ['Ascending'],
+                              'SortMethod': ['Name'],
+                              'Type': ['Folder']})
         return 201, {}, ''
 
       rsps.add_callback(responses.POST,

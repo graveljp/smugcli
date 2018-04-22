@@ -109,3 +109,15 @@ class PersistentDict(object):
 
   def __iter__(self):
     return self._dict.__iter__()
+
+  def __str__(self):
+    return str(self._dict)
+
+  def __repr__(self):
+    return str(self._dict)
+
+  def __eq__(self, other):
+    return self._dict == other
+
+  def __ne__(self, other):
+    return self._dict != other

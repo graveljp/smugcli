@@ -205,8 +205,9 @@ class SmugMugFS(object):
           print 'Ignoring %s, can\'t be copied to a folder' % new_path
       elif current_node['Type'] == 'Album':
         if child_details.isdir:
-          print 'Ignoring folder "%s" found inside %s "%s".' % (
-            child_name, current_node['Type'], current_folder)
+          print ('Ignoring folder "%s" found inside %s "%s". '
+                 'SmugMug albums cannot have subfolders.' % (
+                   child_name, current_node['Type'], current_folder))
         elif child_details.ismedia:
           self._sync_file(new_path, current_node, child_nodes)
 

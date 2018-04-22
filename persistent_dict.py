@@ -72,8 +72,11 @@ class PersistentDict(object):
     raise UnknownError
 
   def _save_to_disk(self):
+    if not self._dict:
+      return
     with open(self._path, 'w') as handle:
-      json.dump(self._dict, handle, sort_keys=True, indent=2, separators=(',', ': '))
+      json.dump(self._dict, handle, sort_keys=True, indent=2,
+                separators=(',', ': '))
 
   def __getattr__(self, name):
     attribute = self._dict.__getattribute__(name)

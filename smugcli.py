@@ -20,13 +20,20 @@ CONFIG_FILE = os.path.expanduser('~/.smugcli')
 class Helpers(object):
   @staticmethod
   def mknode(smugmug, args, node_type, parser):
-    parser.add_argument('path', type=unicode, help='%s to create.' % node_type)
-    parser.add_argument('-p', action='store_true',
+    parser.add_argument('path',
+                        type=lambda s: unicode(s, 'utf8'),
+                        help='%s to create.' % node_type)
+    parser.add_argument('-p',
+                        action='store_true',
                         help='Create parents if they are missing.')
-    parser.add_argument('--privacy', type=unicode, default='public',
+    parser.add_argument('--privacy',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='public',
                         choices=['public', 'private', 'unlisted'],
                         help='Access control for the created folders.')
-    parser.add_argument('-u', '--user', type=unicode, default='',
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
                         help=('User whose SmugMug account is to be accessed. '
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
@@ -66,8 +73,14 @@ class Commands(object):
   def login(smugmug, args):
     parser = argparse.ArgumentParser(
       prog='login', description='Login onto the SmugMug service')
-    parser.add_argument('--key', type=unicode, required=True, help='SmugMug API key')
-    parser.add_argument('--secret', type=unicode, required=True, help='SmugMug API secret')
+    parser.add_argument('--key',
+                        type=lambda s: unicode(s, 'utf8'),
+                        required=True,
+                        help='SmugMug API key')
+    parser.add_argument('--secret',
+                        type=lambda s: unicode(s, 'utf8'),
+                        required=True,
+                        help='SmugMug API secret')
     parsed = parser.parse_args(args)
 
     smugmug.login((parsed.key, parsed.secret))
@@ -88,9 +101,17 @@ class Commands(object):
   def ls(smugmug, args):
     parser = argparse.ArgumentParser(
       prog='ls', description='List the content of a folder or album.')
-    parser.add_argument('path', type=unicode, nargs='?', default=os.sep, help='Path to list.')
-    parser.add_argument('-l', help='Show details.', action='store_true')
-    parser.add_argument('-u', '--user', type=unicode, default='',
+    parser.add_argument('path',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='?',
+                        default=os.sep,
+                        help='Path to list.')
+    parser.add_argument('-l',
+                        help='Show details.',
+                        action='store_true')
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
                         help=('User whose SmugMug account is to be accessed. '
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
@@ -113,9 +134,15 @@ class Commands(object):
   def upload(smugmug, args):
     parser = argparse.ArgumentParser(
       prog='upload', description='Upload files to SmugMug.')
-    parser.add_argument('src', type=unicode, nargs='+', help='Files to upload.')
-    parser.add_argument('album', type=unicode, help='Path to the album.')
-    parser.add_argument('-u', '--user', type=unicode, default='',
+    parser.add_argument('src',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='+', help='Files to upload.')
+    parser.add_argument('album',
+                        type=lambda s: unicode(s, 'utf8'),
+                        help='Path to the album.')
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
                         help=('User whose SmugMug account is to be accessed. '
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
@@ -127,13 +154,20 @@ class Commands(object):
     parser = argparse.ArgumentParser(
       prog='sync',
       description='Synchronize all local albums with SmugMug.')
-    parser.add_argument('source', type=unicode, nargs='*', default=u'*',
+    parser.add_argument('source',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='*',
+                        default=u'*',
                         help=('Folder to sync. Defaults to the local folder. '
                               'Uploads the current folder by default.'))
-    parser.add_argument('-t', '--target', type=unicode, default=os.sep,
+    parser.add_argument('-t', '--target',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default=os.sep,
                         help=('The destination folder in which to upload data. '
                               'Uploads to the root folder by default.'))
-    parser.add_argument('-u', '--user', type=unicode, default='',
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
                         help=('User whose SmugMug account is to be accessed. '
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
@@ -145,7 +179,9 @@ class Commands(object):
     parser = argparse.ArgumentParser(
       prog='ignore',
       description='Mark paths to be ignored during sync.')
-    parser.add_argument('paths', type=unicode, nargs='+',
+    parser.add_argument('paths',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='+',
                         help=('List of paths to ignore during sync.'))
     parsed = parser.parse_args(args)
     Helpers.ignore_or_include(smugmug, parsed.paths, True)
@@ -157,7 +193,9 @@ class Commands(object):
       description=('Mark paths to be included during sync. '
                    'Everything is included by default, this commands is used to '
                    'negate the effect of the "ignore" command.'))
-    parser.add_argument('paths', type=unicode, nargs='+',
+    parser.add_argument('paths',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='+',
                         help=('List of paths to include during sync.'))
     parsed = parser.parse_args(args)
     Helpers.ignore_or_include(smugmug, parsed.paths, False)
@@ -175,8 +213,10 @@ def main():
   smugmug_shell.SmugMugShell.set_commands(commands)
 
   parser = argparse.ArgumentParser(description='SmugMug commandline interface.')
-  parser.add_argument('command', type=unicode, choices=commands.keys(),
-                 help='The command to run.')
+  parser.add_argument('command',
+                      type=lambda s: unicode(s, 'utf8'),
+                      choices=commands.keys(),
+                      help='The command to run.')
   parser.add_argument('args', nargs=argparse.REMAINDER)
   args = parser.parse_args()
 

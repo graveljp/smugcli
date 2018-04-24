@@ -1,918 +1,918 @@
 {
-    "Code": 200,
-    "Message": "Ok",
-    "Options": {
-        "Methods": [
-            "GET"
-        ],
-        "ParameterDescription": {
-            "Select": "Select MIN_COUNT to MAX_COUNT options.  Options should pass only the \"Value\".  When passing more then one value, use an array."
-        },
-        "Parameters": {
-            "GET": [
-                {
-                    "Default": "All",
-                    "MAX_COUNT": "ALL",
-                    "MIN_COUNT": 1,
-                    "Name": "Type",
-                    "OPTIONS": [
-                        "All",
-                        "Folder",
-                        "Album",
-                        "Page",
-                        "System Album"
-                    ],
-                    "ReadOnly": false,
-                    "Required": false,
-                    "Type": "Select"
-                },
-                {
-                    "Default": "Organizer",
-                    "MAX_COUNT": 1,
-                    "MIN_COUNT": 1,
-                    "Name": "SortMethod",
-                    "OPTIONS": [
-                        "DateAdded",
-                        "DateModified",
-                        "Name",
-                        "Organizer"
-                    ],
-                    "ReadOnly": false,
-                    "Required": false,
-                    "Type": "Select"
-                },
-                {
-                    "Default": "Ascending",
-                    "MAX_COUNT": 1,
-                    "MIN_COUNT": 1,
-                    "Name": "SortDirection",
-                    "OPTIONS": [
-                        "Ascending",
-                        "Descending"
-                    ],
-                    "ReadOnly": false,
-                    "Required": false,
-                    "Type": "Select"
-                }
-            ]
-        }
+  "Code": 200,
+  "Message": "Ok",
+  "Options": {
+    "Methods": [
+      "GET"
+    ],
+    "ParameterDescription": {
+      "Select": "Select MIN_COUNT to MAX_COUNT options.  Options should pass only the \"Value\".  When passing more then one value, use an array."
     },
-    "Response": {
-        "EndpointType": "ChildNodes",
-        "Locator": "Node",
-        "LocatorType": "Objects",
-        "Node": [
-            {
-                "DateAdded": "2014-09-13T01:08:32+00:00",
-                "DateModified": "2014-11-25T23:18:13+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "San Francisco by helicopter 2014"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "San Francisco by helicopter 2014",
-                "NodeID": "Tm2d3",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Descending",
-                "SortIndex": 1,
-                "SortMethod": "DateModified",
-                "Type": "Album",
-                "Uri": "/api/v2/node/Tm2d3",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/DDnhRD",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/Tm2d3",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Tm2d3!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Tm2d3!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Tm2d3!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Tm2d3!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "San-Francisco-by-helicopter",
-                "UrlPath": "/Photography/San-Francisco-by-helicopter",
-                "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-by-helicopter"
-            },
-            {
-                "DateAdded": "2008-07-09T00:42:39+00:00",
-                "DateModified": "2012-09-06T01:59:36+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "SmugMug homepage slide show"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "SmugMug homepage slide show",
-                "NodeID": "SH5wj",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 2,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/SH5wj",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/GxmcTJ",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/SH5wj",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/SH5wj!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/SH5wj!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/SH5wj!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/SH5wj!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "SmugMug-homepage-slide-show",
-                "UrlPath": "/Photography/SmugMug-homepage-slide-show",
-                "WebUri": "https://cmac.smugmug.com/Photography/SmugMug-homepage-slide-show"
-            },
-            {
-                "DateAdded": "2009-07-09T19:36:30+00:00",
-                "DateModified": "2009-07-10T23:48:05+00:00",
-                "Description": "<strong style=\"font-size:14px;\">Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw.</strong>",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "<strong style=\"font-size:14px;\">Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw.</strong>",
-                        "text": "Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw."
-                    },
-                    "Name": {
-                        "html": "New Journal style: Big photos!"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "New Journal style: Big photos!",
-                "NodeID": "XQK5g",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 3,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/XQK5g",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/JpDnz7",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/XQK5g",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/XQK5g!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/XQK5g!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/XQK5g!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/XQK5g!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "New-Journal-style-Big-photos",
-                "UrlPath": "/Photography/New-Journal-style-Big-photos",
-                "WebUri": "https://cmac.smugmug.com/Photography/New-Journal-style-Big-photos"
-            },
-            {
-                "DateAdded": "2013-07-14T18:11:29+00:00",
-                "DateModified": "2013-07-14T18:11:29+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "Samples from my new 200-400"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Samples from my new 200-400",
-                "NodeID": "WJZCB",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 4,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/WJZCB",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/TPvQ8Z",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/WJZCB",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/WJZCB!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/WJZCB!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/WJZCB!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/WJZCB!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Samples-from-my-new-200-400",
-                "UrlPath": "/Photography/Samples-from-my-new-200-400",
-                "WebUri": "https://cmac.smugmug.com/Photography/Samples-from-my-new-200-400"
-            },
-            {
-                "DateAdded": "2008-11-28T21:17:02+00:00",
-                "DateModified": "2009-01-09T03:31:20+00:00",
-                "Description": "I wrote up some details about the making of in <a href=\"http://blogs.smugmug.com/don/2008/11/30/first-1080p-video-from-canons-new-5d-mkii-amazing/\">Don's blog</a>.",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "I wrote up some details about the making of in <a href=\"http://blogs.smugmug.com/don/2008/11/30/first-1080p-video-from-canons-new-5d-mkii-amazing/\">Don's blog</a>.",
-                        "text": "I wrote up some details about the making of in Don's blog."
-                    },
-                    "Name": {
-                        "html": "Paris and San Franciso videos by night"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Paris and San Franciso videos by night",
-                "NodeID": "Hd2GM",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 5,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/Hd2GM",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/RjNddV",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/Hd2GM",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Hd2GM!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Hd2GM!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Hd2GM!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Hd2GM!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Paris-and-San-Franciso-videos",
-                "UrlPath": "/Photography/Paris-and-San-Franciso-videos",
-                "WebUri": "https://cmac.smugmug.com/Photography/Paris-and-San-Franciso-videos"
-            },
-            {
-                "DateAdded": "2011-08-16T22:20:35+00:00",
-                "DateModified": "2011-09-19T17:10:13+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "Jackson Hole"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Jackson Hole",
-                "NodeID": "c7bw5",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 6,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/c7bw5",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/WwTXSf",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/c7bw5",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/c7bw5!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/c7bw5!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/c7bw5!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/c7bw5!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Jackson-Hole",
-                "UrlPath": "/Photography/Jackson-Hole",
-                "WebUri": "https://cmac.smugmug.com/Photography/Jackson-Hole"
-            },
-            {
-                "DateAdded": "2008-08-27T04:16:37+00:00",
-                "DateModified": "2013-01-11T01:19:47+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "San Francisco skyline"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "San Francisco skyline",
-                "NodeID": "Dt9Nw",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 7,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/Dt9Nw",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/ThnTb6",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/Dt9Nw",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Dt9Nw!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Dt9Nw!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/Dt9Nw!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/Dt9Nw!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "San-Francisco-skyline",
-                "UrlPath": "/Photography/San-Francisco-skyline",
-                "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-skyline"
-            },
-            {
-                "DateAdded": "2011-04-12T22:01:17+00:00",
-                "DateModified": "2011-04-16T04:38:20+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "Giant prints for SmugMug&#039;s walls"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Giant prints for SmugMug's walls",
-                "NodeID": "tC57D",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 8,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/tC57D",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/b2DTWk",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/tC57D",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/tC57D!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/tC57D!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/tC57D!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/tC57D!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Giant-prints-for-SmugMugs",
-                "UrlPath": "/Photography/Giant-prints-for-SmugMugs",
-                "WebUri": "https://cmac.smugmug.com/Photography/Giant-prints-for-SmugMugs"
-            },
-            {
-                "DateAdded": "2009-09-30T22:40:32+00:00",
-                "DateModified": "2009-09-30T22:44:39+00:00",
-                "Description": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions.",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions.",
-                        "text": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions."
-                    },
-                    "Name": {
-                        "html": "Testing video on the new Canon 7D"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Testing video on the new Canon 7D",
-                "NodeID": "v9q2F",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 9,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/v9q2F",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/HZ7cvC",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/v9q2F",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/v9q2F!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/v9q2F!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/v9q2F!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/v9q2F!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Testing-video-new-Canon-7D",
-                "UrlPath": "/Photography/Testing-video-new-Canon-7D",
-                "WebUri": "https://cmac.smugmug.com/Photography/Testing-video-new-Canon-7D"
-            },
-            {
-                "DateAdded": "2009-06-26T23:20:09+00:00",
-                "DateModified": "2009-07-10T07:01:44+00:00",
-                "Description": "",
-                "EffectiveSecurityType": "None",
-                "FormattedValues": {
-                    "Description": {
-                        "html": "",
-                        "text": ""
-                    },
-                    "Name": {
-                        "html": "Pictures I loved from the week"
-                    }
-                },
-                "HasChildren": false,
-                "IsRoot": false,
-                "Keywords": [],
-                "Name": "Pictures I loved from the week",
-                "NodeID": "CTchX",
-                "PasswordHint": "",
-                "ResponseLevel": "Public",
-                "SecurityType": "None",
-                "ShowCoverImage": false,
-                "SortDirection": "Ascending",
-                "SortIndex": 10,
-                "SortMethod": "SortIndex",
-                "Type": "Album",
-                "Uri": "/api/v2/node/CTchX",
-                "UriDescription": "Node with the given id.",
-                "Uris": {
-                    "Album": {
-                        "EndpointType": "Album",
-                        "Locator": "Album",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/album/kwDJs7",
-                        "UriDescription": "Album by key"
-                    },
-                    "HighlightImage": {
-                        "EndpointType": "HighlightImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/highlight/node/CTchX",
-                        "UriDescription": "Highlight image for a folder, album, or page"
-                    },
-                    "NodeComments": {
-                        "EndpointType": "NodeComments",
-                        "Locator": "Comment",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/CTchX!comments",
-                        "UriDescription": "Comments on a Node"
-                    },
-                    "NodeCoverImage": {
-                        "EndpointType": "NodeCoverImage",
-                        "Locator": "Image",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/CTchX!cover",
-                        "UriDescription": "Cover image for a folder, album, or page"
-                    },
-                    "ParentNode": {
-                        "EndpointType": "ParentNode",
-                        "Locator": "Node",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/node/CTchX!parent",
-                        "UriDescription": "Parent node of the given node."
-                    },
-                    "ParentNodes": {
-                        "EndpointType": "ParentNodes",
-                        "Locator": "Node",
-                        "LocatorType": "Objects",
-                        "Uri": "/api/v2/node/CTchX!parents",
-                        "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                    },
-                    "User": {
-                        "EndpointType": "User",
-                        "Locator": "User",
-                        "LocatorType": "Object",
-                        "Uri": "/api/v2/user/cmac",
-                        "UriDescription": "User By Nickname"
-                    }
-                },
-                "UrlName": "Pictures-I-loved-from-the-week",
-                "UrlPath": "/Photography/Pictures-I-loved-from-the-week",
-                "WebUri": "https://cmac.smugmug.com/Photography/Pictures-I-loved-from-the-week"
-            }
-        ],
-        "Pages": {
-            "Count": 10,
-            "FirstPage": "/api/v2/node/n83bK!children?start=1&count=10",
-            "LastPage": "/api/v2/node/n83bK!children?start=11&count=10",
-            "NextPage": "/api/v2/node/n83bK!children?start=11&count=10",
-            "RequestedCount": 10,
-            "Start": 1,
-            "Total": 16
+    "Parameters": {
+      "GET": [
+        {
+          "Default": "All",
+          "MAX_COUNT": "ALL",
+          "MIN_COUNT": 1,
+          "Name": "Type",
+          "OPTIONS": [
+            "All",
+            "Folder",
+            "Album",
+            "Page",
+            "System Album"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
         },
-        "Uri": "/api/v2/node/n83bK!children",
-        "UriDescription": "Child nodes of the given node."
+        {
+          "Default": "Organizer",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortMethod",
+          "OPTIONS": [
+            "DateAdded",
+            "DateModified",
+            "Name",
+            "Organizer"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        },
+        {
+          "Default": "Ascending",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortDirection",
+          "OPTIONS": [
+            "Ascending",
+            "Descending"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        }
+      ]
     }
+  },
+  "Response": {
+    "EndpointType": "ChildNodes",
+    "Locator": "Node",
+    "LocatorType": "Objects",
+    "Node": [
+      {
+        "DateAdded": "2014-09-13T01:08:32+00:00",
+        "DateModified": "2014-11-25T23:18:13+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "San Francisco by helicopter 2014"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "San Francisco by helicopter 2014",
+        "NodeID": "Tm2d3",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Descending",
+        "SortIndex": 1,
+        "SortMethod": "DateModified",
+        "Type": "Album",
+        "Uri": "/api/v2/node/Tm2d3",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/DDnhRD",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/Tm2d3",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Tm2d3!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Tm2d3!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Tm2d3!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Tm2d3!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "San-Francisco-by-helicopter",
+        "UrlPath": "/Photography/San-Francisco-by-helicopter",
+        "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-by-helicopter"
+      },
+      {
+        "DateAdded": "2008-07-09T00:42:39+00:00",
+        "DateModified": "2012-09-06T01:59:36+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "SmugMug homepage slide show"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "SmugMug homepage slide show",
+        "NodeID": "SH5wj",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 2,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/SH5wj",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/GxmcTJ",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/SH5wj",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/SH5wj!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/SH5wj!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/SH5wj!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/SH5wj!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "SmugMug-homepage-slide-show",
+        "UrlPath": "/Photography/SmugMug-homepage-slide-show",
+        "WebUri": "https://cmac.smugmug.com/Photography/SmugMug-homepage-slide-show"
+      },
+      {
+        "DateAdded": "2009-07-09T19:36:30+00:00",
+        "DateModified": "2009-07-10T23:48:05+00:00",
+        "Description": "<strong style=\"font-size:14px;\">Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw.</strong>",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "<strong style=\"font-size:14px;\">Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw.</strong>",
+            "text": "Big monitor?  \u00a0Widen your browser and Drop.  Your.  Jaw."
+          },
+          "Name": {
+            "html": "New Journal style: Big photos!"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "New Journal style: Big photos!",
+        "NodeID": "XQK5g",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 3,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/XQK5g",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/JpDnz7",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/XQK5g",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/XQK5g!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/XQK5g!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/XQK5g!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/XQK5g!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "New-Journal-style-Big-photos",
+        "UrlPath": "/Photography/New-Journal-style-Big-photos",
+        "WebUri": "https://cmac.smugmug.com/Photography/New-Journal-style-Big-photos"
+      },
+      {
+        "DateAdded": "2013-07-14T18:11:29+00:00",
+        "DateModified": "2013-07-14T18:11:29+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Samples from my new 200-400"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Samples from my new 200-400",
+        "NodeID": "WJZCB",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 4,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/WJZCB",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/TPvQ8Z",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/WJZCB",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/WJZCB!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/WJZCB!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/WJZCB!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/WJZCB!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Samples-from-my-new-200-400",
+        "UrlPath": "/Photography/Samples-from-my-new-200-400",
+        "WebUri": "https://cmac.smugmug.com/Photography/Samples-from-my-new-200-400"
+      },
+      {
+        "DateAdded": "2008-11-28T21:17:02+00:00",
+        "DateModified": "2009-01-09T03:31:20+00:00",
+        "Description": "I wrote up some details about the making of in <a href=\"http://blogs.smugmug.com/don/2008/11/30/first-1080p-video-from-canons-new-5d-mkii-amazing/\">Don's blog</a>.",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "I wrote up some details about the making of in <a href=\"http://blogs.smugmug.com/don/2008/11/30/first-1080p-video-from-canons-new-5d-mkii-amazing/\">Don's blog</a>.",
+            "text": "I wrote up some details about the making of in Don's blog."
+          },
+          "Name": {
+            "html": "Paris and San Franciso videos by night"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Paris and San Franciso videos by night",
+        "NodeID": "Hd2GM",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 5,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/Hd2GM",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/RjNddV",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/Hd2GM",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Hd2GM!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Hd2GM!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Hd2GM!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Hd2GM!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Paris-and-San-Franciso-videos",
+        "UrlPath": "/Photography/Paris-and-San-Franciso-videos",
+        "WebUri": "https://cmac.smugmug.com/Photography/Paris-and-San-Franciso-videos"
+      },
+      {
+        "DateAdded": "2011-08-16T22:20:35+00:00",
+        "DateModified": "2011-09-19T17:10:13+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Jackson Hole"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Jackson Hole",
+        "NodeID": "c7bw5",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 6,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/c7bw5",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/WwTXSf",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/c7bw5",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/c7bw5!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/c7bw5!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/c7bw5!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/c7bw5!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Jackson-Hole",
+        "UrlPath": "/Photography/Jackson-Hole",
+        "WebUri": "https://cmac.smugmug.com/Photography/Jackson-Hole"
+      },
+      {
+        "DateAdded": "2008-08-27T04:16:37+00:00",
+        "DateModified": "2013-01-11T01:19:47+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "San Francisco skyline"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "San Francisco skyline",
+        "NodeID": "Dt9Nw",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 7,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/Dt9Nw",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/ThnTb6",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/Dt9Nw",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Dt9Nw!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Dt9Nw!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/Dt9Nw!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/Dt9Nw!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "San-Francisco-skyline",
+        "UrlPath": "/Photography/San-Francisco-skyline",
+        "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-skyline"
+      },
+      {
+        "DateAdded": "2011-04-12T22:01:17+00:00",
+        "DateModified": "2011-04-16T04:38:20+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Giant prints for SmugMug&#039;s walls"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Giant prints for SmugMug's walls",
+        "NodeID": "tC57D",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 8,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/tC57D",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/b2DTWk",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/tC57D",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/tC57D!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/tC57D!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/tC57D!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/tC57D!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Giant-prints-for-SmugMugs",
+        "UrlPath": "/Photography/Giant-prints-for-SmugMugs",
+        "WebUri": "https://cmac.smugmug.com/Photography/Giant-prints-for-SmugMugs"
+      },
+      {
+        "DateAdded": "2009-09-30T22:40:32+00:00",
+        "DateModified": "2009-09-30T22:44:39+00:00",
+        "Description": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions.",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions.",
+            "text": "I took my new Canon 7D to SF for the evening to compare its video to my 5D MKII under tough conditions."
+          },
+          "Name": {
+            "html": "Testing video on the new Canon 7D"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Testing video on the new Canon 7D",
+        "NodeID": "v9q2F",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 9,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/v9q2F",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/HZ7cvC",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/v9q2F",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/v9q2F!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/v9q2F!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/v9q2F!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/v9q2F!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Testing-video-new-Canon-7D",
+        "UrlPath": "/Photography/Testing-video-new-Canon-7D",
+        "WebUri": "https://cmac.smugmug.com/Photography/Testing-video-new-Canon-7D"
+      },
+      {
+        "DateAdded": "2009-06-26T23:20:09+00:00",
+        "DateModified": "2009-07-10T07:01:44+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Pictures I loved from the week"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Pictures I loved from the week",
+        "NodeID": "CTchX",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 10,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/CTchX",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/kwDJs7",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/CTchX",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/CTchX!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/CTchX!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/CTchX!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/CTchX!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Pictures-I-loved-from-the-week",
+        "UrlPath": "/Photography/Pictures-I-loved-from-the-week",
+        "WebUri": "https://cmac.smugmug.com/Photography/Pictures-I-loved-from-the-week"
+      }
+    ],
+    "Pages": {
+      "Count": 10,
+      "FirstPage": "/api/v2/node/n83bK!children?count=10&start=1",
+      "LastPage": "/api/v2/node/n83bK!children?count=10&start=11",
+      "NextPage": "/api/v2/node/n83bK!children?count=10&start=11",
+      "RequestedCount": 10,
+      "Start": 1,
+      "Total": 16
+    },
+    "Uri": "/api/v2/node/n83bK!children?count=10&start=1",
+    "UriDescription": "Child nodes of the given node."
+  }
 }

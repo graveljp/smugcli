@@ -1,5 +1,6 @@
 import smugcli
 import smugmug
+import test_utils
 
 import json
 import mock
@@ -21,20 +22,7 @@ class TestSmugCLI(unittest.TestCase):
     self._cmd_output = StringIO.StringIO()
     sys.stdout = self._cmd_output
 
-    responses.add(responses.GET, API_ROOT + '/api/v2!authuser',
-                  json=json.load(open('testdata/authuser.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/user/cmac',
-                  json=json.load(open('testdata/user.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/zx4Fx',
-                  json=json.load(open('testdata/root_node.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/zx4Fx!children',
-                  json=json.load(open('testdata/root_children.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/n83bK!children',
-                  json=json.load(open('testdata/folder_children.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/album/DDnhRD',
-                  json=json.load(open('testdata/album.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/album/DDnhRD!images',
-                  json=json.load(open('testdata/album_images.json')))
+    test_utils.add_mock_requests(responses)
 
   def tearDown(self):
     sys.stdout = self._original_stdout
@@ -56,7 +44,13 @@ class TestSmugCLI(unittest.TestCase):
      u'San Francisco skyline\n'
      u'Giant prints for SmugMug\'s walls\n'
      u'Testing video on the new Canon 7D\n'
-     u'Pictures I loved from the week\n'),
+     u'Pictures I loved from the week\n'
+     u'Baldy\'s first experiments with HDR\n'
+     u'Canon 30D versus Fuji S5 image comparisons\n'
+     u'Mac color tests\n'
+     u'Ofoto, Shutterfly, EZprints compared\n'
+     u'Printing services test prints\n'
+     u'Quantum Q Flash 5D\n'),
 
     (['/Photography/San Francisco by helicopter 2014'],
      u'DSC_5752.jpg\n'
@@ -79,10 +73,10 @@ class TestSmugCLI(unittest.TestCase):
      u'Logan Leia wave pool.jpg\n'),
 
     (['/Photography/invalid'],
-     '"invalid" not found in folder "Photography"\n'),
+     '"invalid" not found in "Photography"\n'),
 
     (['/Photography/inval\xc3\xafd'],
-     u'"inval\xefd" not found in folder "Photography"\n')])
+     u'"inval\xefd" not found in "Photography"\n')])
   @responses.activate
   def test_ls(self, command_line, expected_message):
     smugcli.Commands.ls(self._smugmug, command_line)

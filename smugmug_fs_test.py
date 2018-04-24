@@ -1,11 +1,9 @@
-import responses
 import smugmug
 import smugmug_fs
+import test_utils
 
-import json
+import responses
 import unittest
-
-API_ROOT = 'https://api.smugmug.com'
 
 class TestSmugMugFS(unittest.TestCase):
 
@@ -13,16 +11,7 @@ class TestSmugMugFS(unittest.TestCase):
     self._smugmug = smugmug.FakeSmugMug()
     self._fs = self._smugmug._fs
 
-    responses.add(responses.GET, API_ROOT + '/api/v2!authuser',
-                  json=json.load(open('testdata/authuser.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/user/cmac',
-                  json=json.load(open('testdata/user.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/zx4Fx',
-                  json=json.load(open('testdata/root_node.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/zx4Fx!children',
-                  json=json.load(open('testdata/root_children.json')))
-    responses.add(responses.GET, API_ROOT + '/api/v2/node/n83bK!children',
-                  json=json.load(open('testdata/folder_children.json')))
+    test_utils.add_mock_requests(responses)
 
   @responses.activate
   def test_get_root_node(self):
@@ -31,17 +20,23 @@ class TestSmugMugFS(unittest.TestCase):
   @responses.activate
   def test_get_children(self):
     root_node = self._fs.get_root_node('cmac')
-    root_children = self._fs.get_children(root_node)
-    self.assertEquals(len(root_children), 10)
-    self.assertEquals(root_children[2]['Name'], 'Photography')
+    root_children = list(self._fs.get_children(root_node))
+    self.assertEquals(len(root_children), 17)
+    folder_name, folder_node = root_children[3]
+    self.assertEquals(folder_name, 'Photography')
+    self.assertEquals(folder_node['Name'], 'Photography')
 
-    photography = root_children[2]
-    photography_children = self._fs.get_children(photography)
-    self.assertEquals(len(photography_children), 10)
-    self.assertEquals(photography_children[0]['Name'],
-                      'San Francisco by helicopter 2014')
+    folder_children = list(self._fs.get_children(folder_node))
+    self.assertEquals(len(folder_children), 16)
+    album_name, album_node = folder_children[0]
+    self.assertEquals(album_name, 'San Francisco by helicopter 2014')
+    self.assertEquals(album_node['Name'], 'San Francisco by helicopter 2014')
 
-    self.assertEquals(self._fs.get_children(photography_children[0]), [])
+    album_children = list(self._fs.get_children(album_node))
+    self.assertEquals(len(album_children), 18)
+    file_name, file_node = album_children[0]
+    self.assertEquals(file_name, 'DSC_5752.jpg')
+    self.assertEquals(file_node['FileName'], 'DSC_5752.jpg')
 
   @responses.activate
   def test_get_child(self):

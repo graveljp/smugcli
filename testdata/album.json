@@ -1,138 +1,139 @@
 {
-    "Code": 200,
-    "Message": "Ok",
-    "Response": {
-        "Album": {
-            "AlbumKey": "DDnhRD",
-            "AllowDownloads": true,
-            "CanShare": true,
-            "Description": "",
-            "External": true,
-            "ImageCount": 18,
-            "ImagesLastUpdated": "2014-11-25T23:18:53+00:00",
-            "Keywords": "",
-            "LastUpdated": "2014-11-25T23:18:13+00:00",
-            "Name": "San Francisco by helicopter 2014",
-            "NiceName": "San-Francisco-by-helicopter",
-            "NodeID": "Tm2d3",
-            "PasswordHint": "",
-            "Protected": false,
-            "ResponseLevel": "Public",
-            "SecurityType": "None",
-            "SortDirection": "Ascending",
-            "SortMethod": "Position",
-            "Title": "San Francisco by helicopter 2014",
-            "Uri": "/api/v2/album/DDnhRD",
-            "UriDescription": "Album by key",
-            "Uris": {
-                "AlbumComments": {
-                    "EndpointType": "AlbumComments",
-                    "Locator": "Comment",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!comments",
-                    "UriDescription": "Comments on album"
-                },
-                "AlbumDownload": {
-                    "EndpointType": "AlbumDownload",
-                    "Locator": "Download",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!download",
-                    "UriDescription": "Download album"
-                },
-                "AlbumGeoMedia": {
-                    "EndpointType": "AlbumGeoMedia",
-                    "Locator": "AlbumImage",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!geomedia",
-                    "UriDescription": "Geotagged images from album"
-                },
-                "AlbumHighlightImage": {
-                    "EndpointType": "AlbumHighlightImage",
-                    "Locator": "AlbumImage",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/album/DDnhRD!highlightimage",
-                    "UriDescription": "Highlight image for album"
-                },
-                "AlbumImages": {
-                    "EndpointType": "AlbumImages",
-                    "Locator": "AlbumImage",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!images",
-                    "UriDescription": "Images from album"
-                },
-                "AlbumPopularMedia": {
-                    "EndpointType": "AlbumPopularMedia",
-                    "Locator": "AlbumImage",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!popularmedia",
-                    "UriDescription": "Popular images from album"
-                },
-                "AlbumPrices": {
-                    "EndpointType": "AlbumPrices",
-                    "Locator": "CatalogSkuPrice",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/album/DDnhRD!prices",
-                    "UriDescription": "Purchasable Skus"
-                },
-                "AlbumShareUris": {
-                    "EndpointType": "AlbumShareUris",
-                    "Locator": "AlbumShareUris",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/album/DDnhRD!shareuris",
-                    "UriDescription": "URIs that are useful for sharing"
-                },
-                "Folder": {
-                    "EndpointType": "Folder",
-                    "Locator": "Folder",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/folder/user/cmac/Photography",
-                    "UriDescription": "A folder or legacy (sub)category by UrlPath"
-                },
-                "HighlightImage": {
-                    "EndpointType": "HighlightImage",
-                    "Locator": "Image",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/highlight/node/Tm2d3",
-                    "UriDescription": "Highlight image for a folder, album, or page"
-                },
-                "Node": {
-                    "EndpointType": "Node",
-                    "Locator": "Node",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/node/Tm2d3",
-                    "UriDescription": "Node with the given id."
-                },
-                "NodeCoverImage": {
-                    "EndpointType": "NodeCoverImage",
-                    "Locator": "Image",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/node/Tm2d3!cover",
-                    "UriDescription": "Cover image for a folder, album, or page"
-                },
-                "ParentFolders": {
-                    "EndpointType": "ParentFolders",
-                    "Locator": "Folder",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/folder/user/cmac/Photography!parents",
-                    "UriDescription": "The sequence of parent folders, from the given folder to the root"
-                },
-                "User": {
-                    "EndpointType": "User",
-                    "Locator": "User",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/user/cmac",
-                    "UriDescription": "User By Nickname"
-                }
-            },
-            "UrlName": "San-Francisco-by-helicopter",
-            "UrlPath": "/Photography/San-Francisco-by-helicopter",
-            "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-by-helicopter"
+  "Code": 200,
+  "Message": "Ok",
+  "Response": {
+    "Album": {
+      "AlbumKey": "DDnhRD",
+      "AllowDownloads": true,
+      "CanShare": true,
+      "Description": "",
+      "External": true,
+      "HasDownloadPassword": false,
+      "ImageCount": 18,
+      "ImagesLastUpdated": "2014-11-25T23:18:53+00:00",
+      "Keywords": "",
+      "LastUpdated": "2014-11-25T23:18:13+00:00",
+      "Name": "San Francisco by helicopter 2014",
+      "NiceName": "San-Francisco-by-helicopter",
+      "NodeID": "Tm2d3",
+      "PasswordHint": "",
+      "Protected": false,
+      "ResponseLevel": "Public",
+      "SecurityType": "None",
+      "SortDirection": "Ascending",
+      "SortMethod": "Position",
+      "Title": "San Francisco by helicopter 2014",
+      "Uri": "/api/v2/album/DDnhRD",
+      "UriDescription": "Album by key",
+      "Uris": {
+        "AlbumComments": {
+          "EndpointType": "AlbumComments",
+          "Locator": "Comment",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!comments",
+          "UriDescription": "Comments on album"
         },
-        "DocUri": "https://api.smugmug.com/api/v2/doc/reference/album.html",
-        "EndpointType": "Album",
-        "Locator": "Album",
-        "LocatorType": "Object",
-        "Uri": "/api/v2/album/DDnhRD",
-        "UriDescription": "Album by key"
-    }
+        "AlbumDownload": {
+          "EndpointType": "AlbumDownload",
+          "Locator": "Download",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!download",
+          "UriDescription": "Download album"
+        },
+        "AlbumGeoMedia": {
+          "EndpointType": "AlbumGeoMedia",
+          "Locator": "AlbumImage",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!geomedia",
+          "UriDescription": "Geotagged images from album"
+        },
+        "AlbumHighlightImage": {
+          "EndpointType": "AlbumHighlightImage",
+          "Locator": "AlbumImage",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/album/DDnhRD!highlightimage",
+          "UriDescription": "Highlight image for album"
+        },
+        "AlbumImages": {
+          "EndpointType": "AlbumImages",
+          "Locator": "AlbumImage",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!images",
+          "UriDescription": "Images from album"
+        },
+        "AlbumPopularMedia": {
+          "EndpointType": "AlbumPopularMedia",
+          "Locator": "AlbumImage",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!popularmedia",
+          "UriDescription": "Popular images from album"
+        },
+        "AlbumPrices": {
+          "EndpointType": "AlbumPrices",
+          "Locator": "CatalogSkuPrice",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/album/DDnhRD!prices",
+          "UriDescription": "Purchasable Skus"
+        },
+        "AlbumShareUris": {
+          "EndpointType": "AlbumShareUris",
+          "Locator": "AlbumShareUris",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/album/DDnhRD!shareuris",
+          "UriDescription": "URIs that are useful for sharing"
+        },
+        "Folder": {
+          "EndpointType": "Folder",
+          "Locator": "Folder",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/folder/user/cmac/Photography",
+          "UriDescription": "A folder or legacy (sub)category by UrlPath"
+        },
+        "HighlightImage": {
+          "EndpointType": "HighlightImage",
+          "Locator": "Image",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/highlight/node/Tm2d3",
+          "UriDescription": "Highlight image for a folder, album, or page"
+        },
+        "Node": {
+          "EndpointType": "Node",
+          "Locator": "Node",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/node/Tm2d3",
+          "UriDescription": "Node with the given id."
+        },
+        "NodeCoverImage": {
+          "EndpointType": "NodeCoverImage",
+          "Locator": "Image",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/node/Tm2d3!cover",
+          "UriDescription": "Cover image for a folder, album, or page"
+        },
+        "ParentFolders": {
+          "EndpointType": "ParentFolders",
+          "Locator": "Folder",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/folder/user/cmac/Photography!parents",
+          "UriDescription": "The sequence of parent folders, from the given folder to the root"
+        },
+        "User": {
+          "EndpointType": "User",
+          "Locator": "User",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/user/cmac",
+          "UriDescription": "User By Nickname"
+        }
+      },
+      "UrlName": "San-Francisco-by-helicopter",
+      "UrlPath": "/Photography/San-Francisco-by-helicopter",
+      "WebUri": "https://cmac.smugmug.com/Photography/San-Francisco-by-helicopter"
+    },
+    "DocUri": "https://api.smugmug.com/api/v2/doc/reference/album.html",
+    "EndpointType": "Album",
+    "Locator": "Album",
+    "LocatorType": "Object",
+    "Uri": "/api/v2/album/DDnhRD",
+    "UriDescription": "Album by key"
+  }
 }

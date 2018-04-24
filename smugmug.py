@@ -19,41 +19,86 @@ class NotLoggedInError(Error):
   """Error raised if the user is not logged in."""
 
 
-class Wrapper(object):
+class PageIterator:
+  def __init__(self, smugmug, json):
+    self._smugmug = smugmug
+    self._global_index = 0
+    self._set_page(json)
+
+  def _set_page(self, json):
+    response = json['Response']
+    locator = response['Locator']
+    self._pages = response.get('Pages', {})
+    self._page_content = response.get(locator, [])
+    self._page_index = 0
+
+  def __len__(self):
+    return self._page.get('Total')
+
+  def __next__(self):
+    return next()
+
+  def next(self):
+    if self._global_index >= self._pages.get('Total'):
+      raise StopIteration
+
+    if self._global_index >= self._pages['Start'] + self._pages['Count'] - 1:
+      self._set_page(self._smugmug.get_json(self._pages['NextPage']))
+
+    result = self._page_content[self._page_index]
+    self._global_index += 1
+    self._page_index += 1
+
+    return Node(self._smugmug, result)
+
+
+class NodeList(object):
   def __init__(self, smugmug, json):
     self._smugmug = smugmug
     self._json = json
 
-  def get(self, endpoint, **kwargs):
-    uri = self.uri(endpoint)
+  def __iter__(self):
+    return PageIterator(self._smugmug, self._json)
+
+  def __len__(self):
+    return self._json['Response'].get('Pages', {}).get('Total')
+
+
+class Node(object):
+  def __init__(self, smugmug, json):
+    self._smugmug = smugmug
+    self._json = json
+
+  @property
+  def json(self):
+    return self._json
+
+  def get(self, url_name, **kwargs):
+    uri = self.uri(url_name)
     return self._smugmug.get(uri, **kwargs) if uri else None
 
-  def post(self, endpoint, data=None, json=None, **kwargs):
-    uri = self.uri(endpoint)
+  def post(self, uri_name, data=None, json=None, **kwargs):
+    uri = self.uri(uri_name)
     if not uri:
       return None
     return self._smugmug.post(uri, data, json, **kwargs)
 
-  def patch(self, endpoint, data=None, json=None, **kwargs):
-    uri = self.uri(endpoint)
+  def patch(self, uri_name, data=None, json=None, **kwargs):
+    uri = self.uri(uri_name)
     return self._smugmug.patch(uri, data, json, **kwargs)
 
-  def upload(self, endpoint, filename, data, headers=None):
-    uri = self.uri(endpoint)
+  def upload(self, uri_name, filename, data, headers=None):
+    uri = self.uri(uri_name)
     return self._smugmug.upload(uri, filename, data, headers)
 
-  def uri(self, endpoint):
-    return self._json['Uris'].get(endpoint, {}).get('Uri')
+  def uri(self, url_name):
+    return self._json.get('Uris', {}).get(url_name, {}).get('Uri')
 
-  def __getitem__(self, index):
-    item = self._json[index]
-    if isinstance(item, (dict, list)):
-      return Wrapper(self._smugmug, item)
-    else:
-      return item
+  def __getitem__(self, key):
+    return self._json[key]
 
-  def __len__(self):
-    return len(self._json)
+  def __contains__(self, key):
+    return key in self._json
 
   def __eq__(self, other):
     return self._json == other
@@ -61,9 +106,15 @@ class Wrapper(object):
   def __ne__(self, other):
     return self._json != other
 
-  @property
-  def json(self):
-    return self._json
+
+def Wrapper(smugmug, json):
+  response = json['Response']
+  if 'Pages' in response:
+    return NodeList(smugmug, json)
+  else:
+    locator = response['Locator']
+    endpoint = response[locator]
+    return Node(smugmug, endpoint)
 
 
 class SmugMug(object):
@@ -125,10 +176,8 @@ class SmugMug(object):
                         **kwargs).json()
 
   def get(self, path, **kwargs):
-    reply = self.get_json(path + '?count=100000', **kwargs)
-    response = reply['Response']
-    locator = response['Locator']
-    return Wrapper(self, response[locator]) if locator in response else None
+    reply = self.get_json(path, **kwargs)
+    return Wrapper(self, reply)
 
   def post(self, path, data=None, json=None, **kwargs):
     return requests.post(API_ROOT + path,
@@ -158,6 +207,8 @@ class SmugMug(object):
 
 class FakeSmugMug(SmugMug):
   def __init__(self, config=None):
+    config = config or {}
+    config['page_size'] = 10
     super(FakeSmugMug, self).__init__(config or {})
 
   @property

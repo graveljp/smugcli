@@ -1,0 +1,582 @@
+{
+  "Code": 200,
+  "Message": "Ok",
+  "Options": {
+    "Methods": [
+      "GET"
+    ],
+    "ParameterDescription": {
+      "Select": "Select MIN_COUNT to MAX_COUNT options.  Options should pass only the \"Value\".  When passing more then one value, use an array."
+    },
+    "Parameters": {
+      "GET": [
+        {
+          "Default": "All",
+          "MAX_COUNT": "ALL",
+          "MIN_COUNT": 1,
+          "Name": "Type",
+          "OPTIONS": [
+            "All",
+            "Folder",
+            "Album",
+            "Page",
+            "System Album"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        },
+        {
+          "Default": "Organizer",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortMethod",
+          "OPTIONS": [
+            "DateAdded",
+            "DateModified",
+            "Name",
+            "Organizer"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        },
+        {
+          "Default": "Ascending",
+          "MAX_COUNT": 1,
+          "MIN_COUNT": 1,
+          "Name": "SortDirection",
+          "OPTIONS": [
+            "Ascending",
+            "Descending"
+          ],
+          "ReadOnly": false,
+          "Required": false,
+          "Type": "Select"
+        }
+      ]
+    }
+  },
+  "Response": {
+    "EndpointType": "ChildNodes",
+    "Locator": "Node",
+    "LocatorType": "Objects",
+    "Node": [
+      {
+        "DateAdded": "2008-09-07T19:36:08+00:00",
+        "DateModified": "2008-09-13T06:55:28+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Baldy&#039;s first experiments with HDR"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Baldy's first experiments with HDR",
+        "NodeID": "hN3kj",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 11,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/hN3kj",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/gWmLxk",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/hN3kj",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/hN3kj!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/hN3kj!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/hN3kj!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/hN3kj!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Baldys-first-experiments-with",
+        "UrlPath": "/Photography/Baldys-first-experiments-with",
+        "WebUri": "https://cmac.smugmug.com/Photography/Baldys-first-experiments-with"
+      },
+      {
+        "DateAdded": "1970-01-01T00:00:00+00:00",
+        "DateModified": "2007-04-20T17:46:09+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Canon 30D versus Fuji S5 image comparisons"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Canon 30D versus Fuji S5 image comparisons",
+        "NodeID": "2m9Zb",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 12,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/2m9Zb",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/Bfdddp",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/2m9Zb",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/2m9Zb!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/2m9Zb!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/2m9Zb!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/2m9Zb!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Canon-30D-versus-Fuji-S5-image",
+        "UrlPath": "/Photography/Canon-30D-versus-Fuji-S5-image",
+        "WebUri": "https://cmac.smugmug.com/Photography/Canon-30D-versus-Fuji-S5-image"
+      },
+      {
+        "DateAdded": "1970-01-01T00:00:00+00:00",
+        "DateModified": "2007-02-10T22:31:59+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Mac color tests"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Mac color tests",
+        "NodeID": "QLHBJ",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 13,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/QLHBJ",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/R8H9CS",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/QLHBJ",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/QLHBJ!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/QLHBJ!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/QLHBJ!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/QLHBJ!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Mac-color-tests",
+        "UrlPath": "/Photography/Mac-color-tests",
+        "WebUri": "https://cmac.smugmug.com/Photography/Mac-color-tests"
+      },
+      {
+        "DateAdded": "1970-01-01T00:00:00+00:00",
+        "DateModified": "2007-09-14T01:42:43+00:00",
+        "Description": "Scans of 20 test prints sent to 12 labs.  Ofoto (red dot), Shutterfly (yellow dot), and EZprints (blue dots) were finalists for best.  Blue dot: autoenhance off.  Double blue: autoenhance on.  30 customers ranging from pro photographers to consumers we asked to pick best and worst of each set of 4.  Red bars represent votes for worst, green for best.",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "Scans of 20 test prints sent to 12 labs.  Ofoto (red dot), Shutterfly (yellow dot), and EZprints (blue dots) were finalists for best.  Blue dot: autoenhance off.  Double blue: autoenhance on.  30 customers ranging from pro photographers to consumers we asked to pick best and worst of each set of 4.  Red bars represent votes for worst, green for best.",
+            "text": "Scans of 20 test prints sent to 12 labs.  Ofoto (red dot), Shutterfly (yellow dot), and EZprints (blue dots) were finalists for best.  Blue dot: autoenhance off.  Double blue: autoenhance on.  30 customers ranging from pro photographers to consumers we asked to pick best and worst of each set of 4.  Red bars represent votes for worst, green for best."
+          },
+          "Name": {
+            "html": "Ofoto, Shutterfly, EZprints compared"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Ofoto, Shutterfly, EZprints compared",
+        "NodeID": "PSwb3",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 16,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/PSwb3",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/xrD8GS",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/PSwb3",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/PSwb3!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/PSwb3!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/PSwb3!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/PSwb3!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Ofoto-Shutterfly-EZprints",
+        "UrlPath": "/Photography/Ofoto-Shutterfly-EZprints",
+        "WebUri": "https://cmac.smugmug.com/Photography/Ofoto-Shutterfly-EZprints"
+      },
+      {
+        "DateAdded": "1970-01-01T00:00:00+00:00",
+        "DateModified": "2004-10-01T21:05:50+00:00",
+        "Description": "",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "",
+            "text": ""
+          },
+          "Name": {
+            "html": "Printing services test prints"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Printing services test prints",
+        "NodeID": "M56df",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 17,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/M56df",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/TzRzjw",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/M56df",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/M56df!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/M56df!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/M56df!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/M56df!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Printing-services-test-prints",
+        "UrlPath": "/Photography/Printing-services-test-prints",
+        "WebUri": "https://cmac.smugmug.com/Photography/Printing-services-test-prints"
+      },
+      {
+        "DateAdded": "2008-05-11T18:13:18+00:00",
+        "DateModified": "2008-05-12T00:28:48+00:00",
+        "Description": "After struggling with Canon flashes with every kind of Gary Fong adaptor, etc., I finally found relief with a QFlash.",
+        "EffectiveSecurityType": "None",
+        "FormattedValues": {
+          "Description": {
+            "html": "After struggling with Canon flashes with every kind of Gary Fong adaptor, etc., I finally found relief with a QFlash.",
+            "text": "After struggling with Canon flashes with every kind of Gary Fong adaptor, etc., I finally found relief with a QFlash."
+          },
+          "Name": {
+            "html": "Quantum Q Flash 5D"
+          }
+        },
+        "HasChildren": false,
+        "IsRoot": false,
+        "Keywords": [],
+        "Name": "Quantum Q Flash 5D",
+        "NodeID": "BrXTg",
+        "PasswordHint": "",
+        "ResponseLevel": "Public",
+        "SecurityType": "None",
+        "ShowCoverImage": false,
+        "SortDirection": "Ascending",
+        "SortIndex": 18,
+        "SortMethod": "SortIndex",
+        "Type": "Album",
+        "Uri": "/api/v2/node/BrXTg",
+        "UriDescription": "Node with the given id.",
+        "Uris": {
+          "Album": {
+            "EndpointType": "Album",
+            "Locator": "Album",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/album/5WZ89X",
+            "UriDescription": "Album by key"
+          },
+          "HighlightImage": {
+            "EndpointType": "HighlightImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/highlight/node/BrXTg",
+            "UriDescription": "Highlight image for a folder, album, or page"
+          },
+          "NodeComments": {
+            "EndpointType": "NodeComments",
+            "Locator": "Comment",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/BrXTg!comments",
+            "UriDescription": "Comments on a Node"
+          },
+          "NodeCoverImage": {
+            "EndpointType": "NodeCoverImage",
+            "Locator": "Image",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/BrXTg!cover",
+            "UriDescription": "Cover image for a folder, album, or page"
+          },
+          "ParentNode": {
+            "EndpointType": "ParentNode",
+            "Locator": "Node",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/node/BrXTg!parent",
+            "UriDescription": "Parent node of the given node."
+          },
+          "ParentNodes": {
+            "EndpointType": "ParentNodes",
+            "Locator": "Node",
+            "LocatorType": "Objects",
+            "Uri": "/api/v2/node/BrXTg!parents",
+            "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+          },
+          "User": {
+            "EndpointType": "User",
+            "Locator": "User",
+            "LocatorType": "Object",
+            "Uri": "/api/v2/user/cmac",
+            "UriDescription": "User By Nickname"
+          }
+        },
+        "UrlName": "Quantum-Q-Flash-5D",
+        "UrlPath": "/Photography/Quantum-Q-Flash-5D",
+        "WebUri": "https://cmac.smugmug.com/Photography/Quantum-Q-Flash-5D"
+      }
+    ],
+    "Pages": {
+      "Count": 6,
+      "FirstPage": "/api/v2/node/n83bK!children?count=10&start=1",
+      "LastPage": "/api/v2/node/n83bK!children?count=10&start=11",
+      "PrevPage": "/api/v2/node/n83bK!children?count=10&start=1",
+      "RequestedCount": 10,
+      "Start": 11,
+      "Total": 16
+    },
+    "Uri": "/api/v2/node/n83bK!children?count=10&start=11",
+    "UriDescription": "Child nodes of the given node."
+  }
+}

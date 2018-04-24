@@ -2,6 +2,7 @@ import base64
 import collections
 import glob
 import itertools
+import json
 import md5
 import os
 import smugmug
@@ -20,12 +21,24 @@ class SmugMugFS(object):
     return self._smugmug.get('/api/v2/user/%s' % user).get('Node')
 
   def get_children(self, node, params=None):
-    return node.get('ChildNodes') or smugmug.Wrapper(self._smugmug, [])
+    if 'Type' not in node:
+      return
+
+    params = params or {}
+    params['start'] = 1
+    params['count'] = self._smugmug.config.get('page_size', 1000)
+
+    if node['Type'] == 'Album':
+      for child in node.get('Album').get('AlbumImages', params=params) or []:
+        yield child['FileName'], child
+    else:
+      for child in node.get('ChildNodes', params=params) or []:
+        yield child['Name'], child
 
   def get_child(self, parent, child_name, params=None):
-    for node in self.get_children(parent, params):
-      if node['Name'] == child_name:
-        return node
+    for name, child in self.get_children(parent, params):
+      if name == child_name:
+        return child
     return None
 
   def path_to_node(self, user, path):
@@ -47,21 +60,18 @@ class SmugMugFS(object):
     user = user or self._smugmug.get_auth_user()
     node, matched, unmatched = self.path_to_node(user, path)
     if unmatched:
-      print '"%s" not found in folder "%s"' % (unmatched[0], os.sep.join(matched))
+      print '"%s" not found in "%s"' % (unmatched[0], os.sep.join(matched))
       return
 
-    if node['Type'] == 'Album':
-      children = node.get('Album').get('AlbumImages') or []
-      names = [child['FileName'] for child in children]
-    else:
-      children = node.get('ChildNodes') or []
-      names = [child['Name'] for child in children]
+    if 'FileName' in node:
+      print path
+      return
 
-    if details:
-      print json.dumps(children.json, sort_keys=True, indent=2,
-                       separators=(',', ': '))
-    else:
-      for name in names:
+    for name, child in self.get_children(node):
+      if details:
+        print json.dumps(child.json, sort_keys=True, indent=2,
+                         separators=(',', ': '))
+      else:
         print name
 
   def make_childnode(self, node, path, params=None):
@@ -260,12 +270,6 @@ class SmugMugFS(object):
 
   def _get_child_nodes_by_name(self, node):
     child_by_name = collections.defaultdict(list)
-
-    if node['Type'] == 'Album':
-      for child in node.get('Album').get('AlbumImages') or []:
-        child_by_name[child['FileName']].append(child)
-    else:
-      for child in node.get('ChildNodes') or []:
-        child_by_name[child['Name']].append(child)
-
+    for name, child in self.get_children(node):
+      child_by_name[name].append(child)
     return child_by_name

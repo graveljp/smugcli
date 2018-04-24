@@ -1,94 +1,94 @@
 {
-    "Code": 200,
-    "Message": "Ok",
-    "Response": {
-        "EndpointType": "Node",
-        "Locator": "Node",
-        "LocatorType": "Object",
-        "Node": {
-            "DateAdded": "2013-07-13T22:44:07+00:00",
-            "DateModified": "2013-07-28T00:27:50+00:00",
-            "Description": "",
-            "EffectiveSecurityType": "None",
-            "FormattedValues": {
-                "Description": {
-                    "html": "",
-                    "text": ""
-                },
-                "Name": {
-                    "html": ""
-                }
-            },
-            "HasChildren": true,
-            "IsRoot": true,
-            "Keywords": [],
-            "Name": "",
-            "NodeID": "zx4Fx",
-            "PasswordHint": "",
-            "ResponseLevel": "Public",
-            "SecurityType": "None",
-            "ShowCoverImage": false,
-            "SortDirection": "Ascending",
-            "SortMethod": "SortIndex",
-            "Type": "Folder",
-            "Uri": "/api/v2/node/zx4Fx",
-            "UriDescription": "Node with the given id.",
-            "Uris": {
-                "ChildNodes": {
-                    "EndpointType": "ChildNodes",
-                    "Locator": "Node",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/node/zx4Fx!children",
-                    "UriDescription": "Child nodes of the given node."
-                },
-                "FolderByID": {
-                    "EndpointType": "FolderByID",
-                    "Locator": "Folder",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/folder/id/zx4Fx",
-                    "UriDescription": "Get folder by its ID"
-                },
-                "HighlightImage": {
-                    "EndpointType": "HighlightImage",
-                    "Locator": "Image",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/highlight/node/zx4Fx",
-                    "UriDescription": "Highlight image for a folder, album, or page"
-                },
-                "NodeComments": {
-                    "EndpointType": "NodeComments",
-                    "Locator": "Comment",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/node/zx4Fx!comments",
-                    "UriDescription": "Comments on a Node"
-                },
-                "NodeCoverImage": {
-                    "EndpointType": "NodeCoverImage",
-                    "Locator": "Image",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/node/zx4Fx!cover",
-                    "UriDescription": "Cover image for a folder, album, or page"
-                },
-                "ParentNodes": {
-                    "EndpointType": "ParentNodes",
-                    "Locator": "Node",
-                    "LocatorType": "Objects",
-                    "Uri": "/api/v2/node/zx4Fx!parents",
-                    "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
-                },
-                "User": {
-                    "EndpointType": "User",
-                    "Locator": "User",
-                    "LocatorType": "Object",
-                    "Uri": "/api/v2/user/cmac",
-                    "UriDescription": "User By Nickname"
-                }
-            },
-            "UrlName": "",
-            "UrlPath": "/",
-            "WebUri": "https://cmac.smugmug.com"
+  "Code": 200,
+  "Message": "Ok",
+  "Response": {
+    "EndpointType": "Node",
+    "Locator": "Node",
+    "LocatorType": "Object",
+    "Node": {
+      "DateAdded": "2013-07-13T22:44:07+00:00",
+      "DateModified": "2013-07-28T00:27:50+00:00",
+      "Description": "",
+      "EffectiveSecurityType": "None",
+      "FormattedValues": {
+        "Description": {
+          "html": "",
+          "text": ""
         },
-        "Uri": "/api/v2/node/zx4Fx",
-        "UriDescription": "Node with the given id."
-    }
+        "Name": {
+          "html": ""
+        }
+      },
+      "HasChildren": true,
+      "IsRoot": true,
+      "Keywords": [],
+      "Name": "",
+      "NodeID": "zx4Fx",
+      "PasswordHint": "",
+      "ResponseLevel": "Public",
+      "SecurityType": "None",
+      "ShowCoverImage": false,
+      "SortDirection": "Ascending",
+      "SortMethod": "SortIndex",
+      "Type": "Folder",
+      "Uri": "/api/v2/node/zx4Fx",
+      "UriDescription": "Node with the given id.",
+      "Uris": {
+        "ChildNodes": {
+          "EndpointType": "ChildNodes",
+          "Locator": "Node",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/node/zx4Fx!children",
+          "UriDescription": "Child nodes of the given node."
+        },
+        "FolderByID": {
+          "EndpointType": "FolderByID",
+          "Locator": "Folder",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/folder/id/zx4Fx",
+          "UriDescription": "Get folder by its ID"
+        },
+        "HighlightImage": {
+          "EndpointType": "HighlightImage",
+          "Locator": "Image",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/highlight/node/zx4Fx",
+          "UriDescription": "Highlight image for a folder, album, or page"
+        },
+        "NodeComments": {
+          "EndpointType": "NodeComments",
+          "Locator": "Comment",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/node/zx4Fx!comments",
+          "UriDescription": "Comments on a Node"
+        },
+        "NodeCoverImage": {
+          "EndpointType": "NodeCoverImage",
+          "Locator": "Image",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/node/zx4Fx!cover",
+          "UriDescription": "Cover image for a folder, album, or page"
+        },
+        "ParentNodes": {
+          "EndpointType": "ParentNodes",
+          "Locator": "Node",
+          "LocatorType": "Objects",
+          "Uri": "/api/v2/node/zx4Fx!parents",
+          "UriDescription": "Hierarchy of nodes from the given node (inclusive) to the root node."
+        },
+        "User": {
+          "EndpointType": "User",
+          "Locator": "User",
+          "LocatorType": "Object",
+          "Uri": "/api/v2/user/cmac",
+          "UriDescription": "User By Nickname"
+        }
+      },
+      "UrlName": "",
+      "UrlPath": "/",
+      "WebUri": "https://cmac.smugmug.com"
+    },
+    "Uri": "/api/v2/node/zx4Fx",
+    "UriDescription": "Node with the given id."
+  }
 }

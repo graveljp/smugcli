@@ -3,6 +3,7 @@ import smugmug
 
 import json
 import mock
+from parameterized import parameterized
 import responses
 import StringIO
 import sys
@@ -44,50 +45,48 @@ class TestSmugCLI(unittest.TestCase):
     self.assertEqual(json.loads(self._cmd_output.getvalue()),
                      json.load(open('testdata/root_node.json')))
 
-  @responses.activate
-  def test_ls_folder(self):
-    smugcli.Commands.ls(self._smugmug, ['/Photography/'])
-    self.assertEqual(self._cmd_output.getvalue(),
-                     u'San Francisco by helicopter 2014\n'
-                     u'SmugMug homepage slide show\n'
-                     u'New Journal style: Big photos!\n'
-                     u'Samples from my new 200-400\n'
-                     u'Paris and San Franciso videos by night\n'
-                     u'Jackson Hole\n'
-                     u'San Francisco skyline\n'
-                     u'Giant prints for SmugMug\'s walls\n'
-                     u'Testing video on the new Canon 7D\n'
-                     u'Pictures I loved from the week\n')
+  @parameterized.expand([
+    (['/Photography/'],
+     u'San Francisco by helicopter 2014\n'
+     u'SmugMug homepage slide show\n'
+     u'New Journal style: Big photos!\n'
+     u'Samples from my new 200-400\n'
+     u'Paris and San Franciso videos by night\n'
+     u'Jackson Hole\n'
+     u'San Francisco skyline\n'
+     u'Giant prints for SmugMug\'s walls\n'
+     u'Testing video on the new Canon 7D\n'
+     u'Pictures I loved from the week\n'),
 
-  @responses.activate
-  def test_ls_album(self):
-    smugcli.Commands.ls(self._smugmug,
-                        ['/Photography/San Francisco by helicopter 2014'])
-    self.assertEqual(self._cmd_output.getvalue(),
-                     u'DSC_5752.jpg\n'
-                     u'DSC_5903.jpg\n'
-                     u'DSC_5932.jpg\n'
-                     u'DSC_5947.jpg\n'
-                     u'DSC_5978.jpg\n'
-                     u'SF by air for 48 inch print-5978.jpg\n'
-                     u'DSC_6023.jpg\n'
-                     u'DSC_6069.jpg\n'
-                     u'DSC_6110.jpg\n'
-                     u'DSC_5626.jpg\n'
-                     u'DSC_5657.jpg\n'
-                     u'Von Wong-2807.jpg\n'
-                     u'Von Wong-009783.jpg\n'
-                     u'Von Wong-009789.jpg\n'
-                     u'Von Wong-009812.jpg\n'
-                     u'Von Wong-009906.jpg\n'
-                     u'DSC_4933.jpg\n'
-                     u'Logan Leia wave pool.jpg\n')
+    (['/Photography/San Francisco by helicopter 2014'],
+     u'DSC_5752.jpg\n'
+     u'DSC_5903.jpg\n'
+     u'DSC_5932.jpg\n'
+     u'DSC_5947.jpg\n'
+     u'DSC_5978.jpg\n'
+     u'SF by air for 48 inch print-5978.jpg\n'
+     u'DSC_6023.jpg\n'
+     u'DSC_6069.jpg\n'
+     u'DSC_6110.jpg\n'
+     u'DSC_5626.jpg\n'
+     u'DSC_5657.jpg\n'
+     u'Von Wong-2807.jpg\n'
+     u'Von Wong-009783.jpg\n'
+     u'Von Wong-009789.jpg\n'
+     u'Von Wong-009812.jpg\n'
+     u'Von Wong-009906.jpg\n'
+     u'DSC_4933.jpg\n'
+     u'Logan Leia wave pool.jpg\n'),
 
+    (['/Photography/invalid'],
+     '"invalid" not found in folder "Photography"\n'),
+
+    (['/Photography/inval\xc3\xafd'],
+     u'"inval\xefd" not found in folder "Photography"\n')])
   @responses.activate
-  def test_ls_invalid_sub_folder(self):
-    smugcli.Commands.ls(self._smugmug, ['/Photography/invalid'])
-    self.assertEqual(self._cmd_output.getvalue(),
-                     '"invalid" not found in "Photography"\n')
+  def test_ls(self, command_line, expected_message):
+    smugcli.Commands.ls(self._smugmug, command_line)
+    self.assertEqual(self._cmd_output.getvalue(), expected_message)
 
   def test_mkdir(self):
     with responses.RequestsMock(assert_all_requests_are_fired=True) as rsps:

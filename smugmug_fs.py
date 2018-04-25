@@ -72,13 +72,11 @@ class SmugMugFS(object):
       print '"%s" not found in "%s"' % (unmatched[0], os.sep.join(matched))
       return
 
-    if 'FileName' in node:
-      print path
-      return
+    nodes = [(path, node)] if 'FileName' in node else self.get_children(node)
 
-    for name, child in self.get_children(node):
+    for name, node in nodes:
       if details:
-        print json.dumps(child.json, sort_keys=True, indent=2,
+        print json.dumps(node.json, sort_keys=True, indent=2,
                          separators=(',', ': '))
       else:
         print name

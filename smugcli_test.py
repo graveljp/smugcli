@@ -1,5 +1,6 @@
 import smugcli
 import smugmug
+import smugmug_fs
 import test_utils
 
 import json
@@ -16,7 +17,7 @@ API_ROOT = 'https://api.smugmug.com'
 class TestSmugCLI(unittest.TestCase):
 
   def setUp(self):
-    self._smugmug = smugmug.FakeSmugMug()
+    self._fs = smugmug_fs.SmugMugFS(smugmug.FakeSmugMug())
 
     self._original_stdout = sys.stdout
     self._cmd_output = StringIO.StringIO()
@@ -29,7 +30,7 @@ class TestSmugCLI(unittest.TestCase):
 
   @responses.activate
   def test_get(self):
-    smugcli.Commands.get(self._smugmug, ['/api/v2/node/zx4Fx'])
+    smugcli.Commands.get(self._fs, ['/api/v2/node/zx4Fx'])
     self.assertEqual(json.loads(self._cmd_output.getvalue()),
                      json.load(open('testdata/root_node.json')))
 
@@ -79,7 +80,7 @@ class TestSmugCLI(unittest.TestCase):
      u'"inval\xefd" not found in "Photography"\n')])
   @responses.activate
   def test_ls(self, command_line, expected_message):
-    smugcli.Commands.ls(self._smugmug, command_line)
+    smugcli.Commands.ls(self._fs, command_line)
     self.assertEqual(self._cmd_output.getvalue(), expected_message)
 
   def test_mkdir(self):
@@ -111,7 +112,7 @@ class TestSmugCLI(unittest.TestCase):
         responses.GET, API_ROOT + '/api/v2/node/XWx8t!children',
         json=json.load(open('testdata/smugmug_node_children_mkdir.json')))
 
-      smugcli.Commands.mkdir(self._smugmug, ['/SmugMug/smugcli-test'])
+      smugcli.Commands.mkdir(self._fs, ['/SmugMug/smugcli-test'])
       self.assertEqual(self._cmd_output.getvalue(), u'')  # No errors printed
 
 if __name__ == '__main__':

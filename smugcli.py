@@ -11,6 +11,7 @@ import requests
 import urlparse
 
 import smugmug as smugmug_lib
+import smugmug_fs
 import smugmug_shell
 
 
@@ -19,7 +20,7 @@ CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
 class Helpers(object):
   @staticmethod
-  def mknode(smugmug, args, node_type, parser):
+  def mknode(fs, args, node_type, parser):
     parser.add_argument('path',
                         type=lambda s: unicode(s, 'utf8'),
                         help='%s to create.' % node_type)
@@ -38,13 +39,13 @@ class Helpers(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    smugmug.fs.make_node(parsed.user, parsed.path, parsed.p, {
+    fs.make_node(parsed.user, parsed.path, parsed.p, {
       'Type': node_type,
       'Privacy': parsed.privacy.title(),
     })
 
   @staticmethod
-  def ignore_or_include(smugmug, paths, ignore):
+  def ignore_or_include(paths, ignore):
     files_by_folder = collections.defaultdict(list)
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
@@ -70,7 +71,7 @@ class Helpers(object):
 
 class Commands(object):
   @staticmethod
-  def login(smugmug, args):
+  def login(fs, args):
     parser = argparse.ArgumentParser(
       prog='login', description='Login onto the SmugMug service')
     parser.add_argument('--key',
@@ -83,22 +84,22 @@ class Commands(object):
                         help='SmugMug API secret')
     parsed = parser.parse_args(args)
 
-    smugmug.login((parsed.key, parsed.secret))
+    fs.smugmug.login((parsed.key, parsed.secret))
 
   @staticmethod
-  def logout(smugmug, args):
-    smugmug.logout()
+  def logout(fs, args):
+    fs.smugmug.logout()
 
   @staticmethod
-  def get(smugmug, args):
+  def get(fs, args):
     url = args[0]
     scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
     params = urlparse.parse_qs(query)
-    result = smugmug.get_json(path, params=params)
+    result = fs.smugmug.get_json(path, params=params)
     print json.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
 
   @staticmethod
-  def ls(smugmug, args):
+  def ls(fs, args):
     parser = argparse.ArgumentParser(
       prog='ls', description='List the content of a folder or album.')
     parser.add_argument('path',
@@ -116,22 +117,22 @@ class Commands(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    smugmug.fs.ls(parsed.user, parsed.path, parsed.l)
+    fs.ls(parsed.user, parsed.path, parsed.l)
 
   @staticmethod
-  def mkdir(smugmug, args):
+  def mkdir(fs, args):
     parser = argparse.ArgumentParser(
       prog='mkdir', description='Create a folder.')
-    Helpers.mknode(smugmug, args, 'Folder', parser)
+    Helpers.mknode(fs, args, 'Folder', parser)
 
   @staticmethod
-  def mkalbum(smugmug, args):
+  def mkalbum(fs, args):
     parser = argparse.ArgumentParser(
       prog='mkalbum', description='Create a album.')
-    Helpers.mknode(smugmug, args, 'Album', parser)
+    Helpers.mknode(fs, args, 'Album', parser)
 
   @staticmethod
-  def upload(smugmug, args):
+  def upload(fs, args):
     parser = argparse.ArgumentParser(
       prog='upload', description='Upload files to SmugMug.')
     parser.add_argument('src',
@@ -147,10 +148,10 @@ class Commands(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    smugmug.fs.upload(parsed.user, parsed.src, parsed.album)
+    fs.upload(parsed.user, parsed.src, parsed.album)
 
   @staticmethod
-  def sync(smugmug, args):
+  def sync(fs, args):
     parser = argparse.ArgumentParser(
       prog='sync',
       description='Synchronize all local albums with SmugMug.')
@@ -172,10 +173,10 @@ class Commands(object):
                               'Uses the logged-on user by default.'))
     parsed = parser.parse_args(args)
 
-    smugmug.fs.sync(parsed.user, parsed.source, parsed.target)
+    fs.sync(parsed.user, parsed.source, parsed.target)
 
   @staticmethod
-  def ignore(smugmug, args):
+  def ignore(fs, args):
     parser = argparse.ArgumentParser(
       prog='ignore',
       description='Mark paths to be ignored during sync.')
@@ -184,10 +185,10 @@ class Commands(object):
                         nargs='+',
                         help=('List of paths to ignore during sync.'))
     parsed = parser.parse_args(args)
-    Helpers.ignore_or_include(smugmug, parsed.paths, True)
+    Helpers.ignore_or_include(parsed.paths, True)
 
   @staticmethod
-  def include(smugmug, args):
+  def include(fs, args):
     parser = argparse.ArgumentParser(
       prog='include',
       description=('Mark paths to be included during sync. '
@@ -198,11 +199,11 @@ class Commands(object):
                         nargs='+',
                         help=('List of paths to include during sync.'))
     parsed = parser.parse_args(args)
-    Helpers.ignore_or_include(smugmug, parsed.paths, False)
+    Helpers.ignore_or_include(parsed.paths, False)
 
   @staticmethod
-  def shell(smugmug, args):
-    shell = smugmug_shell.SmugMugShell(smugmug)
+  def shell(fs, args):
+    shell = smugmug_shell.SmugMugShell(fs)
     shell.cmdloop()
 
 
@@ -228,9 +229,10 @@ def main():
     return
 
   smugmug = smugmug_lib.SmugMug(config)
+  fs = smugmug_fs.SmugMugFS(smugmug)
 
   try:
-    commands[args.command](smugmug, args.args)
+    commands[args.command](fs, args.args)
   except smugmug_lib.NotLoggedInError:
     return
 

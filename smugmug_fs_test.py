@@ -8,8 +8,7 @@ import unittest
 class TestSmugMugFS(unittest.TestCase):
 
   def setUp(self):
-    self._smugmug = smugmug.FakeSmugMug()
-    self._fs = self._smugmug._fs
+    self._fs = smugmug_fs.SmugMugFS(smugmug.FakeSmugMug())
 
     test_utils.add_mock_requests(responses)
 

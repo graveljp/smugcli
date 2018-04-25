@@ -17,6 +17,10 @@ class SmugMugFS(object):
   def __init__(self, smugmug):
     self._smugmug = smugmug
 
+  @property
+  def smugmug(self):
+    return self._smugmug
+
   def get_root_node(self, user):
     return self._smugmug.get('/api/v2/user/%s' % user).get('Node')
 

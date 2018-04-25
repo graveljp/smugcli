@@ -7,16 +7,16 @@ class SmugMugShell(cmd.Cmd):
   prompt = '(smugmug) '
   file = None
 
-  def __init__(self, smugmug):
+  def __init__(self, fs):
     cmd.Cmd.__init__(self)
-    self._smugmug = smugmug
+    self._fs = fs
 
   @classmethod
   def set_commands(cls, commands):
     def build_handler(callback):
       def handler(self, args):
         try:
-          callback(self._smugmug, args.split())
+          callback(self._fs, args.split())
         except:
           pass
       return handler

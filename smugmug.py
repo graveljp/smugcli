@@ -165,10 +165,6 @@ class SmugMug(object):
   def get_auth_user(self):
     return self.get('/api/v2!authuser')['NickName']
 
-  @property
-  def fs(self):
-    return self._fs
-
   def get_json(self, path, **kwargs):
     return requests.get(API_ROOT + path,
                         headers={'Accept': 'application/json'},

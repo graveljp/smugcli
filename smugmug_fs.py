@@ -17,6 +17,11 @@ class SmugMugFS(object):
   def __init__(self, smugmug):
     self._smugmug = smugmug
 
+    # Pre-compute some common variables.
+    self._media_ext = [
+      ext.lower() for ext in
+      self.smugmug.config.get('media_extensions', DEFAULT_MEDIA_EXT)]
+
   @property
   def smugmug(self):
     return self._smugmug
@@ -258,7 +263,7 @@ class SmugMugFS(object):
   def _is_media(self, path):
     isfile = os.path.isfile(path)
     extension = os.path.splitext(path)[1].lower()
-    return isfile and (extension in MEDIA_EXT)
+    return isfile and (extension in self._media_ext)
 
   def _read_local_dir(self, path):
 

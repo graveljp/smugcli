@@ -11,7 +11,7 @@ import persistent_dict
 
 Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
 
-MEDIA_EXT = ['.jpg', '.jpeg', '.mov', '.mp4']
+DEFAULT_MEDIA_EXT = ['.gif', '.jpeg', '.jpg', '.mov', '.mp4', '.png']
 
 class SmugMugFS(object):
   def __init__(self, smugmug):

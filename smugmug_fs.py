@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 import collections
 import glob
 import itertools
@@ -12,6 +13,7 @@ import persistent_dict
 Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
 
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
+VIDEO_EXT = ['mov', 'mp4']
 
 class SmugMugFS(object):
   def __init__(self, smugmug):
@@ -239,10 +241,20 @@ class SmugMugFS(object):
 
     if remote_matches:
       remote_file = remote_matches[0]
-      file_md5 = md5.new(file_content).hexdigest()
-      if remote_file['ArchivedMD5'] == file_md5:
+      if remote_file['Format'].lower() in VIDEO_EXT:
+        remote_time = remote_file.get('ImageMetadata')['DateTimeModified']
+        file_time = datetime.utcfromtimestamp(
+          os.path.getmtime(file_path)).strftime('%Y-%m-%dT%H:%M:%S')
+        same_file = (remote_time == file_time)
+      else:
+        remote_md5 = remote_file['ArchivedMD5']
+        file_md5 = md5.new(file_content).hexdigest()
+        same_file = (remote_md5 == file_md5)
+
+      if same_file:
         pass  # File already exists on Smugmug
       else:
+
         print 'File "%s" exists, but has changed. Re-uploading.' % file_path
         remote_file.upload('Album', file_name, file_content,
                            headers={'X-Smug-ImageUri': remote_file.uri('Image')})

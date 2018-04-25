@@ -11,7 +11,7 @@ import persistent_dict
 
 Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
 
-DEFAULT_MEDIA_EXT = ['.gif', '.jpeg', '.jpg', '.mov', '.mp4', '.png']
+DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
 
 class SmugMugFS(object):
   def __init__(self, smugmug):
@@ -90,8 +90,9 @@ class SmugMugFS(object):
       print '"%s" is of type "%s".' % (parent, node['Type'])
       return None
 
+    remote_name = name.strip()
     node_params = {
-      'Name': name,
+      'Name': remote_name,
       'Privacy': 'Public',
       'SortDirection': 'Ascending',
       'SortMethod': 'Name',
@@ -108,7 +109,7 @@ class SmugMugFS(object):
       print 'Server responded with %s' % str(response)
       return None
 
-    node = self.get_child(node, name)
+    node = self.get_child(node, remote_name)
     if not node:
       print 'Cannot find newly created node "%s"' % path
       return None
@@ -147,7 +148,7 @@ class SmugMugFS(object):
 
     for filename in filenames:
       node.upload('Album',
-                  os.path.basename(filename),
+                  os.path.basename(filename).strip(),
                   open(filename, 'rb').read())
 
   def sync(self, user, sources, target):
@@ -178,7 +179,7 @@ class SmugMugFS(object):
       self._recursive_sync(source, node, child_nodes)
 
   def _recursive_sync(self, current_folder, parent_node, current_nodes):
-    current_name = current_folder.split(os.sep)[-1]
+    current_name = current_folder.split(os.sep)[-1].strip()
     remote_matches = current_nodes.get(current_name, [])
     if len(remote_matches) > 1:
       print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
@@ -231,7 +232,7 @@ class SmugMugFS(object):
           self._sync_file(new_path, current_node, child_nodes)
 
   def _sync_file(self, file_path, album_node, album_children):
-    file_name = file_path.split(os.sep)[-1]
+    file_name = file_path.split(os.sep)[-1].strip()
     file_content = open(file_path, 'rb').read()
     remote_matches = album_children.get(file_name, [])
     if len(remote_matches) > 1:
@@ -252,7 +253,7 @@ class SmugMugFS(object):
       album_node.upload('Album', file_name, file_content)
 
   def _resursive_album_sync(self, current_folder, album_node, image_nodes):
-    current_name = current_folder.split(os.sep)[-1]
+    current_name = current_folder.split(os.sep)[-1].strip()
     remote_matches = current_nodes.get(current_name, [])
     if len(remote_matches) > 1:
       print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
@@ -262,7 +263,7 @@ class SmugMugFS(object):
 
   def _is_media(self, path):
     isfile = os.path.isfile(path)
-    extension = os.path.splitext(path)[1].lower()
+    extension = os.path.splitext(path)[1][1:].lower().strip()
     return isfile and (extension in self._media_ext)
 
   def _read_local_dir(self, path):

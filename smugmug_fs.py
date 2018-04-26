@@ -1,14 +1,19 @@
+import persistent_dict
+
 import base64
 from datetime import datetime
 import collections
 import glob
+from hachoir_metadata import extractMetadata
+from hachoir_parser import guessParser
+from hachoir_core.stream import StringInputStream
+from hachoir_core import config as hachoir_config
 import itertools
 import json
 import md5
 import os
-import smugmug
 
-import persistent_dict
+hachoir_config.quiet = True
 
 Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
 
@@ -242,9 +247,22 @@ class SmugMugFS(object):
     if remote_matches:
       remote_file = remote_matches[0]
       if remote_file['Format'].lower() in VIDEO_EXT:
-        remote_time = remote_file.get('ImageMetadata')['DateTimeModified']
-        file_time = datetime.utcfromtimestamp(
-          os.path.getmtime(file_path)).strftime('%Y-%m-%dT%H:%M:%S')
+        # Video files are modified by SmugMug server side, so we cannot use the
+        # MD5 to check if the file needs a re-sync. Use the last modification
+        # time instead.
+        remote_time = datetime.strptime(
+          remote_file.get('ImageMetadata')['DateTimeModified'],
+          '%Y-%m-%dT%H:%M:%S')
+
+        try:
+          parser = guessParser(StringInputStream(file_content))
+          metadata = extractMetadata(parser)
+          file_time = max(metadata.getValues('last_modification') +
+                          metadata.getValues('creation_date'))
+        except Exception as err:
+          print 'Failed extracting metadata for file "%s"' % file_path
+          file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+
         same_file = (remote_time == file_time)
       else:
         remote_md5 = remote_file['ArchivedMD5']
@@ -254,7 +272,6 @@ class SmugMugFS(object):
       if same_file:
         pass  # File already exists on Smugmug
       else:
-
         print 'File "%s" exists, but has changed. Re-uploading.' % file_path
         remote_file.upload('Album', file_name, file_content,
                            headers={'X-Smug-ImageUri': remote_file.uri('Image')})

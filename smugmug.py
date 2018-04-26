@@ -87,6 +87,10 @@ class Node(object):
     uri = self.uri(uri_name)
     return self._smugmug.patch(uri, data, json, **kwargs)
 
+  def delete(self, **kwargs):
+    uri = self._json.get('Uri')
+    return self._smugmug.delete(uri, **kwargs)
+
   def upload(self, uri_name, filename, data, headers=None):
     uri = self.uri(uri_name)
     return self._smugmug.upload(uri, filename, data, headers)
@@ -188,6 +192,11 @@ class SmugMug(object):
                           headers={'Accept': 'application/json'},
                           auth=self.oauth,
                           **kwargs)
+
+  def delete(self, path, data=None, json=None, **kwargs):
+    return requests.delete(API_ROOT + path,
+                           auth=self.oauth,
+                           **kwargs)
 
   def upload(self, uri, filename, data, additional_headers=None):
     headers = {'Content-Length': str(len(data)),

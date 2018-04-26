@@ -270,14 +270,15 @@ class SmugMugFS(object):
         same_file = (remote_md5 == file_md5)
 
       if same_file:
-        pass  # File already exists on Smugmug
+        return  # File already exists on Smugmug
       else:
-        print 'File "%s" exists, but has changed. Re-uploading.' % file_path
-        remote_file.upload('Album', file_name, file_content,
-                           headers={'X-Smug-ImageUri': remote_file.uri('Image')})
+        print ('File "%s" exists, but has changed. '
+               'Deleting old version.' % file_path)
+        remote_file.delete()
+        print 'Re-uploading "%s".' % file_path
     else:
-      print 'Uploading %s' % file_path
-      album_node.upload('Album', file_name, file_content)
+      print 'Uploading "%s"' % file_path
+    album_node.upload('Album', file_name, file_content)
 
   def _resursive_album_sync(self, current_folder, album_node, image_nodes):
     current_name = current_folder.split(os.sep)[-1].strip()

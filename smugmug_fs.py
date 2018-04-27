@@ -187,20 +187,20 @@ class SmugMugFS(object):
     current_name = current_folder.split(os.sep)[-1].strip()
     remote_matches = current_nodes.get(current_name, [])
     if len(remote_matches) > 1:
-      print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
+      print 'Skipping "%s", multiple remote nodes matches local path.' % current_folder
       return None
 
     folder_children = self._read_local_dir(current_folder)
 
     if remote_matches:
-      print 'Found matching remote folder for %s' % current_folder
+      print 'Found matching remote folder for "%s"' % current_folder
       current_node = remote_matches[0]
     else:
-      current_node_type = ('Album' if any(details.ismedia for _, details
+      current_node_type = ('Folder' if any(details.isdir for _, details
                                           in folder_children.iteritems())
-                           else 'Folder')
+                           else 'Album')
 
-      print 'Making %s %s' % (current_node_type, current_folder)
+      print 'Making %s "%s"' % (current_node_type, current_folder)
       current_node = self.make_childnode(parent_node,
                                          current_folder,
                                          params={
@@ -208,7 +208,7 @@ class SmugMugFS(object):
                                          })
 
     if not current_node:
-      print 'Skipping %s, no matching remote node.' % current_folder
+      print 'Skipping "%s", no matching remote node.' % current_folder
       return None
 
     child_nodes = self._get_child_nodes_by_name(current_node)
@@ -217,17 +217,42 @@ class SmugMugFS(object):
       os.path.join(current_folder, '.smugcli'))
     to_ignore = set(configs.get('ignore', []))
 
+    side_album_node = None
     for child_name, child_details in sorted(folder_children.items()):
       new_path = os.path.join(current_folder, child_name)
       if child_name in to_ignore:
-        print 'Skipping ignored path %s' % new_path
+        print 'Skipping ignored path "%s"' % new_path
         continue
 
       if current_node['Type'] == 'Folder':
         if child_details.isdir:
           self._recursive_sync(new_path, current_node, child_nodes)
         elif child_details.ismedia:
-          print 'Ignoring %s, can\'t be copied to a folder' % new_path
+          if side_album_node == None:
+            print ('Found media next to a sub-folder within "%s". '
+                   'Fork a side album to store images.') % current_folder
+            side_album_name = 'Images from folder ' + current_name
+            side_album_path = os.path.join(current_folder, side_album_name)
+            side_album_matches = child_nodes.get(side_album_name, [])
+            if len(side_album_matches) > 1:
+              print ('Skipping "%s", multiple remote nodes matches local '
+                     'path.' % side_album_path)
+              continue
+
+            if side_album_matches:
+              print 'Found matching remote folder for "%s"' % side_album_path
+              side_album_node = side_album_matches[0]
+            else:
+              side_album_node = self.make_childnode(
+                current_node, side_album_path, params={'Type': 'Album'})
+            if not side_album_node:
+              print 'Skipping "%s", no matching remote node.' % side_album_path
+              continue
+
+            side_album_child_nodes = self._get_child_nodes_by_name(
+              side_album_node)
+          self._sync_file(new_path, side_album_node, side_album_child_nodes)
+
       elif current_node['Type'] == 'Album':
         if child_details.isdir:
           print ('Ignoring folder "%s" found inside %s "%s". '

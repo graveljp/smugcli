@@ -122,11 +122,13 @@ def Wrapper(smugmug, json):
 
 
 class SmugMug(object):
-  def __init__(self, config):
+  def __init__(self, config, requests_sent=None):
     self._config = config
     self._smugmug_oauth = None
     self._oauth = None
     self._fs = smugmug_fs.SmugMugFS(self)
+    self._session = requests.Session()
+    self._requests_sent = requests_sent
 
   @property
   def config(self):
@@ -170,10 +172,15 @@ class SmugMug(object):
     return self.get('/api/v2!authuser')['NickName']
 
   def get_json(self, path, **kwargs):
-    return requests.get(API_ROOT + path,
-                        headers={'Accept': 'application/json'},
-                        auth=self.oauth,
-                        **kwargs).json()
+    req = requests.Request('GET', API_ROOT + path,
+                           headers={'Accept': 'application/json'},
+                           auth=self.oauth,
+                           **kwargs).prepare()
+    resp = self._session.send(req)
+    resp_json = resp.json()
+    if self._requests_sent is not None:
+      self._requests_sent.append((req, resp_json))
+    return resp_json
 
   def get(self, path, **kwargs):
     reply = self.get_json(path, **kwargs)

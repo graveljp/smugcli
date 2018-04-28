@@ -8,6 +8,7 @@ import json
 import persistent_dict
 import os
 import requests
+import sys
 import urlparse
 
 import smugmug as smugmug_lib
@@ -207,7 +208,7 @@ class Commands(object):
     shell.cmdloop()
 
 
-def main():
+def run(args, requests_sent=None):
   commands = {name: func for name, func in
               inspect.getmembers(Commands, predicate=inspect.isfunction)}
 
@@ -219,7 +220,7 @@ def main():
                       choices=commands.keys(),
                       help='The command to run.')
   parser.add_argument('args', nargs=argparse.REMAINDER)
-  args = parser.parse_args()
+  parsed_args = parser.parse_args(args)
 
   try:
     config = persistent_dict.PersistentDict(CONFIG_FILE)
@@ -228,14 +229,14 @@ def main():
            'Please fix or delete the file.' % CONFIG_FILE)
     return
 
-  smugmug = smugmug_lib.SmugMug(config)
+  smugmug = smugmug_lib.SmugMug(config, requests_sent)
   fs = smugmug_fs.SmugMugFS(smugmug)
 
   try:
-    commands[args.command](fs, args.args)
+    commands[parsed_args.command](fs, parsed_args.args)
   except smugmug_lib.NotLoggedInError:
     return
 
 
 if __name__ == '__main__':
-  main()
+  run(sys.argv[1:])

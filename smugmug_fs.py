@@ -15,10 +15,20 @@ import os
 
 hachoir_config.quiet = True
 
-Details = collections.namedtuple('details', ['path', 'isdir', 'ismedia'])
+Details = collections.namedtuple('Details', ['path', 'isdir', 'ismedia'])
+NodeInfo = collections.namedtuple('NodeInfo', ['name', 'node'])
 
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
 VIDEO_EXT = ['mov', 'mp4']
+
+
+class Error(Exception):
+  """Base class for all exception of this module."""
+
+
+class UnexpectedResponseError(Error):
+  """Error raised when encountering unexpected data returned by SmugMug."""
+
 
 class SmugMugFS(object):
   def __init__(self, smugmug):
@@ -36,50 +46,30 @@ class SmugMugFS(object):
   def get_root_node(self, user):
     return self._smugmug.get('/api/v2/user/%s' % user).get('Node')
 
-  def get_children(self, node, params=None):
-    if 'Type' not in node:
-      return
-
-    params = params or {}
-    params['start'] = 1
-    params['count'] = self._smugmug.config.get('page_size', 1000)
-
-    if node['Type'] == 'Album':
-      for child in node.get('Album').get('AlbumImages', params=params) or []:
-        yield child['FileName'], child
-    else:
-      for child in node.get('ChildNodes', params=params) or []:
-        yield child['Name'], child
-
-  def get_child(self, parent, child_name, params=None):
-    for name, child in self.get_children(parent, params):
-      if name == child_name:
-        return child
-    return None
-
   def path_to_node(self, user, path):
     current_node = self.get_root_node(user)
     parts = filter(bool, path.split(os.sep))
-    last_node = current_node
-    matched = []
-    unmatched = collections.deque(parts)
+    matched_nodes = [NodeInfo('', current_node)]
+    unmatched_dirs = collections.deque(parts)
     for part in parts:
-      current_node = self.get_child(current_node, part)
+      current_node = current_node.get_child(part)
       if not current_node:
         break
-      last_node = current_node
-      matched.append(part)
-      unmatched.popleft()
-    return last_node, matched, list(unmatched)
+      matched_nodes.append(NodeInfo(part, current_node))
+      unmatched_dirs.popleft()
+    return matched_nodes, list(unmatched_dirs)
 
   def ls(self, user, path, details):
     user = user or self._smugmug.get_auth_user()
-    node, matched, unmatched = self.path_to_node(user, path)
-    if unmatched:
-      print '"%s" not found in "%s"' % (unmatched[0], os.sep.join(matched))
+    matched_nodes, unmatched_dirs = self.path_to_node(user, path)
+    if unmatched_dirs:
+      print '"%s" not found in "%s"' % (
+        unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
       return
 
-    nodes = [(path, node)] if 'FileName' in node else self.get_children(node)
+    node = matched_nodes[-1].node
+    nodes = ([(path, node)] if 'FileName' in node else
+             [(child.name, child) for child in node.get_children()])
 
     for name, node in nodes:
       if details:
@@ -114,7 +104,7 @@ class SmugMugFS(object):
       print 'Server responded with %s' % str(response)
       return None
 
-    node = self.get_child(node, remote_name)
+    node = node.get_child(remote_name)
     if not node:
       print 'Cannot find newly created node "%s"' % path
       return None
@@ -128,29 +118,57 @@ class SmugMugFS(object):
 
   def make_node(self, user, path, create_parents, params=None):
     user = user or self._smugmug.get_auth_user()
-    node, matched, unmatched = self.path_to_node(user, path)
-    if len(unmatched) > 1 and not create_parents:
-      print '"%s" not found in "%s"' % (unmatched[0], os.sep.join(matched))
+    matched_nodes, unmatched_dirs = self.path_to_node(user, path)
+    if len(unmatched_dirs) > 1 and not create_parents:
+      print '"%s" not found in "%s"' % (
+        unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
       return
 
-    if not len(unmatched):
+    if not len(unmatched_dirs):
       print 'Path "%s" already exists.' % path
       return
 
-    for part in unmatched:
+    built_path = os.path.join(*[m.name for m in matched_nodes])
+    node = matched_nodes[-1].node
+    for part in unmatched_dirs:
+      built_path = os.path.join(built_path, part)
+      print 'Creating "%s".' % built_path
       node = self.make_childnode(node, part, params)
       if not node:
         return
-      matched.append(part)
+
+  def rmdir(self, user, parents, dirs):
+    user = user or self._smugmug.get_auth_user()
+    for dir in dirs:
+      matched_nodes, unmatched_dirs = self.path_to_node(user, dir)
+      if unmatched_dirs:
+        print 'Folder or album "%s" not found.' % dir
+        continue
+
+      matched_nodes.pop(0)
+      while matched_nodes:
+        current_dir = os.sep.join(m.name for m in matched_nodes)
+        node = matched_nodes.pop().node
+        if len(node.get_children({'count': 1})):
+          print 'Cannot delete folder or album: "%s" is not empty.' % (
+            current_dir)
+          continue
+
+        print 'Deleting %s' % current_dir
+        node.delete()
+
+        if not parents:
+          break
 
 
   def upload(self, user, filenames, album):
     user = user or self._smugmug.get_auth_user()
-    node, matched, unmatched = self.path_to_node(user, album)
-    if unmatched:
+    matched_nodes, unmatched_dirs = self.path_to_node(user, album)
+    if unmatched_dirs:
       print 'Album not found: "%s"' % album
       return
 
+    node = matched_nodes[-1].node
     for filename in filenames:
       node.upload('Album',
                   os.path.basename(filename).strip(),
@@ -162,11 +180,12 @@ class SmugMugFS(object):
       ', '.join(sources), target)
 
     user = user or self._smugmug.get_auth_user()
-    node, matched, unmatched = self.path_to_node(user, target)
-    if unmatched:
+    matched_nodes, unmatched_dirs = self.path_to_node(user, target)
+    if unmatched_dirs:
       print 'Target folder not found: "%s"' % target
       return
 
+    node = matched_nodes[-1].node
     child_nodes = self._get_child_nodes_by_name(node)
 
     for source in sources:
@@ -333,6 +352,6 @@ class SmugMugFS(object):
 
   def _get_child_nodes_by_name(self, node):
     child_by_name = collections.defaultdict(list)
-    for name, child in self.get_children(node):
-      child_by_name[name].append(child)
+    for child in node.get_children():
+      child_by_name[child.name].append(child)
     return child_by_name

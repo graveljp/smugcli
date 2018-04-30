@@ -74,10 +74,10 @@ class TestSmugCLI(unittest.TestCase):
      u'Logan Leia wave pool.jpg\n'),
 
     (['/Photography/invalid'],
-     '"invalid" not found in "Photography"\n'),
+     '"invalid" not found in "/Photography"\n'),
 
     (['/Photography/inval\xc3\xafd'],
-     u'"inval\xefd" not found in "Photography"\n')])
+     u'"inval\xefd" not found in "/Photography"\n')])
   @responses.activate
   def test_ls(self, command_line, expected_message):
     smugcli.Commands.ls(self._fs, command_line)
@@ -113,7 +113,8 @@ class TestSmugCLI(unittest.TestCase):
         json=json.load(open('testdata/smugmug_node_children_mkdir.json')))
 
       smugcli.Commands.mkdir(self._fs, ['/SmugMug/smugcli-test'])
-      self.assertEqual(self._cmd_output.getvalue(), u'')  # No errors printed
+      self.assertEqual(self._cmd_output.getvalue(),
+                       u'Creating "SmugMug/smugcli-test".\n')
 
 if __name__ == '__main__':
   unittest.main()

@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # Command line tool for SmugMug. Uses SmugMug API V2.
 
+import smugmug as smugmug_lib
+import smugmug_fs
+import smugmug_shell
+
 import argparse
 import collections
 import inspect
@@ -10,10 +14,6 @@ import os
 import requests
 import sys
 import urlparse
-
-import smugmug as smugmug_lib
-import smugmug_fs
-import smugmug_shell
 
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
@@ -131,6 +131,25 @@ class Commands(object):
     parser = argparse.ArgumentParser(
       prog='mkalbum', description='Create a album.')
     Helpers.mknode(fs, args, 'Album', parser)
+
+  @staticmethod
+  def rmdir(fs, args):
+    parser = argparse.ArgumentParser(
+      prog='rmdir', description='Remove a folder(s) if they are empty.')
+    parser.add_argument('-p', '--parents',
+                        action='store_true',
+                        help=('Remove parent directory as well if they are '
+                              'empty'))
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-in user by default.'))
+    parser.add_argument('dirs',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='+', help='Directories to create.')
+    parsed = parser.parse_args(args)
+    fs.rmdir(parsed.user, parsed.parents, parsed.dirs)
 
   @staticmethod
   def upload(fs, args):

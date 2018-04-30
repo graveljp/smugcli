@@ -70,9 +70,15 @@ class Node(object):
   def json(self):
     return self._json
 
+  @property
+  def name(self):
+    return self._json.get('FileName') or self._json['Name']
+
   def get(self, url_name, **kwargs):
     uri = self.uri(url_name)
-    return self._smugmug.get(uri, **kwargs) if uri else None
+    if not uri:
+      raise UnexpectedResponseError('Node does not have a "%s" uri.' % url_name)
+    return self._smugmug.get(uri, **kwargs)
 
   def post(self, uri_name, data=None, json=None, **kwargs):
     uri = self.uri(uri_name)
@@ -106,6 +112,26 @@ class Node(object):
 
   def __ne__(self, other):
     return self._json != other
+
+  def get_children(self, params=None):
+    if 'Type' not in self._json:
+      raise UnexpectedResponseError('Node does not have a "Type" attribute.')
+
+    params = params or {}
+    params = {
+      'start': params.get('start', 1),
+      'count': params.get('count', self._smugmug.config.get('page_size', 1000))}
+
+    if self._json['Type'] == 'Album':
+      return self.get('Album').get('AlbumImages', params=params)
+    else:
+      return self.get('ChildNodes', params=params)
+
+  def get_child(self, child_name):
+    for child in self.get_children():
+      if child.name == child_name:
+        return child
+    return None
 
 
 def Wrapper(smugmug, json):
@@ -174,21 +200,26 @@ class SmugMug(object):
                            auth=self.oauth,
                            **kwargs).prepare()
     resp = self._session.send(req)
-    resp_json = resp.json()
     if self._requests_sent is not None:
-      self._requests_sent.append((req, resp_json))
-    return resp_json
+      self._requests_sent.append((req, resp))
+    return resp.json()
 
   def get(self, path, **kwargs):
     reply = self.get_json(path, **kwargs)
     return Wrapper(self, reply)
 
   def post(self, path, data=None, json=None, **kwargs):
-    return requests.post(API_ROOT + path,
-                         data=data, json=json,
-                         headers={'Accept': 'application/json'},
-                         auth=self.oauth,
-                         **kwargs)
+    req = requests.Request('POST',
+                           API_ROOT + path,
+                           data=data,
+                           json=json,
+                           headers={'Accept': 'application/json'},
+                           auth=self.oauth,
+                           **kwargs).prepare()
+    resp = self._session.send(req)
+    if self._requests_sent is not None:
+      self._requests_sent.append((req, resp))
+    return resp
 
   def patch(self, path, data=None, json=None, **kwargs):
     return requests.patch(API_ROOT + path,
@@ -198,9 +229,15 @@ class SmugMug(object):
                           **kwargs)
 
   def delete(self, path, data=None, json=None, **kwargs):
-    return requests.delete(API_ROOT + path,
+    req = requests.Request('DELETE',
+                           API_ROOT + path,
                            auth=self.oauth,
-                           **kwargs)
+                           headers={'Accept': 'application/json'},
+                           **kwargs).prepare()
+    resp = self._session.send(req)
+    if self._requests_sent is not None:
+      self._requests_sent.append((req, resp))
+    return resp
 
   def upload(self, uri, filename, data, additional_headers=None):
     headers = {'Content-Length': str(len(data)),

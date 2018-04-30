@@ -2,7 +2,9 @@
 
 import base64
 import json
+import math
 import md5
+import re
 import requests
 import smugmug_oauth
 import smugmug_fs
@@ -10,6 +12,8 @@ import smugmug_fs
 API_ROOT = 'https://api.smugmug.com'
 API_UPLOAD = 'https://upload.smugmug.com/'
 API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
+
+PAGE_START_RE = re.compile(r'(\?.*start=)[0-9]+')
 
 class Error(Exception):
   """Base class for all exception of this module."""
@@ -19,49 +23,42 @@ class NotLoggedInError(Error):
   """Error raised if the user is not logged in."""
 
 
-class PageIterator:
-  def __init__(self, smugmug, json):
-    self._smugmug = smugmug
-    self._global_index = 0
-    self._set_page(json)
-
-  def _set_page(self, json):
-    response = json['Response']
-    locator = response['Locator']
-    self._pages = response.get('Pages', {})
-    self._page_content = response.get(locator, [])
-    self._page_index = 0
-
-  def __len__(self):
-    return self._page.get('Total')
-
-  def __next__(self):
-    return next()
-
-  def next(self):
-    if self._global_index >= self._pages.get('Total'):
-      raise StopIteration
-
-    if self._global_index >= self._pages['Start'] + self._pages['Count'] - 1:
-      self._set_page(self._smugmug.get_json(self._pages['NextPage']))
-
-    result = self._page_content[self._page_index]
-    self._global_index += 1
-    self._page_index += 1
-
-    return Node(self._smugmug, result)
+class UnexpectedResponseError(Error):
+  """Error raised when encountering unexpected data returned by SmugMug."""
 
 
 class NodeList(object):
   def __init__(self, smugmug, json):
     self._smugmug = smugmug
-    self._json = json
 
-  def __iter__(self):
-    return PageIterator(self._smugmug, self._json)
+    response = json['Response']
+    locator = response['Locator']
+    page_info = response['Pages']
+    self._page_size = page_info['Count']
+    self._total_size = page_info['Total']
+    num_pages = int(math.ceil(float(self._total_size) / self._page_size)
+                    if self._page_size else 0)
+    self._pages = [None] * num_pages
+    if num_pages:
+      self._pages[0] = response[locator]
+    self._uri = PAGE_START_RE.sub(r'\1%d', response['Uri'])
 
   def __len__(self):
-    return self._json['Response'].get('Pages', {}).get('Total')
+    return self._total_size
+
+  def __getitem__(self, item):
+    if item < 0 or item >= self._total_size:
+      raise IndexError
+
+    page_index = item / self._page_size
+    if self._pages[page_index] is None:
+      new_page_uri = self._uri % (page_index * self._page_size + 1)
+      json = self._smugmug.get_json(new_page_uri)
+      response = json['Response']
+      locator = response['Locator']
+      self._pages[page_index] = response[locator]
+    return Node(self._smugmug,
+                self._pages[page_index][item - page_index * self._page_size])
 
 
 class Node(object):

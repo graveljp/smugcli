@@ -13,22 +13,74 @@ import tempfile
 import unittest
 
 
-class CapturingStream(object):
+REMOTE_DIR = '__smugcli_unit_tests__'
+
+
+def format_path(path):
+  path = path.format(root=REMOTE_DIR)
+  path = path.replace('/', os.sep)
+  return path
+
+
+class Reply(object):
+
+  def __init__(self, string):
+    self._string = string
+
+  def __str__(self):
+    return str(self._string)
+
+  def __repr__(self):
+    return 'Reply(%s)' % repr(self._string)
+
+
+class ExpectedInputOutput(object):
 
   def __init__(self):
-    self._stdout = sys.stdout
-    self._string_io = StringIO.StringIO()
+    self._expected_io = None
 
-  def write(self, *args, **kwargs):
-    self._stdout.write(*args, **kwargs)
-    self._string_io.write(*args, **kwargs)
+  def set_expected_io(self, expected_io):
+    self._expected_io = expected_io
 
-  def getvalue(self):
-    return self._string_io.getvalue()
+  def assert_no_pending(self):
+    if self._expected_io:
+      raise AssertionError('Pending IO expectation never fulfulled:\n%s' % str(self._expected_io))
+    self._expected_io = None
 
-  def reset(self):
-    self._string_io.close()
-    self._string_io = StringIO.StringIO()
+  def write(self, string):
+    sys.__stdout__.write(string)
+
+    if self._expected_io is None:
+      return
+
+    if string == '\n':
+      return
+
+    if not self._expected_io:
+      raise AssertionError('Not expecting any more IOs but got: %s' %
+                           repr(string))
+
+    io = self._expected_io.pop(0)
+    if not isinstance(io, basestring):
+      raise AssertionError('Not expecting output message but got: %s' %
+                           repr(string))
+
+    formatted = format_path(io)
+    if string != formatted:
+      raise AssertionError('Unexpected output: %s != %s' % (repr(string),
+                                                            repr(formatted)))
+
+  def readline(self):
+    if not self._expected_io:
+      raise AssertionError('Not expecting any more IOs.')
+
+    io = self._expected_io.pop(0)
+    if not isinstance(io, Reply):
+      raise AssertionError('Not expecting input request.')
+
+    reply = format_path(str(io)) + '\n'
+    sys.__stdout__.write(reply)
+    return reply
 
 
 class EndToEndTest(unittest.TestCase):
@@ -37,11 +89,10 @@ class EndToEndTest(unittest.TestCase):
     print '\n-------------------------'
     print 'Running: %s\n' % self.id()
     self._local_dir = tempfile.mkdtemp()
-    self._remote_dir = '__smugcli_unit_tests__'
 
-    self._original_stdout = sys.stdout
-    self._cmd_output = CapturingStream()
-    sys.stdout = self._cmd_output
+    self._io = ExpectedInputOutput()
+    sys.stdin = self._io
+    sys.stdout = self._io
 
     self._url_re = re.compile(
       r'https://api\.smugmug\.com/api/v2[\!/](?P<path>.*)')
@@ -62,7 +113,8 @@ class EndToEndTest(unittest.TestCase):
           '\n'.join(sorted(self._pending))))
 
     shutil.rmtree(self._local_dir)
-    sys.stdout = self._original_stdout
+    sys.stdin = sys.__stdin__
+    sys.stdout = sys.__stdout__
 
   def _url_path(self, request):
     match = self._url_re.match(request.url)
@@ -115,11 +167,10 @@ class EndToEndTest(unittest.TestCase):
         url=req['url'],
         callback=lambda x, req=req, resp=resp, name=name: callback(x, req, resp, name))
 
-  def _do(self, command, expected_output=None):
-    command = command.format(root=self._remote_dir)
-    command = command.replace('/', os.sep)
+  def _do(self, command, expected_io=None):
+    command = format_path(command)
     print '$ %s' % command
-    self._cmd_output.reset()
+    self._io.set_expected_io(expected_io)
 
     args = command.split(' ')
     cache_folder = self._get_cache_folder(args)
@@ -142,45 +193,40 @@ class EndToEndTest(unittest.TestCase):
       self._save_requests(cache_folder, requests_sent)
 
     self._command_index += 1
-
-    if expected_output is not None:
-      expected_output = expected_output.format(root=self._remote_dir)
-      expected_output = expected_output.replace('/', os.sep)
-      self.assertEqual(self._cmd_output.getvalue(),
-                       expected_output)
+    self._io.assert_no_pending()
 
   def test_ls(self):
     self._do('ls __non_existing_folder__',
-             '"__non_existing_folder__" not found in "".\n')
+             ['"__non_existing_folder__" not found in "".'])
 
   def test_mkdir(self):
     # Missing parent.
     self._do('mkdir {root}/foo',
-             '"{root}" not found in "".\n')
+             ['"{root}" not found in "".'])
 
     # Creating root folder.
     self._do('mkdir {root}',
-             'Creating "{root}".\n')
+             ['Creating "{root}".'])
 
     # Cannot create existing folder.
     self._do('mkdir {root}',
-             'Path "{root}" already exists.\n')
+             ['Path "{root}" already exists.'])
 
     # Missing sub-folder parent.
     self._do('mkdir {root}/foo/bar/baz',
-             '"foo" not found in "/{root}".\n')
+             ['"foo" not found in "/{root}".'])
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
-             'Creating "{root}/foo".\n'
-             'Creating "{root}/foo/bar".\n'
-             'Creating "{root}/foo/bar/baz".\n')
+             ['Creating "{root}/foo".',
+              'Creating "{root}/foo/bar".',
+              'Creating "{root}/foo/bar/baz".'])
 
     # Check that all folders were properly created.
     self._do('ls {root}/foo/bar',
-             'baz\n')
+             ['baz'])
     self._do('ls {root}/foo/bar/baz',
-             '')  # Folder exists, but is empty.
+             [])  # Folder exists, but is empty.
 
 
   def test_rmdir(self):
@@ -190,31 +236,30 @@ class EndToEndTest(unittest.TestCase):
 
     # Can't remove non-existing folders.
     self._do('rmdir {root}/foo/bar/baz/buz',
-             'Folder or album "{root}/foo/bar/baz/buz" not found.\n')
+             ['Folder or album "{root}/foo/bar/baz/buz" not found.'])
 
     # Can't remove non-empty folders.
     self._do('rmdir {root}/foo/bar',
-             'Cannot delete Folder: "{root}/foo/bar" is not empty.\n')
+             ['Cannot delete Folder: "{root}/foo/bar" is not empty.'])
 
     # Can delete simple folder.
     self._do('rmdir {root}/foo/bar/baz',
-             'Deleting "{root}/foo/bar/baz".\n')
+             ['Deleting "{root}/foo/bar/baz".'])
     self._do('ls {root}/foo',
-             'bar\n')
+             ['bar'])
     self._do('ls {root}/foo/bar',
-             '')  # Folder exists, but is empty.
+             [])  # Folder exists, but is empty.
 
     # Can delete folder and all it's non-empty parents.
     self._do('rmdir -p {root}/foo/bar',
-             'Deleting "{root}/foo/bar".\n'
-             'Deleting "{root}/foo".\n'
-             'Cannot delete Folder: "{root}" is not empty.\n')
+             ['Deleting "{root}/foo/bar".',
+              'Deleting "{root}/foo".',
+              'Cannot delete Folder: "{root}" is not empty.'])
 
     self._do('ls {root}/foo',
-             '"foo" not found in "/{root}".\n')
+             ['"foo" not found in "/{root}".'])
     self._do('ls {root}',
-             'buz\n')
-
+             ['buz'])
 
   def test_rm(self):
     self._do('mkdir -p {root}/foo/bar/baz')
@@ -222,24 +267,37 @@ class EndToEndTest(unittest.TestCase):
 
     # Not found.
     self._do('rm {root}/does_not_exists',
-             '"{root}/does_not_exists" not found.\n')
+             ['"{root}/does_not_exists" not found.'])
 
     # Not empty.
     self._do('rm -f {root}/foo/bar',
-             'Folder "{root}/foo/bar" is not empty.\n')
+             ['Folder "{root}/foo/bar" is not empty.'])
 
     # Remove leaf.
     self._do('rm -f {root}/foo/bar/baz',
-             'Removing "{root}/foo/bar/baz".\n')
+             ['Removing "{root}/foo/bar/baz".'])
 
     # Doesn't remove non-empty folder by default.
     self._do('rm -f {root}/fuz/buz',
-             'Folder "{root}/fuz/buz" is not empty.\n')
+             ['Folder "{root}/fuz/buz" is not empty.'])
 
     # Can be forced to delete non-empty folders.
     self._do('rm -f -r {root}/fuz/buz',
-             'Removing "{root}/fuz/buz".\n')
+             ['Removing "{root}/fuz/buz".'])
 
-    self._do('rm -r -f {root}/foo {root}/fuz',
-             'Removing "{root}/foo".\n'
-             'Removing "{root}/fuz".\n')
+    # Can remove multiple nodes.
+    # Ask for confirmation by default.
+    self._do('rm -r {root}/foo {root}/fuz',
+             ['Remove Folder node "{root}/foo"? ',
+              Reply('n'),
+              'Remove Folder node "{root}/fuz"? ',
+              Reply('y'),
+              'Removing "{root}/fuz".'])
+    self._do('rm -r {root}/foo {root}/fuz {root}',
+             ['Remove Folder node "{root}/foo"? ',
+              Reply('yes'),
+              'Removing "{root}/foo".',
+              '"{root}/fuz" not found.',
+              'Remove Folder node "{root}"? ',
+              Reply('YES'),
+              'Removing "{root}".'])

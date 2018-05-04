@@ -182,17 +182,40 @@ class EndToEndTest(unittest.TestCase):
     # Cleanup.
     self._do('rmdir -p {root}/foo/bar/baz')
 
-  def test_rmdir_parents(self):
+  def test_rmdir(self):
+    # Create a test folder hierarchy.
     self._do('mkdir -p {root}/foo/bar/baz')
+    self._do('mkdir -p {root}/buz')
 
+    # Can't remove non-existing folders.
+    self._do('rmdir {root}/foo/bar/baz/buz',
+             'Folder or album "{root}/foo/bar/baz/buz" not found.\n')
+
+    # Can't remove non-empty folders.
+    self._do('rmdir {root}/foo/bar',
+             'Cannot delete Folder: "{root}/foo/bar" is not empty\n')
+
+    # Can delete simple folder.
+    self._do('rmdir {root}/foo/bar/baz',
+             'Deleting {root}/foo/bar/baz\n')
+    self._do('ls {root}/foo',
+             'bar\n')
     self._do('ls {root}/foo/bar',
-             'baz\n')
-    self._do('ls {root}/foo/bar/baz',
              '')  # Folder exists, but is empty.
 
-    self._do('rmdir -p {root}/foo/bar/baz')
-    self._do('ls {root}/foo/bar/baz',
-             '"{root}" not found in ""\n')
+    # Can delete folder and all it's non-empty parents.
+    self._do('rmdir -p {root}/foo/bar',
+             'Deleting {root}/foo/bar\n'
+             'Deleting {root}/foo\n'
+             'Cannot delete Folder: "{root}" is not empty\n')
+
+    self._do('ls {root}/foo',
+             '"foo" not found in "/{root}"\n')
+    self._do('ls {root}',
+             'buz\n')
+
+    # Cleanup.
+    self._do('rmdir -p {root}/buz')
 
   def test_rm(self):
     self._do('mkdir -p {root}/foo/bar/baz')

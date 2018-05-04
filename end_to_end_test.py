@@ -51,15 +51,18 @@ class EndToEndTest(unittest.TestCase):
     self._pending = set()
     self._replay_cached_requests = os.path.exists(self._get_cache_base_folder())
 
-  def tearDown(self):
-    shutil.rmtree(self._local_dir)
+    self._do('rm -r -f {root}')
 
-    sys.stdout = self._original_stdout
+  def tearDown(self):
+    self._do('rm -r -f {root}')
 
     if self._pending:
       raise AssertionError(
         'Not all requests have been executed:\n%s' % (
           '\n'.join(sorted(self._pending))))
+
+    shutil.rmtree(self._local_dir)
+    sys.stdout = self._original_stdout
 
   def _url_path(self, request):
     match = self._url_re.match(request.url)
@@ -179,8 +182,6 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls {root}/foo/bar/baz',
              '')  # Folder exists, but is empty.
 
-    # Cleanup.
-    self._do('rmdir -p {root}/foo/bar/baz')
 
   def test_rmdir(self):
     # Create a test folder hierarchy.
@@ -214,8 +215,6 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls {root}',
              'buz\n')
 
-    # Cleanup.
-    self._do('rmdir -p {root}/buz')
 
   def test_rm(self):
     self._do('mkdir -p {root}/foo/bar/baz')

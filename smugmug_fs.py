@@ -160,6 +160,25 @@ class SmugMugFS(object):
         if not parents:
           break
 
+  def _ask(self, question):
+    answer = raw_input(question)
+    return answer.lower() in ['y', 'yes']
+
+  def rm(self, user, force, recursive, paths):
+    user = user or self._smugmug.get_auth_user()
+    for path in paths:
+      matched_nodes, unmatched_dirs = self.path_to_node(user, path)
+      if unmatched_dirs:
+        print '"%s" not found.' % path
+        continue
+
+      name, node = matched_nodes[-1]
+      if recursive or len(node.get_children({'count': 1})) == 0:
+        if force or self._ask('Remove %s node "%s"? ' % (node['Type'], path)):
+          print 'Removing "%s".' % path
+          node.delete()
+      else:
+        print 'Folder "%s" is not empty.' % path
 
   def upload(self, user, filenames, album):
     user = user or self._smugmug.get_auth_user()

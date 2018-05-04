@@ -177,3 +177,31 @@ class EndToEndTest(unittest.TestCase):
     self._do('rmdir -p {root}/foo/bar/baz')
     self._do('ls {root}/foo/bar/baz',
              '"{root}" not found in ""\n')
+
+  def test_rm(self):
+    self._do('mkdir -p {root}/foo/bar/baz')
+    self._do('mkdir -p {root}/fuz/buz/biz')
+
+    # Not found.
+    self._do('rm {root}/does_not_exists',
+             '"{root}/does_not_exists" not found.\n')
+
+    # Not empty.
+    self._do('rm -f {root}/foo/bar',
+             'Folder "{root}/foo/bar" is not empty.\n')
+
+    # Remove leaf.
+    self._do('rm -f {root}/foo/bar/baz',
+             'Removing "{root}/foo/bar/baz".\n')
+
+    # Doesn't remove non-empty folder by default.
+    self._do('rm -f {root}/fuz/buz',
+             'Folder "{root}/fuz/buz" is not empty.\n')
+
+    # Can be forced to delete non-empty folders.
+    self._do('rm -f -r {root}/fuz/buz',
+             'Removing "{root}/fuz/buz".\n')
+
+    self._do('rm -r -f {root}/foo {root}/fuz',
+             'Removing "{root}/foo".\n'
+             'Removing "{root}/fuz".\n')

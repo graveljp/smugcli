@@ -152,6 +152,27 @@ class Commands(object):
     fs.rmdir(parsed.user, parsed.parents, parsed.dirs)
 
   @staticmethod
+  def rm(fs, args):
+    parser = argparse.ArgumentParser(
+      prog='rmdir', description='Remove a folder(s) if they are empty.')
+    parser.add_argument('-u', '--user',
+                        type=lambda s: unicode(s, 'utf8'),
+                        default='',
+                        help=('User whose SmugMug account is to be accessed. '
+                              'Uses the logged-in user by default.'))
+    parser.add_argument('-f', '--force',
+                        action='store_true',
+                        help=('Do not prompt before deleting files.'))
+    parser.add_argument('-r', '--recursive',
+                        action='store_true',
+                        help=('Recursively delete all of folder\'s content.'))
+    parser.add_argument('paths',
+                        type=lambda s: unicode(s, 'utf8'),
+                        nargs='+', help='Path to remove.')
+    parsed = parser.parse_args(args)
+    fs.rm(parsed.user, parsed.force, parsed.recursive, parsed.paths)
+
+  @staticmethod
   def upload(fs, args):
     parser = argparse.ArgumentParser(
       prog='upload', description='Upload files to SmugMug.')

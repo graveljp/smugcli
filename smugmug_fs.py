@@ -63,7 +63,7 @@ class SmugMugFS(object):
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if unmatched_dirs:
-      print '"%s" not found in "%s"' % (
+      print '"%s" not found in "%s".' % (
         unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
       return
 
@@ -96,23 +96,23 @@ class SmugMugFS(object):
 
     response = node.post('ChildNodes', data=node_params)
     if response is None:
-      print 'Cannot create child nodes under "%s"' % parent
+      print 'Cannot create child nodes under "%s".' % parent
       return None
 
     if response.status_code != 201:
       print 'Error creating node "%s".' % path
-      print 'Server responded with %s' % str(response)
+      print 'Server responded with %s.' % str(response)
       return None
 
     node = node.get_child(remote_name)
     if not node:
-      print 'Cannot find newly created node "%s"' % path
+      print 'Cannot find newly created node "%s".' % path
       return None
 
     if node['Type'] == 'Album':
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
       if response.status_code != 200:
-        print 'Failed setting SortMethod on Album %s' % name
+        print 'Failed setting SortMethod on Album "%s".' % name
 
     return node
 
@@ -120,7 +120,7 @@ class SmugMugFS(object):
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if len(unmatched_dirs) > 1 and not create_parents:
-      print '"%s" not found in "%s"' % (
+      print '"%s" not found in "%s".' % (
         unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
       return
 
@@ -154,7 +154,7 @@ class SmugMugFS(object):
             node['Type'], current_dir)
           break
 
-        print 'Deleting %s' % current_dir
+        print 'Deleting "%s".' % current_dir
         node.delete()
 
         if not parents:
@@ -195,13 +195,13 @@ class SmugMugFS(object):
 
   def sync(self, user, sources, target):
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
-    print 'Syncing local folders %s to SmugMug folder %s' % (
+    print 'Syncing local folders %s to SmugMug folder %s.' % (
       ', '.join(sources), target)
 
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, target)
     if unmatched_dirs:
-      print 'Target folder not found: "%s"' % target
+      print 'Target folder not found: "%s".' % target
       return
 
     node = matched_nodes[-1].node
@@ -209,14 +209,14 @@ class SmugMugFS(object):
 
     for source in sources:
       if not os.path.isdir(source):
-        print 'Source folder not found: "%s"' % source
+        print 'Source folder not found: "%s".' % source
         continue
 
       folder, file = os.path.split(source)
       configs = persistent_dict.PersistentDict(
         os.path.join(folder, '.smugcli'))
       if file in configs.get('ignore', []):
-        print 'Skipping ignored path %s' % source
+        print 'Skipping ignored path "%s".' % source
         continue
 
       self._recursive_sync(source, node, child_nodes)
@@ -231,14 +231,14 @@ class SmugMugFS(object):
     folder_children = self._read_local_dir(current_folder)
 
     if remote_matches:
-      print 'Found matching remote folder for "%s"' % current_folder
+      print 'Found matching remote folder for "%s".' % current_folder
       current_node = remote_matches[0]
     else:
       current_node_type = ('Folder' if any(details.isdir for _, details
                                           in folder_children.iteritems())
                            else 'Album')
 
-      print 'Making %s "%s"' % (current_node_type, current_folder)
+      print 'Making %s "%s".' % (current_node_type, current_folder)
       current_node = self.make_childnode(parent_node,
                                          current_folder,
                                          params={
@@ -259,7 +259,7 @@ class SmugMugFS(object):
     for child_name, child_details in sorted(folder_children.items()):
       new_path = os.path.join(current_folder, child_name)
       if child_name in to_ignore:
-        print 'Skipping ignored path "%s"' % new_path
+        print 'Skipping ignored path "%s".' % new_path
         continue
 
       if current_node['Type'] == 'Folder':
@@ -278,7 +278,7 @@ class SmugMugFS(object):
               continue
 
             if side_album_matches:
-              print 'Found matching remote folder for "%s"' % side_album_path
+              print 'Found matching remote folder for "%s".' % side_album_path
               side_album_node = side_album_matches[0]
             else:
               side_album_node = self.make_childnode(
@@ -323,7 +323,7 @@ class SmugMugFS(object):
           file_time = max(metadata.getValues('last_modification') +
                           metadata.getValues('creation_date'))
         except Exception as err:
-          print 'Failed extracting metadata for file "%s"' % file_path
+          print 'Failed extracting metadata for file "%s".' % file_path
           file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
 
         same_file = (remote_time == file_time)
@@ -340,7 +340,7 @@ class SmugMugFS(object):
         remote_file.delete()
         print 'Re-uploading "%s".' % file_path
     else:
-      print 'Uploading "%s"' % file_path
+      print 'Uploading "%s".' % file_path
     album_node.upload('Album', file_name, file_content)
 
   def _resursive_album_sync(self, current_folder, album_node, image_nodes):

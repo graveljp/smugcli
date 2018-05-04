@@ -151,12 +151,12 @@ class EndToEndTest(unittest.TestCase):
 
   def test_ls(self):
     self._do('ls __non_existing_folder__',
-             '"__non_existing_folder__" not found in ""\n')
+             '"__non_existing_folder__" not found in "".\n')
 
   def test_mkdir(self):
     # Missing parent.
     self._do('mkdir {root}/foo',
-             '"{root}" not found in ""\n')
+             '"{root}" not found in "".\n')
 
     # Creating root folder.
     self._do('mkdir {root}',
@@ -168,7 +168,7 @@ class EndToEndTest(unittest.TestCase):
 
     # Missing sub-folder parent.
     self._do('mkdir {root}/foo/bar/baz',
-             '"foo" not found in "/{root}"\n')
+             '"foo" not found in "/{root}".\n')
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
@@ -194,11 +194,11 @@ class EndToEndTest(unittest.TestCase):
 
     # Can't remove non-empty folders.
     self._do('rmdir {root}/foo/bar',
-             'Cannot delete Folder: "{root}/foo/bar" is not empty\n')
+             'Cannot delete Folder: "{root}/foo/bar" is not empty.\n')
 
     # Can delete simple folder.
     self._do('rmdir {root}/foo/bar/baz',
-             'Deleting {root}/foo/bar/baz\n')
+             'Deleting "{root}/foo/bar/baz".\n')
     self._do('ls {root}/foo',
              'bar\n')
     self._do('ls {root}/foo/bar',
@@ -206,12 +206,12 @@ class EndToEndTest(unittest.TestCase):
 
     # Can delete folder and all it's non-empty parents.
     self._do('rmdir -p {root}/foo/bar',
-             'Deleting {root}/foo/bar\n'
-             'Deleting {root}/foo\n'
-             'Cannot delete Folder: "{root}" is not empty\n')
+             'Deleting "{root}/foo/bar".\n'
+             'Deleting "{root}/foo".\n'
+             'Cannot delete Folder: "{root}" is not empty.\n')
 
     self._do('ls {root}/foo',
-             '"foo" not found in "/{root}"\n')
+             '"foo" not found in "/{root}".\n')
     self._do('ls {root}',
              'buz\n')
 

@@ -74,10 +74,10 @@ class TestSmugCLI(unittest.TestCase):
      u'Logan Leia wave pool.jpg\n'),
 
     (['/Photography/invalid'],
-     '"invalid" not found in "/Photography"\n'),
+     '"invalid" not found in "/Photography".\n'),
 
     (['/Photography/inval\xc3\xafd'],
-     u'"inval\xefd" not found in "/Photography"\n')])
+     u'"inval\xefd" not found in "/Photography".\n')])
   @responses.activate
   def test_ls(self, command_line, expected_message):
     smugcli.Commands.ls(self._fs, command_line)

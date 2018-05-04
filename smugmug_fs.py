@@ -150,9 +150,9 @@ class SmugMugFS(object):
         current_dir = os.sep.join(m.name for m in matched_nodes)
         node = matched_nodes.pop().node
         if len(node.get_children({'count': 1})):
-          print 'Cannot delete folder or album: "%s" is not empty.' % (
-            current_dir)
-          continue
+          print 'Cannot delete %s: "%s" is not empty.' % (
+            node['Type'], current_dir)
+          break
 
         print 'Deleting %s' % current_dir
         node.delete()

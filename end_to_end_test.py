@@ -12,9 +12,10 @@ import sys
 import tempfile
 import unittest
 
+
 class CapturingStream(object):
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self):
     self._stdout = sys.stdout
     self._string_io = StringIO.StringIO()
 
@@ -28,6 +29,7 @@ class CapturingStream(object):
   def reset(self):
     self._string_io.close()
     self._string_io = StringIO.StringIO()
+
 
 class EndToEndTest(unittest.TestCase):
 
@@ -143,9 +145,6 @@ class EndToEndTest(unittest.TestCase):
       expected_output = expected_output.replace('/', os.sep)
       self.assertEqual(self._cmd_output.getvalue(),
                        expected_output)
-
-  def _smpath(self, *args):
-    return os.path.join(self._remote_dir, *args)
 
   def test_ls(self):
     self._do('ls __non_existing_folder__',

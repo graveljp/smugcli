@@ -151,20 +151,36 @@ class EndToEndTest(unittest.TestCase):
              '"__non_existing_folder__" not found in ""\n')
 
   def test_mkdir(self):
+    # Missing parent.
     self._do('mkdir {root}/foo',
              '"{root}" not found in ""\n')
 
+    # Creating root folder.
     self._do('mkdir {root}',
              'Creating "{root}".\n')
 
+    # Cannot create existing folder.
     self._do('mkdir {root}',
              'Path "{root}" already exists.\n')
 
-    self._do('mkdir {root}/foo',
-             'Creating "{root}/foo".\n')
+    # Missing sub-folder parent.
+    self._do('mkdir {root}/foo/bar/baz',
+             '"foo" not found in "/{root}"\n')
+
+    # Creates all missing parents.
+    self._do('mkdir -p {root}/foo/bar/baz',
+             'Creating "{root}/foo".\n'
+             'Creating "{root}/foo/bar".\n'
+             'Creating "{root}/foo/bar/baz".\n')
+
+    # Check that all folders were properly created.
+    self._do('ls {root}/foo/bar',
+             'baz\n')
+    self._do('ls {root}/foo/bar/baz',
+             '')  # Folder exists, but is empty.
 
     # Cleanup.
-    self._do('rmdir -p {root}/foo')
+    self._do('rmdir -p {root}/foo/bar/baz')
 
   def test_rmdir_parents(self):
     self._do('mkdir -p {root}/foo/bar/baz')

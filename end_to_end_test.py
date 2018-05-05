@@ -228,6 +228,21 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls {root}/foo/bar/baz',
              [])  # Folder exists, but is empty.
 
+    # Can create many folders in one command.
+    self._do('mkdir {root}/buz {root}/biz',
+             ['Creating "{root}/buz".',
+              'Creating "{root}/biz".'])
+
+    self._do('mkdir {root}/baz/biz {root}/buz {root}/baz',
+             ['"baz" not found in "/{root}".',
+              'Path "{root}/buz" already exists.',
+              'Creating "{root}/baz".'])
+
+    self._do('ls {root}',
+             ['baz',
+              'biz',
+              'buz',
+              'foo'])
 
   def test_rmdir(self):
     # Create a test folder hierarchy.

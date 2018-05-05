@@ -24,7 +24,8 @@ class Helpers(object):
   def mknode(fs, args, node_type, parser):
     parser.add_argument('path',
                         type=lambda s: unicode(s, 'utf8'),
-                        help='%s to create.' % node_type)
+                        nargs='+',
+                        help='%ss to create.' % node_type)
     parser.add_argument('-p',
                         action='store_true',
                         help='Create parents if they are missing.')

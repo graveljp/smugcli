@@ -116,26 +116,27 @@ class SmugMugFS(object):
 
     return node
 
-  def make_node(self, user, path, create_parents, params=None):
+  def make_node(self, user, paths, create_parents, params=None):
     user = user or self._smugmug.get_auth_user()
-    matched_nodes, unmatched_dirs = self.path_to_node(user, path)
-    if len(unmatched_dirs) > 1 and not create_parents:
-      print '"%s" not found in "%s".' % (
-        unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
-      return
+    for path in paths:
+      matched_nodes, unmatched_dirs = self.path_to_node(user, path)
+      if len(unmatched_dirs) > 1 and not create_parents:
+        print '"%s" not found in "%s".' % (
+          unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
+        continue
 
-    if not len(unmatched_dirs):
-      print 'Path "%s" already exists.' % path
-      return
+      if not len(unmatched_dirs):
+        print 'Path "%s" already exists.' % path
+        continue
 
-    built_path = os.path.join(*[m.name for m in matched_nodes])
-    node = matched_nodes[-1].node
-    for part in unmatched_dirs:
-      built_path = os.path.join(built_path, part)
-      print 'Creating "%s".' % built_path
-      node = self.make_childnode(node, part, params)
-      if not node:
-        return
+      built_path = os.path.join(*[m.name for m in matched_nodes])
+      node = matched_nodes[-1].node
+      for part in unmatched_dirs:
+        built_path = os.path.join(built_path, part)
+        print 'Creating "%s".' % built_path
+        node = self.make_childnode(node, part, params)
+        if not node:
+          continue
 
   def rmdir(self, user, parents, dirs):
     user = user or self._smugmug.get_auth_user()

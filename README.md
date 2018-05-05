@@ -3,6 +3,27 @@ Command line tool for SmugMug, useful for automatically synchronizing a local fo
 
 Implemented using the V2 API and tested with Python 2.7.10.
 
+# Prerequisites
+Depends on the following Python libraries:
+
+ * For authentification and communication with SmugMug:
+   * bottle
+   * rauth
+   * requests
+   * requests_oauthlib
+
+ * For parsing metadata from local files:
+   * hachoir_core
+   * hachoir_parser
+   * hachoir_metadata
+
+ * To run unit-tests:
+   * parameterized
+   * mock
+   * responses
+
+You may install any missing library using `pip` (e.g. `pip install requests`)
+
 # Sample usage
 
 To use this command line tool, you will need to request your own API key by visiting https://api.smugmug.com/api/developer/apply. Using your key and secret, loging to smugcli using the following command:

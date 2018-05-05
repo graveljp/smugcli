@@ -88,6 +88,11 @@ class EndToEndTest(unittest.TestCase):
   def setUp(self):
     print '\n-------------------------'
     print 'Running: %s\n' % self.id()
+
+    cache_folder = self._get_cache_base_folder()
+    if bool(os.environ.get('RESET_CACHE')):
+      shutil.rmtree(cache_folder)
+
     self._local_dir = tempfile.mkdtemp()
 
     self._io = ExpectedInputOutput()
@@ -100,7 +105,7 @@ class EndToEndTest(unittest.TestCase):
 
     self._command_index = 0
     self._pending = set()
-    self._replay_cached_requests = os.path.exists(self._get_cache_base_folder())
+    self._replay_cached_requests = os.path.exists(cache_folder)
 
     self._do('rm -r -f {root}')
 
@@ -316,3 +321,6 @@ class EndToEndTest(unittest.TestCase):
               'Remove Folder node "{root}"? ',
               Reply('YES'),
               'Removing "{root}".'])
+
+if __name__ == '__main__':
+  unittest.main()

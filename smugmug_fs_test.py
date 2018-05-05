@@ -2,6 +2,7 @@ import smugmug
 import smugmug_fs
 import test_utils
 
+import os
 import responses
 import unittest
 
@@ -53,7 +54,8 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertTrue(matched_nodes[0].node['IsRoot'])
     self.assertEquals(unmatched_dirs, [])
 
-    matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac', '/')
+    matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac',
+                                                          os.path.normpath('/'))
     self.assertEquals(len(matched_nodes), 1)
     self.assertTrue(matched_nodes[0].node['IsRoot'])
     self.assertEquals(unmatched_dirs, [])
@@ -65,13 +67,15 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertEquals(matched_nodes[1].node['Name'],'Photography')
     self.assertEquals(unmatched_dirs, [])
 
-    matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac', '/Photography')
+    matched_nodes, ummatched_dirs = self._fs.path_to_node(
+      'cmac', os.path.normpath('/Photography'))
     self.assertEquals(matched_nodes[-1].name, 'Photography')
     self.assertEquals(matched_nodes[-1].node['Name'], 'Photography')
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-        'cmac', '/Photography/San Francisco by helicopter 2014')
+      'cmac',
+      os.path.normpath('/Photography/San Francisco by helicopter 2014'))
     self.assertEquals(len(matched_nodes), 3)
     self.assertTrue(matched_nodes[0].node['IsRoot'])
     self.assertEquals(matched_nodes[1].node['Name'], 'Photography')
@@ -79,13 +83,14 @@ class TestSmugMugFS(unittest.TestCase):
                       'San Francisco by helicopter 2014')
     self.assertEquals(unmatched_dirs, [])
 
-    matched_nodes, unmatched_dirs = self._fs.path_to_node('cmac', '/invalid1')
+    matched_nodes, unmatched_dirs = self._fs.path_to_node(
+      'cmac', os.path.normpath('/invalid1'))
     self.assertEquals(len(matched_nodes), 1)
     self.assertTrue(matched_nodes[0].node['IsRoot'])
     self.assertEquals(unmatched_dirs, ['invalid1'])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-      'cmac', '/Photography/invalid2')
+      'cmac', os.path.normpath('/Photography/invalid2'))
     self.assertEquals(len(matched_nodes), 2)
     self.assertTrue(matched_nodes[0].node['IsRoot'])
     self.assertEquals(matched_nodes[1].name, 'Photography')

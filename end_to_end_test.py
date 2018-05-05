@@ -18,7 +18,7 @@ REMOTE_DIR = '__smugcli_unit_tests__'
 
 def format_path(path):
   path = path.format(root=REMOTE_DIR)
-  path = path.replace('/', os.sep)
+  path = os.path.normpath(path)
   return path
 
 

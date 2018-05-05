@@ -5,6 +5,7 @@ import test_utils
 
 import json
 import mock
+import os
 from parameterized import parameterized
 import responses
 import StringIO
@@ -35,7 +36,7 @@ class TestSmugCLI(unittest.TestCase):
                      json.load(open('testdata/root_node.json')))
 
   @parameterized.expand([
-    (['/Photography/'],
+    ('/Photography/',
      u'San Francisco by helicopter 2014\n'
      u'SmugMug homepage slide show\n'
      u'New Journal style: Big photos!\n'
@@ -53,7 +54,7 @@ class TestSmugCLI(unittest.TestCase):
      u'Printing services test prints\n'
      u'Quantum Q Flash 5D\n'),
 
-    (['/Photography/San Francisco by helicopter 2014'],
+    ('/Photography/San Francisco by helicopter 2014',
      u'DSC_5752.jpg\n'
      u'DSC_5903.jpg\n'
      u'DSC_5932.jpg\n'
@@ -73,15 +74,17 @@ class TestSmugCLI(unittest.TestCase):
      u'DSC_4933.jpg\n'
      u'Logan Leia wave pool.jpg\n'),
 
-    (['/Photography/invalid'],
+    ('/Photography/invalid',
      '"invalid" not found in "/Photography".\n'),
 
-    (['/Photography/inval\xc3\xafd'],
+    ('/Photography/inval\xc3\xafd',
      u'"inval\xefd" not found in "/Photography".\n')])
   @responses.activate
-  def test_ls(self, command_line, expected_message):
-    smugcli.Commands.ls(self._fs, command_line)
-    self.assertEqual(self._cmd_output.getvalue(), expected_message)
+  def test_ls(self, folder, expected_message):
+    smugcli.Commands.ls(self._fs, [os.path.normpath(folder)])
+    self.assertEqual(
+      self._cmd_output.getvalue(),
+      os.path.normpath(expected_message))
 
   def test_mkdir(self):
     with responses.RequestsMock(assert_all_requests_are_fired=True) as rsps:
@@ -112,9 +115,11 @@ class TestSmugCLI(unittest.TestCase):
         responses.GET, API_ROOT + '/api/v2/node/XWx8t!children',
         json=json.load(open('testdata/smugmug_node_children_mkdir.json')))
 
-      smugcli.Commands.mkdir(self._fs, ['/SmugMug/smugcli-test'])
-      self.assertEqual(self._cmd_output.getvalue(),
-                       u'Creating "SmugMug/smugcli-test".\n')
+      smugcli.Commands.mkdir(self._fs,
+                             [os.path.normpath('/SmugMug/smugcli-test')])
+      self.assertEqual(
+        self._cmd_output.getvalue(),
+        os.path.normpath(u'Creating "SmugMug/smugcli-test".\n'))
 
 if __name__ == '__main__':
   unittest.main()

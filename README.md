@@ -93,3 +93,27 @@ To undo this operation, you can run:
 ```
 $ ./smugcli.py include local/folder/export-tmp
 ```
+
+# Running the tests
+PLEASE READ, RUN UNIT TESTS AT YOUR OWN RISKS: smugcli's unit-tests use the logged-in user account to do run actual commands on SmugMug. All operations *should* be performed in a `__smugcli_unit_tests__` subfolder in the SmugMug account's root. This folder *should* be deleted automatically when/if the test completes. If in doubt, do `smugcli.py logout && smugcli.py login` and use a test account.
+
+Run all unit tests by running:
+```
+$ ./run_tests.py
+```
+
+Individual tests can be ran by doing:
+```
+$ ./run_tests.py module[.class_name[.test_name]]
+```
+for instance:
+```
+$ ./run_tests.py end_to_end_test  # Runs all tests in module end_to_end_test.
+$ ./run_tests.py end_to_end_test.EndToEndTest  # Runs all tests in class EndToEndTest.
+$ ./run_tests.py end_to_end_test.EndToEndTest.test_mkdir  # Runs a single test.
+```
+
+SmugMug is slow, so to speed up iterations while changing code, all HTTP requests are cached on disk and replayed on subsequent runs. The first test run will take a while, but the second one should take about a second. When updating tests however, the cached HTTP request may no longer match the new test code. Reset the cache by using `--reset_cache`:
+```
+$ ./run_tests.py end_to_end_test.EndToEndTest.test_mkdir --reset_cache
+```

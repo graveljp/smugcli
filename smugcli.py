@@ -67,7 +67,8 @@ class Helpers(object):
       if ignore:
         updated_ignore = list(set(original_ignore) | set(files))
       else:
-        updated_ignore = list(set(original_ignore) ^ set(files))
+        updated_ignore = list(set(original_ignore) ^ (set(files) &
+                                                      set(original_ignore)))
       configs['ignore'] = updated_ignore
 
 

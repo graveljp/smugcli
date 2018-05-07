@@ -12,6 +12,7 @@ import itertools
 import json
 import md5
 import os
+import urlparse
 
 hachoir_config.quiet = True
 
@@ -58,6 +59,36 @@ class SmugMugFS(object):
       matched_nodes.append(NodeInfo(part, current_node))
       unmatched_dirs.popleft()
     return matched_nodes, list(unmatched_dirs)
+
+  def get(self, url):
+    scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
+    params = urlparse.parse_qs(query)
+    result = self._smugmug.get_json(path, params=params)
+    print json.dumps(result, sort_keys=True, indent=2, separators=(',', ': '))
+
+  def ignore_or_include(paths, ignore):
+    files_by_folder = collections.defaultdict(list)
+    for folder, file in [os.path.split(path) for path in paths]:
+      files_by_folder[folder].append(file)
+
+    for folder, files in files_by_folder.iteritems():
+      if not os.path.isdir(folder or '.'):
+        print 'Can\'t find folder %s' % folder
+        return
+      for file in files:
+        full_path = os.path.join(folder, file)
+        if not os.path.exists(full_path):
+          print '%s doesn\'t exists' % full_path
+          return
+
+      configs = persistent_dict.PersistentDict(os.path.join(folder, '.smugcli'))
+      original_ignore = configs.get('ignore', [])
+      if ignore:
+        updated_ignore = list(set(original_ignore) | set(files))
+      else:
+        updated_ignore = list(set(original_ignore) ^ (set(files) &
+                                                      set(original_ignore)))
+      configs['ignore'] = updated_ignore
 
   def ls(self, user, path, details):
     user = user or self._smugmug.get_auth_user()

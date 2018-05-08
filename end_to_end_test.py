@@ -236,6 +236,10 @@ class EndToEndTest(unittest.TestCase):
     self._command_index += 1
     self._io.assert_no_pending()
 
+  def test_get(self):
+    self._do('get /api/v2/user',
+             [ExpectPrefix('{\n  "Code": 200,\n  "Message": "Ok"')])
+
   def test_ls(self):
     self._do('ls __non_existing_folder__',
              ['"__non_existing_folder__" not found in "".'])

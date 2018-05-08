@@ -22,6 +22,37 @@ def format_path(path):
   return path
 
 
+class ExpectBase(object):
+  # Base class for all expected response string matchers.
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
+
+class Expect(ExpectBase):
+
+  def __init__(self, string):
+    self._string = format_path(string)
+
+  def __eq__(self, other):
+    return other == self._string
+
+  def __repr__(self):
+    return repr(self._string)
+
+
+class ExpectPrefix(ExpectBase):
+
+  def __init__(self, prefix):
+    self._prefix = format_path(prefix)
+
+  def __eq__(self, other):
+    return other.startswith(self._prefix)
+
+  def __repr__(self):
+    return repr(self._prefix + '[...]')
+
+
 class Reply(object):
 
   def __init__(self, string):
@@ -40,7 +71,8 @@ class ExpectedInputOutput(object):
     self._expected_io = None
 
   def set_expected_io(self, expected_io):
-    self._expected_io = expected_io
+    self._expected_io = [Expect(io) if isinstance(io, basestring) else io
+                         for io in expected_io] if expected_io else None
 
   def assert_no_pending(self):
     if self._expected_io:
@@ -61,14 +93,13 @@ class ExpectedInputOutput(object):
                            repr(string))
 
     io = self._expected_io.pop(0)
-    if not isinstance(io, basestring):
+    if not isinstance(io, ExpectBase):
       raise AssertionError('Not expecting output message but got: %s' %
                            repr(string))
 
-    formatted = format_path(io)
-    if string != formatted:
+    if io != string:
       raise AssertionError('Unexpected output: %s != %s' % (repr(string),
-                                                            repr(formatted)))
+                                                            repr(io)))
 
   def readline(self):
     if not self._expected_io:

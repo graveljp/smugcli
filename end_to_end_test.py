@@ -110,6 +110,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('rm -r -f {root}')
 
   def tearDown(self):
+    self._io.set_expected_io(None)
     self._do('rm -r -f {root}')
 
     if self._pending:

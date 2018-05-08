@@ -54,7 +54,19 @@ class ExpectPrefix(ExpectBase):
     return other.startswith(self._prefix)
 
   def __repr__(self):
-    return repr(self._prefix + '[...]')
+    return 'ExpectPrefix(' + repr(self._prefix) + ')'
+
+
+class ExpectRegex(ExpectBase):
+
+  def __init__(self, regex):
+    self._regex = regex
+
+  def __eq__(self, other):
+    return re.match(self._regex, other, re.DOTALL)
+
+  def __repr__(self):
+    return 'ExpectRegex(' + repr(self._regex) + ')'
 
 
 class Reply(object):
@@ -241,8 +253,23 @@ class EndToEndTest(unittest.TestCase):
              [ExpectPrefix('{\n  "Code": 200,\n  "Message": "Ok"')])
 
   def test_ls(self):
-    self._do('ls __non_existing_folder__',
-             ['"__non_existing_folder__" not found in "".'])
+    # Fails if node doesn't exists.
+    self._do('ls {root}',
+             ['"{root}" not found in "".'])
+    self._do('ls {root}/foo',
+             ['"{root}" not found in "".'])
+
+    # Works if node exists:
+    self._do('mkdir -p {root}/foo/bar {root}/foo/baz')
+    self._do('ls {root}',
+             ['foo'])
+    self._do('ls {root}/foo',
+             ['bar',
+              'baz'])
+
+    # Shows full node JSON info in -l mode:
+    self._do('ls -l {root}',
+             [ExpectRegex(r'{\n  .*  "Name": "foo"')])
 
   def test_mkdir(self):
     # Missing parent.

@@ -17,7 +17,11 @@ REMOTE_DIR = '__smugcli_unit_tests__'
 
 
 def format_path(path):
-  path = path.format(root=REMOTE_DIR)
+  try:
+    path = path.format(root=REMOTE_DIR)
+  except ValueError:  # Ignore unmatched '{'.
+    pass
+
   path = os.path.normpath(path)
   return path
 

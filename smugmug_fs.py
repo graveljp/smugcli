@@ -12,6 +12,7 @@ import itertools
 import json
 import md5
 import os
+import requests
 import urlparse
 
 hachoir_config.quiet = True
@@ -221,9 +222,14 @@ class SmugMugFS(object):
       return
 
     for filename in filenames:
-      node.upload('Album',
-                  os.path.basename(filename).strip(),
-                  open(filename, 'rb').read())
+      response = node.upload('Album',
+                             os.path.basename(filename).strip(),
+                             open(filename, 'rb').read())
+      if response.status_code != requests.codes.ok:
+        print 'Error uploading "%s" to "%s".' % (filename, album)
+        print 'Server responded with %s.' % str(response)
+        return None
+
 
   def sync(self, user, sources, target):
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))

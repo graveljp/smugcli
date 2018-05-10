@@ -39,7 +39,7 @@ class Expect(ExpectBase):
     self._string = format_path(string)
 
   def __eq__(self, other):
-    return other == self._string
+    return other.strip() == self._string.strip()
 
   def __repr__(self):
     return repr(self._string)
@@ -51,7 +51,7 @@ class ExpectPrefix(ExpectBase):
     self._prefix = format_path(prefix)
 
   def __eq__(self, other):
-    return other.startswith(self._prefix)
+    return other.strip().startswith(self._prefix.strip())
 
   def __repr__(self):
     return 'ExpectPrefix(' + repr(self._prefix) + ')'
@@ -63,7 +63,7 @@ class ExpectRegex(ExpectBase):
     self._regex = regex
 
   def __eq__(self, other):
-    return re.match(self._regex, other, re.DOTALL)
+    return re.match(self._regex, other, re.DOTALL | re.MULTILINE)
 
   def __repr__(self):
     return 'ExpectRegex(' + repr(self._regex) + ')'
@@ -85,39 +85,27 @@ class ExpectedInputOutput(object):
 
   def __init__(self):
     self._expected_io = None
+    self._cmd_output = StringIO.StringIO()
 
   def set_expected_io(self, expected_io):
     self._expected_io = [Expect(io) if isinstance(io, basestring) else io
                          for io in expected_io] if expected_io else None
+    self._cmd_output = StringIO.StringIO()
 
   def assert_no_pending(self):
+    self._CheckExpectedOutput()
+
     if self._expected_io:
       raise AssertionError('Pending IO expectation never fulfulled:\n%s' % str(self._expected_io))
-    self._expected_io = None
+    self.set_expected_io(None)
 
   def write(self, string):
     sys.__stdout__.write(string)
-
-    if self._expected_io is None:
-      return
-
-    if string == '\n':
-      return
-
-    if not self._expected_io:
-      raise AssertionError('Not expecting any more IOs but got: %s' %
-                           repr(string))
-
-    io = self._expected_io.pop(0)
-    if not isinstance(io, ExpectBase):
-      raise AssertionError('Not expecting output message but got: %s' %
-                           repr(string))
-
-    if io != string:
-      raise AssertionError('Unexpected output: %s != %s' % (repr(string),
-                                                            repr(io)))
+    self._cmd_output.write(string)
 
   def readline(self):
+    self._CheckExpectedOutput()
+
     if not self._expected_io:
       raise AssertionError('Not expecting any more IOs.')
 
@@ -128,6 +116,26 @@ class ExpectedInputOutput(object):
     reply = format_path(str(io)) + '\n'
     sys.__stdout__.write(reply)
     return reply
+
+  def _CheckExpectedOutput(self):
+    output = self._cmd_output.getvalue()
+    self._cmd_output = StringIO.StringIO()
+
+    if not output or self._expected_io is None:
+      return
+
+    if not self._expected_io:
+      raise AssertionError('Not expecting any more IOs but got: %s' %
+                           repr(output))
+
+    io = self._expected_io.pop(0)
+    if not isinstance(io, ExpectBase):
+      raise AssertionError('Not expecting output message but got: %s' %
+                           repr(output))
+
+    if io != output:
+      raise AssertionError('Unexpected output: %s != %s' % (repr(io),
+                                                            repr(output)))
 
 
 class EndToEndTest(unittest.TestCase):
@@ -264,7 +272,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls {root}',
              ['foo'])
     self._do('ls {root}/foo',
-             ['bar',
+             ['bar\n'
               'baz'])
 
     # Shows full node JSON info in -l mode:
@@ -290,8 +298,8 @@ class EndToEndTest(unittest.TestCase):
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
-             ['Creating "{root}/foo".',
-              'Creating "{root}/foo/bar".',
+             ['Creating "{root}/foo".\n'
+              'Creating "{root}/foo/bar".\n'
               'Creating "{root}/foo/bar/baz".'])
 
     # Check that all folders were properly created.
@@ -302,18 +310,18 @@ class EndToEndTest(unittest.TestCase):
 
     # Can create many folders in one command.
     self._do('mkdir {root}/buz {root}/biz',
-             ['Creating "{root}/buz".',
+             ['Creating "{root}/buz".\n'
               'Creating "{root}/biz".'])
 
     self._do('mkdir {root}/baz/biz {root}/buz {root}/baz',
-             ['"baz" not found in "/{root}".',
-              'Path "{root}/buz" already exists.',
+             ['"baz" not found in "/{root}".\n'
+              'Path "{root}/buz" already exists.\n'
               'Creating "{root}/baz".'])
 
     self._do('ls {root}',
-             ['baz',
-              'biz',
-              'buz',
+             ['baz\n'
+              'biz\n'
+              'buz\n'
               'foo'])
 
   def test_rmdir(self):
@@ -339,8 +347,8 @@ class EndToEndTest(unittest.TestCase):
 
     # Can delete folder and all it's non-empty parents.
     self._do('rmdir -p {root}/foo/bar',
-             ['Deleting "{root}/foo/bar".',
-              'Deleting "{root}/foo".',
+             ['Deleting "{root}/foo/bar".\n'
+              'Deleting "{root}/foo".\n'
               'Cannot delete Folder: "{root}" is not empty.'])
 
     self._do('ls {root}/foo',
@@ -383,8 +391,8 @@ class EndToEndTest(unittest.TestCase):
     self._do('rm -r {root}/foo {root}/fuz {root}',
              ['Remove Folder node "{root}/foo"? ',
               Reply('yes'),
-              'Removing "{root}/foo".',
-              '"{root}/fuz" not found.',
+              'Removing "{root}/foo".\n'
+              '"{root}/fuz" not found.\n'
               'Remove Folder node "{root}"? ',
               Reply('YES'),
               'Removing "{root}".'])

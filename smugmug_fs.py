@@ -126,10 +126,6 @@ class SmugMugFS(object):
     node_params.update(params or {})
 
     response = node.post('ChildNodes', data=node_params)
-    if response is None:
-      print 'Cannot create child nodes under "%s".' % parent
-      return None
-
     if response.status_code != 201:
       print 'Error creating node "%s".' % path
       print 'Server responded with %s.' % str(response)

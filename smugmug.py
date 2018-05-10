@@ -76,14 +76,10 @@ class Node(object):
 
   def get(self, url_name, **kwargs):
     uri = self.uri(url_name)
-    if not uri:
-      raise UnexpectedResponseError('Node does not have a "%s" uri.' % url_name)
     return self._smugmug.get(uri, **kwargs)
 
   def post(self, uri_name, data=None, json=None, **kwargs):
     uri = self.uri(uri_name)
-    if not uri:
-      return None
     return self._smugmug.post(uri, data, json, **kwargs)
 
   def patch(self, uri_name, data=None, json=None, **kwargs):
@@ -99,7 +95,10 @@ class Node(object):
     return self._smugmug.upload(uri, filename, data, headers)
 
   def uri(self, url_name):
-    return self._json.get('Uris', {}).get(url_name, {}).get('Uri')
+    uri = self._json.get('Uris', {}).get(url_name, {}).get('Uri')
+    if not uri:
+      raise UnexpectedResponseError('Node does not have a "%s" uri.' % url_name)
+    return uri
 
   def __getitem__(self, key):
     return self._json[key]

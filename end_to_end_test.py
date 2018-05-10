@@ -150,7 +150,7 @@ class EndToEndTest(unittest.TestCase):
 
     cache_folder = self._get_cache_base_folder()
     if bool(os.environ.get('RESET_CACHE')):
-      shutil.rmtree(cache_folder)
+      shutil.rmtree(cache_folder, ignore_errors=True)
 
     self._local_dir = tempfile.mkdtemp()
 

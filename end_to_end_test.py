@@ -283,6 +283,10 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls -l {root}',
              [ExpectRegex(r'{\n  .*  "Name": "foo"')])
 
+    # Lists other user's folder
+    self._do('ls -u cmac',
+             [ExpectRegex(r'.*^Photography$')])
+
   def test_mkdir(self):
     # Missing parent.
     self._do('mkdir {root}/foo',

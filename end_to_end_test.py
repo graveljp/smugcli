@@ -22,7 +22,10 @@ def format_path(path):
   except ValueError:  # Ignore unmatched '{'.
     pass
 
-  path = os.path.normpath(path)
+  # On windows, replace '/' for '\\', but keep '\\/' and '/'.
+  fix_slash_re = re.compile(r'([^\\])/')
+  path = fix_slash_re.sub(r'\1\%s' % os.sep, path)
+  path = path.replace('\\/', '/')
   return path
 
 
@@ -257,7 +260,7 @@ class EndToEndTest(unittest.TestCase):
     self._io.assert_no_pending()
 
   def test_get(self):
-    self._do('get /api/v2/user',
+    self._do('get \\/api\\/v2\\/user',
              [ExpectPrefix('{\n  "Code": 200,\n  "Message": "Ok"')])
 
   def test_ls(self):

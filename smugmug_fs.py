@@ -216,6 +216,10 @@ class SmugMugFS(object):
       return
 
     node = matched_nodes[-1].node
+    if node['Type'] != 'Album':
+      print 'Cannot upload images in node of type "%s".' % node['Type']
+      return
+
     for filename in filenames:
       node.upload('Album',
                   os.path.basename(filename).strip(),

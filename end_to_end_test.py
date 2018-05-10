@@ -91,8 +91,9 @@ class ExpectedInputOutput(object):
     self._cmd_output = StringIO.StringIO()
 
   def set_expected_io(self, expected_io):
-    self._expected_io = [Expect(io) if isinstance(io, basestring) else io
-                         for io in expected_io] if expected_io else None
+    self._expected_io = (
+      [Expect(io) if isinstance(io, basestring) else io for io in expected_io]
+      if expected_io is not None else None)
     self._cmd_output = StringIO.StringIO()
 
   def assert_no_pending(self):

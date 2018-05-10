@@ -201,6 +201,7 @@ class SmugMug(object):
     resp = self._session.send(req)
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
+    resp.raise_for_status()
     return resp.json()
 
   def get(self, path, **kwargs):

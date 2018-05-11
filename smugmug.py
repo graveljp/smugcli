@@ -222,11 +222,16 @@ class SmugMug(object):
     return resp
 
   def patch(self, path, data=None, json=None, **kwargs):
-    return requests.patch(API_ROOT + path,
-                          data=data, json=json,
-                          headers={'Accept': 'application/json'},
-                          auth=self.oauth,
-                          **kwargs)
+    req = requests.Request('PATCH',
+                           API_ROOT + path,
+                           data=data, json=json,
+                           headers={'Accept': 'application/json'},
+                           auth=self.oauth,
+                           **kwargs).prepare()
+    resp = self._session.send(req)
+    if self._requests_sent is not None:
+      self._requests_sent.append((req, resp))
+    return resp
 
   def delete(self, path, data=None, json=None, **kwargs):
     req = requests.Request('DELETE',

@@ -158,8 +158,10 @@ class EndToEndTest(unittest.TestCase):
     sys.stdin = self._io
     sys.stdout = self._io
 
-    self._url_re = re.compile(
+    self._api_url_re = re.compile(
       r'https://api\.smugmug\.com/api/v2[\!/](?P<path>.*)')
+    self._upload_url_re = re.compile(
+      r'https://(?P<path>upload)\.smugmug\.com/')
     self._path_replace_re = re.compile(r'[!/?]')
 
     self._command_index = 0
@@ -182,7 +184,8 @@ class EndToEndTest(unittest.TestCase):
     sys.stdout = sys.__stdout__
 
   def _url_path(self, request):
-    match = self._url_re.match(request.url)
+    match = (self._api_url_re.match(request.url) or
+             self._upload_url_re.match(request.url))
     assert match
     path = match.group('path')
     path = self._path_replace_re.sub('.', path)

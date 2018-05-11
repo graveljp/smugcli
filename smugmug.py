@@ -247,8 +247,15 @@ class SmugMug(object):
                'X-Smug-ResponseType': 'JSON',
                'X-Smug-Version': 'v2'}
     headers.update(additional_headers or {})
-    return requests.post(API_UPLOAD, data=data, headers=headers,
-                         auth=self.oauth)
+    req = requests.Request('POST',
+                           API_UPLOAD,
+                           data=data,
+                           headers=headers,
+                           auth=self.oauth).prepare()
+    resp = self._session.send(req)
+    if self._requests_sent is not None:
+      self._requests_sent.append((req, resp))
+    return resp
 
 
 class FakeSmugMug(SmugMug):

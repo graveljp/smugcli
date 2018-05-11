@@ -197,13 +197,23 @@ class EndToEndTest(unittest.TestCase):
     return os.path.join(
       self._get_cache_base_folder(), '%02d_%s' % (self._command_index, args[0]))
 
+  def _encode_body(self, body):
+    if body:
+      try:
+        json.loads(body)
+      except:
+        return body.encode('base64')
+
+    return body
+
   def _save_requests(self, cache_folder, requests_sent):
     os.makedirs(cache_folder)
 
     for i, (request, response) in enumerate(requests_sent):
+
       data = {'request': {'method': request.method,
                           'url': request.url,
-                          'body': request.body},
+                          'body': self._encode_body(request.body)},
               'response': {'status': response.status_code,
                            'json': response.json()}}
       data_path = os.path.join(
@@ -220,8 +230,7 @@ class EndToEndTest(unittest.TestCase):
       def callback(req, expected_req, resp, name):
         self.assertIn(name, self._pending)
         self._pending.remove(name)
-
-        self.assertEqual(req.body, expected_req['body'])
+        self.assertEqual(self._encode_body(req.body), expected_req['body'])
         return resp['status'], {}, json.dumps(resp['json'])
       req_resp = json.load(open(file))
       req = req_resp['request']

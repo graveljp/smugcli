@@ -129,7 +129,8 @@ class SmugMugFS(object):
     response = node.post('ChildNodes', data=node_params)
     if response.status_code != 201:
       print 'Error creating node "%s".' % path
-      print 'Server responded with %s.' % str(response)
+      print 'Server responded with status code %d: %s.' % (
+        response.status_code, response.json()['Message'])
       return None
 
     node = node.get_child(remote_name)
@@ -141,6 +142,8 @@ class SmugMugFS(object):
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
       if response.status_code != 200:
         print 'Failed setting SortMethod on Album "%s".' % name
+        print 'Server responded with status code %d: %s.' % (
+          response.status_code, response.json()['Message'])
 
     return node
 

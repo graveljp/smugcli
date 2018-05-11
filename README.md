@@ -71,7 +71,7 @@ $ ./smugcli.py upload local/folder/*.jpg 'Photography/2017/My new album'
 
 Finally, the nicest feature of all, you can synchronize a whole local folder hierarchy to your SmugMug account using the `sync` command:
 ```
-$ ./smugcli.py sync local/folder --target remove/folder
+$ ./smugcli.py sync local/folder --target remote/folder
 Making folder remote/folder/2015
 Making album remote/folder/2015/2015-08-03, Mary's Wedding
 Uploading local/folder/2015/2015-08-03, Mary's Wedding/DSC_0001.JPG
@@ -84,7 +84,7 @@ Uploading local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0052.JPG
 ...
 ```
 
-The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded. To exclute paths from the sync operation, run the command:
+The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded. To exclude paths from the sync operation, run the command:
 ```
 $ ./smugcli.py ignore local/folder/export-tmp
 ```

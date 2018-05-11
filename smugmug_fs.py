@@ -223,7 +223,7 @@ class SmugMugFS(object):
 
     child_nodes = self._get_child_nodes_by_name(node)
 
-    for filename in filenames:
+    for filename in itertools.chain(*(glob.glob(f) for f in filenames)):
       file_basename = os.path.basename(filename).strip()
       if file_basename in child_nodes:
         print 'Skipping "%s", file already exists in Album "%s".' % (filename,

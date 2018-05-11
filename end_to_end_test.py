@@ -437,5 +437,13 @@ class EndToEndTest(unittest.TestCase):
              ['Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
               '"{root}/folder/album".'])
 
+    # Can upload multiple files
+    self._do('upload testdata/Sm?gCLI_1.* testdata/SmugCLI_2.jpg {root}/folder/album',
+             ['Uploading "testdata/SmugCLI_1.gif" to "{root}/folder/album"...\n'
+              'Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
+              '"{root}/folder/album".\n'
+              'Uploading "testdata/SmugCLI_1.png" to "{root}/folder/album"...\n'
+              'Uploading "testdata/SmugCLI_2.jpg" to "{root}/folder/album"...'])
+
 if __name__ == '__main__':
   unittest.main()

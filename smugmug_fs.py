@@ -221,10 +221,18 @@ class SmugMugFS(object):
       print 'Cannot upload images in node of type "%s".' % node['Type']
       return
 
+    child_nodes = self._get_child_nodes_by_name(node)
+
     for filename in filenames:
+      file_basename = os.path.basename(filename).strip()
+      if file_basename in child_nodes:
+        print 'Skipping "%s", file already exists in Album "%s".' % (filename,
+                                                                     album)
+        continue
+
       print 'Uploading "%s" to "%s"...' % (filename, album)
       response = node.upload('Album',
-                             os.path.basename(filename).strip(),
+                             file_basename,
                              open(filename, 'rb').read())
       if response.status_code != requests.codes.ok:
         print 'Error uploading "%s" to "%s".' % (filename, album)

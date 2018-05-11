@@ -432,5 +432,10 @@ class EndToEndTest(unittest.TestCase):
     self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
              ['Uploading "testdata/SmugCLI_1.jpg" to "{root}/folder/album"...'])
 
+    # Can't upload duplicate.
+    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
+             ['Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
+              '"{root}/folder/album".'])
+
 if __name__ == '__main__':
   unittest.main()

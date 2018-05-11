@@ -306,7 +306,7 @@ class EndToEndTest(unittest.TestCase):
 
     # Creating root folder.
     self._do('mkdir {root}',
-             ['Creating "{root}".'])
+             ['Creating Folder "{root}".'])
 
     # Cannot create existing folder.
     self._do('mkdir {root}',
@@ -318,9 +318,9 @@ class EndToEndTest(unittest.TestCase):
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
-             ['Creating "{root}/foo".\n'
-              'Creating "{root}/foo/bar".\n'
-              'Creating "{root}/foo/bar/baz".'])
+             ['Creating Folder "{root}/foo".\n'
+              'Creating Folder "{root}/foo/bar".\n'
+              'Creating Folder "{root}/foo/bar/baz".'])
 
     # Check that all folders were properly created.
     self._do('ls {root}/foo/bar',
@@ -330,19 +330,30 @@ class EndToEndTest(unittest.TestCase):
 
     # Can create many folders in one command.
     self._do('mkdir {root}/buz {root}/biz',
-             ['Creating "{root}/buz".\n'
-              'Creating "{root}/biz".'])
+             ['Creating Folder "{root}/buz".\n'
+              'Creating Folder "{root}/biz".'])
 
     self._do('mkdir {root}/baz/biz {root}/buz {root}/baz',
              ['"baz" not found in "/{root}".\n'
               'Path "{root}/buz" already exists.\n'
-              'Creating "{root}/baz".'])
+              'Creating Folder "{root}/baz".'])
 
     self._do('ls {root}',
              ['baz\n'
               'biz\n'
               'buz\n'
               'foo'])
+
+  def test_mkalbum(self):
+    # Missing parent.
+    self._do('mkalbum {root}/folder/album',
+             ['"{root}" not found in "".'])
+
+    # Create all missing folders.
+    self._do('mkalbum -p {root}/folder/album',
+             ['Creating Folder "{root}".\n'
+              'Creating Folder "{root}/folder".\n'
+              'Creating Album "{root}/folder/album".'])
 
   def test_rmdir(self):
     # Create a test folder hierarchy.

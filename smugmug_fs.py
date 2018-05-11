@@ -144,7 +144,7 @@ class SmugMugFS(object):
 
     return node
 
-  def make_node(self, user, paths, create_parents, params=None):
+  def make_node(self, user, paths, create_parents, node_type, privacy):
     user = user or self._smugmug.get_auth_user()
     for path in paths:
       matched_nodes, unmatched_dirs = self.path_to_node(user, path)
@@ -159,9 +159,13 @@ class SmugMugFS(object):
 
       built_path = os.path.join(*[m.name for m in matched_nodes])
       node = matched_nodes[-1].node
-      for part in unmatched_dirs:
+      for i, part in enumerate(unmatched_dirs):
         built_path = os.path.join(built_path, part)
-        print 'Creating "%s".' % built_path
+        params = {
+          'Type': node_type if i == len(unmatched_dirs) - 1 else 'Folder',
+          'Privacy': privacy,
+        }
+        print 'Creating %s "%s".' % (params['Type'], built_path)
         node = self.make_childnode(node, part, params)
         if not node:
           continue

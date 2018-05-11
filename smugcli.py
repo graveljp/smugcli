@@ -84,11 +84,8 @@ def run(args, requests_sent=None):
     mkdir_parser = subparsers.add_parser(
       cmd, help='Create a %s.' % node_type.lower())
     mkdir_parser.set_defaults(
-      func=lambda a, t=node_type: fs.make_node(a.user, a.path, a.p,
-                                               {
-                                                 'Type': t,
-                                                 'Privacy': a.privacy.title(),
-                                               }))
+      func=lambda a, t=node_type: fs.make_node(a.user, a.path, a.p, t,
+                                               a.privacy.title()))
     mkdir_parser.add_argument('path',
                               type=lambda s: unicode(s, 'utf8'),
                               nargs='+',

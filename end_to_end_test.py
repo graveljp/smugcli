@@ -417,5 +417,20 @@ class EndToEndTest(unittest.TestCase):
               Reply('YES'),
               'Removing "{root}".'])
 
+  def test_upload(self):
+    # Can't upload to non-existing album.
+    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
+             ['Album not found: "{root}/folder/album".'])
+
+    # Can't upload to folders.
+    self._do('mkdir -p {root}/folder')
+    self._do('upload testdata/SmugCLI_1.jpg {root}/folder',
+             ['Cannot upload images in node of type "Folder".'])
+
+    # Can upload to album.
+    self._do('mkalbum -p {root}/folder/album')
+    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
+             ['Uploading "testdata/SmugCLI_1.jpg" to "{root}/folder/album"...'])
+
 if __name__ == '__main__':
   unittest.main()

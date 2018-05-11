@@ -222,6 +222,7 @@ class SmugMugFS(object):
       return
 
     for filename in filenames:
+      print 'Uploading "%s" to "%s"...' % (filename, album)
       response = node.upload('Album',
                              os.path.basename(filename).strip(),
                              open(filename, 'rb').read())

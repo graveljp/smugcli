@@ -171,7 +171,7 @@ class SmugMugFS(object):
         print 'Creating %s "%s".' % (params['Type'], built_path)
         node = self.make_childnode(node, part, params)
         if not node:
-          continue
+          break
 
   def rmdir(self, user, parents, dirs):
     user = user or self._smugmug.get_auth_user()

@@ -14,12 +14,12 @@ import tempfile
 import unittest
 
 
-REMOTE_DIR = '__smugcli_unit_tests__'
+ROOT_DIR = '__smugcli_unit_tests__'
 
 
 def format_path(path):
   try:
-    path = path.format(root=REMOTE_DIR)
+    path = path.format(root=ROOT_DIR)
   except ValueError:  # Ignore unmatched '{'.
     pass
 
@@ -161,8 +161,6 @@ class EndToEndTest(unittest.TestCase):
     if bool(os.environ.get('RESET_CACHE')):
       shutil.rmtree(cache_folder, ignore_errors=True)
 
-    self._local_dir = tempfile.mkdtemp()
-
     self._io = ExpectedInputOutput()
     sys.stdin = self._io
     sys.stdout = self._io
@@ -178,17 +176,18 @@ class EndToEndTest(unittest.TestCase):
     self._replay_cached_requests = os.path.exists(cache_folder)
 
     self._do('rm -r -f {root}')
+    shutil.rmtree(ROOT_DIR, ignore_errors=True)
 
   def tearDown(self):
     self._io.set_expected_io(None)
     self._do('rm -r -f {root}')
+    shutil.rmtree(ROOT_DIR, ignore_errors=True)
 
     if self._pending:
       raise AssertionError(
         'Not all requests have been executed:\n%s' % (
           '\n'.join(sorted(self._pending))))
 
-    shutil.rmtree(self._local_dir)
     sys.stdin = sys.__stdin__
     sys.stdout = sys.__stdout__
 
@@ -280,6 +279,12 @@ class EndToEndTest(unittest.TestCase):
 
     self._command_index += 1
     self._io.assert_no_pending()
+
+  def _stage_files(self, dest, files):
+    dest_path = format_path(dest)
+    os.makedirs(dest_path)
+    for f in files:
+      shutil.copy(format_path(f), dest_path)
 
   def test_get(self):
     self._do('get \\/api\\/v2\\/user',
@@ -464,6 +469,35 @@ class EndToEndTest(unittest.TestCase):
               '"{root}/folder/album".\n'
               'Uploading "testdata/SmugCLI_1.png" to "{root}/folder/album"...\n'
               'Uploading "testdata/SmugCLI_2.jpg" to "{root}/folder/album"...'])
+
+  def test_sync(self):
+    self._stage_files('{root}/dir', ['testdata/SmugCLI_1.jpg',
+                                     'testdata/SmugCLI_2.jpg',
+                                     'testdata/SmugCLI_3.jpg'])
+    self._stage_files('{root}/dir/album', ['testdata/SmugCLI_4.jpg',
+                                           'testdata/SmugCLI_5.jpg'])
+    self._do('sync {root}',
+             ['Syncing local folders {root} to SmugMug folder /.\n'
+              'Making Folder "{root}".\n'
+              'Making Folder "{root}/dir".\n'
+              'Found media next to a sub-folder within "{root}/dir".'
+              ' Fork a side album to store images.\n'
+              'Uploading "{root}/dir/SmugCLI_1.jpg".\n'
+              'Uploading "{root}/dir/SmugCLI_2.jpg".\n'
+              'Uploading "{root}/dir/SmugCLI_3.jpg".\n'
+              'Making Album "{root}/dir/album".\n'
+              'Uploading "{root}/dir/album/SmugCLI_4.jpg".\n'
+              'Uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
+
+    self._do(
+      'sync {root}',
+      ['Syncing local folders {root} to SmugMug folder /.\n'
+       'Found matching remote folder for "{root}".\n'
+       'Found matching remote folder for "{root}/dir".\n'
+       'Found media next to a sub-folder within "{root}/dir".'
+       ' Fork a side album to store images.\n'
+       'Found matching remote folder for "{root}/dir/Images from folder dir".\n'
+       'Found matching remote folder for "{root}/dir/album".\n'])
 
 if __name__ == '__main__':
   unittest.main()

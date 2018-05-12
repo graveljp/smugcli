@@ -1,5 +1,6 @@
 import smugcli
 
+import difflib
 import glob
 import json
 import os
@@ -44,6 +45,9 @@ class Expect(ExpectBase):
   def __eq__(self, other):
     return other.strip() == self._string.strip()
 
+  def __str__(self):
+    return str(self._string)
+
   def __repr__(self):
     return repr(self._string)
 
@@ -55,6 +59,9 @@ class ExpectPrefix(ExpectBase):
 
   def __eq__(self, other):
     return other.strip().startswith(self._prefix.strip())
+
+  def __str__(self):
+    return str(self._prefix)
 
   def __repr__(self):
     return 'ExpectPrefix(' + repr(self._prefix) + ')'
@@ -138,8 +145,10 @@ class ExpectedInputOutput(object):
                            repr(output))
 
     if io != output:
-      raise AssertionError('Unexpected output: %s != %s' % (repr(io),
-                                                            repr(output)))
+      raise AssertionError('Unexpected output:\n'
+                           '%s' % ''.join(difflib.ndiff(
+                             str(io).splitlines(True),
+                             str(output).splitlines(True))))
 
 
 class EndToEndTest(unittest.TestCase):

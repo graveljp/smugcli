@@ -160,6 +160,13 @@ class SmugMugFS(object):
         print 'Path "%s" already exists.' % path
         continue
 
+      folder_depth = len(matched_nodes) + len(unmatched_dirs)
+      folder_depth -= 1 if node_type == 'Album' else 0
+      if folder_depth >= 7:  # matched_nodes include an extra node for the root.
+        print ('Cannot create "%s", SmugMug does not support folder more than '
+               '5 level deep.' % path)
+        return
+
       built_path = os.path.join(*[m.name for m in matched_nodes])
       node = matched_nodes[-1].node
       for i, part in enumerate(unmatched_dirs):

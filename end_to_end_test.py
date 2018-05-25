@@ -502,5 +502,19 @@ class EndToEndTest(unittest.TestCase):
        'Found matching remote folder for "{root}/dir/Images from folder dir".\n'
        'Found matching remote folder for "{root}/dir/album".\n'])
 
+  def test_mkdir_folder_depth_limits(self):
+    # Can't create more than 5 folder deep.
+    self._do('mkdir -p {root}/1/2/3/4',
+             ['Creating Folder "{root}".\n'
+              'Creating Folder "{root}/1".\n'
+              'Creating Folder "{root}/1/2".\n'
+              'Creating Folder "{root}/1/2/3".\n'
+              'Creating Folder "{root}/1/2/3/4".\n'])
+    self._do('mkdir -p {root}/1/2/3/4/5',
+             ['Cannot create "{root}/1/2/3/4/5", SmugMug does not support '
+              'folder more than 5 level deep.'])
+    self._do('mkalbum -p {root}/1/2/3/4/5',
+             ['Creating Album "{root}/1/2/3/4/5".'])
+
 if __name__ == '__main__':
   unittest.main()

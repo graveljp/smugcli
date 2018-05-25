@@ -197,6 +197,21 @@ class SmugMug(object):
       self.config['authuser'] = self.get('/api/v2!authuser')['NickName']
     return self.config['authuser']
 
+  def get_user_uri(self, user):
+    return self.get('/api/v2/user/%s' % user).uri('Node')
+
+  def get_auth_user_uri(self):
+    if not 'authuser_uri' in self._config:
+      self.config['authuser_uri'] = self.get_user_uri(self.get_auth_user())
+    return self.config['authuser_uri']
+
+  def get_root_node(self, user):
+    if user == self.get_auth_user():
+      uri = self.get_auth_user_uri()
+    else:
+      uri = self.get_user_uri(user)
+    return self.get(uri)
+
   def get_json(self, path, **kwargs):
     req = requests.Request('GET', API_ROOT + path,
                            headers={'Accept': 'application/json'},

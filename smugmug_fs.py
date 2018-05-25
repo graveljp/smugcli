@@ -46,7 +46,7 @@ class SmugMugFS(object):
     return self._smugmug
 
   def get_root_node(self, user):
-    return self._smugmug.get('/api/v2/user/%s' % user).get('Node')
+    return self._smugmug.get_root_node(user)
 
   def path_to_node(self, user, path):
     current_node = self.get_root_node(user)

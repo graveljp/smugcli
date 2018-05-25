@@ -17,7 +17,7 @@ API_ROOT = 'https://api.smugmug.com'
 class TestSmugMugFS(unittest.TestCase):
 
   def setUp(self):
-    self._fs = smugmug_fs.SmugMugFS(smugmug.FakeSmugMug())
+    self._fs = smugmug_fs.SmugMugFS(smugmug.FakeSmugMug({'authuser': 'cmac'}))
     self._cmd_output = StringIO.StringIO()
     sys.stdout = self._cmd_output
 

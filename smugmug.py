@@ -187,11 +187,15 @@ class SmugMug(object):
       del self.config['api_key']
     if 'access_token' in self.config:
       del self.config['access_token']
+    if 'authuser' in self.config:
+      del self.config['authuser']
     self._service = None
     self._session = None
 
   def get_auth_user(self):
-    return self.get('/api/v2!authuser')['NickName']
+    if not 'authuser' in self.config:
+      self.config['authuser'] = self.get('/api/v2!authuser')['NickName']
+    return self.config['authuser']
 
   def get_json(self, path, **kwargs):
     req = requests.Request('GET', API_ROOT + path,

@@ -282,7 +282,10 @@ class EndToEndTest(unittest.TestCase):
 
   def _stage_files(self, dest, files):
     dest_path = format_path(dest)
-    os.makedirs(dest_path)
+    try:
+      os.makedirs(dest_path)
+    except OSError:
+      pass
     for f in files:
       shutil.copy(format_path(f), dest_path)
 

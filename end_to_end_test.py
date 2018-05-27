@@ -211,7 +211,7 @@ class EndToEndTest(unittest.TestCase):
   def _encode_body(self, body):
     if body:
       try:
-        json.loads(body)
+        body.encode('UTF-8')
       except:
         return body.encode('base64')
 

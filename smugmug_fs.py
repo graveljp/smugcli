@@ -337,7 +337,8 @@ class SmugMugFS(object):
             matched = self._create_children(
               matched, unmatched, 'Album', privacy)
           else:
-            print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
+            print 'Found matching remote album "%s".' % os.path.join(
+              *local_dirs)
 
           for f in media_files:
             self._sync_file(os.path.join(subdir, f), matched[-1])

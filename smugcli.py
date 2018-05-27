@@ -211,6 +211,8 @@ def run(args, requests_sent=None):
 
   try:
     parsed.func(parsed)
+  except smugmug_fs.Error as e:
+    print e
   except smugmug_lib.NotLoggedInError:
     return
 

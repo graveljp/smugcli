@@ -311,7 +311,7 @@ class SmugMugFS(object):
       unmatched_dirs.pop(0)
     return new_matched_nodes, unmatched_dirs
 
-  def sync(self, user, sources, target):
+  def sync(self, user, sources, target, privacy):
     target = target if target.startswith(os.sep) else os.sep + target
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
     print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
@@ -334,7 +334,8 @@ class SmugMugFS(object):
           matched, unmatched = self._get_common_path(matched, local_dirs)
           matched, unmatched = self._match_nodes(matched, unmatched)
           if unmatched:
-            matched = self._create_children(matched, unmatched, 'Album', 'Public')
+            matched = self._create_children(
+              matched, unmatched, 'Album', privacy)
           else:
             print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
 

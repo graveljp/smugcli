@@ -157,7 +157,8 @@ def run(args, requests_sent=None):
   # ---------------
   sync_parser = subparsers.add_parser(
     'sync', help='Synchronize all local albums with SmugMug.')
-  sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target))
+  sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target,
+                                                  a.privacy.title()))
   sync_parser.add_argument('source',
                            type=lambda s: unicode(s, 'utf8'),
                            nargs='*',
@@ -171,6 +172,11 @@ def run(args, requests_sent=None):
                            help=('The destination folder in which to upload '
                                  'data. Uploads to the root folder by '
                                  'default.'))
+  sync_parser.add_argument('--privacy',
+                           type=lambda s: unicode(s, 'utf8'),
+                           default='public',
+                           choices=['public', 'private', 'unlisted'],
+                           help='Access control for the created folders.')
   sync_parser.add_argument('-u', '--user',
                            type=lambda s: unicode(s, 'utf8'),
                            default='',

@@ -533,6 +533,27 @@ class EndToEndTest(unittest.TestCase):
        ' Deleting old version.\n'
        'Re-uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
 
+  def test_sync_privacy(self):
+    self._stage_files('{root}/default/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root}')
+    self._do('ls -l {root}/default',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._stage_files('{root}/public/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root} --privacy=public')
+    self._do('ls -l {root}/public',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._stage_files('{root}/unlisted/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root} --privacy=unlisted')
+    self._do('ls -l {root}/unlisted',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+
+    self._stage_files('{root}/private/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root} --privacy=private')
+    self._do('ls -l {root}/private',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+
   def test_mkdir_folder_depth_limits(self):
     # Can't create more than 5 folder deep.
     self._do('mkdir -p {root}/1/2/3/4',

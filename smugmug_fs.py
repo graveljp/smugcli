@@ -340,12 +340,12 @@ class SmugMugFS(object):
             print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
 
           for f in media_files:
-            self._sync_file(os.path.join(subdir, f), matched[-1].node, matched[-1].child_nodes_by_name)
+            self._sync_file(os.path.join(subdir, f), matched[-1])
 
-  def _sync_file(self, file_path, album_node, album_children):
+  def _sync_file(self, file_path, node_info):
     file_name = file_path.split(os.sep)[-1].strip()
     file_content = open(file_path, 'rb').read()
-    remote_matches = album_children.get(file_name, [])
+    remote_matches = node_info.child_nodes_by_name.get(file_name, [])
     if len(remote_matches) > 1:
       print 'Skipping %s, multiple remote nodes matches local file.' % file_path
       return
@@ -384,7 +384,7 @@ class SmugMugFS(object):
         print 'Re-uploading "%s".' % file_path
     else:
       print 'Uploading "%s".' % file_path
-    album_node.upload('Album', file_name, file_content)
+    node_info.node.upload('Album', file_name, file_content)
 
   def _is_media(self, path):
     extension = os.path.splitext(path)[1][1:].lower().strip()

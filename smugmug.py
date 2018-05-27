@@ -1,6 +1,7 @@
 # Main interface to the SmugMug web service.
 
 import base64
+import collections
 import json
 import math
 import md5
@@ -131,6 +132,12 @@ class Node(object):
       if child.name == child_name:
         return child
     return None
+
+  def get_child_nodes_by_name(self):
+    child_by_name = collections.defaultdict(list)
+    for child in self.get_children():
+      child_by_name[child.name].append(child)
+    return child_by_name
 
 
 def Wrapper(smugmug, json):

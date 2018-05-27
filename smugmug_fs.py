@@ -18,7 +18,28 @@ import urlparse
 hachoir_config.quiet = True
 
 Details = collections.namedtuple('Details', ['path', 'isdir', 'ismedia'])
-NodeInfo = collections.namedtuple('NodeInfo', ['name', 'node'])
+
+class NodeInfo(object):
+
+  def __init__(self, name, node):
+    self._name = name
+    self._node = node
+    self._child_nodes_by_name = None
+
+  @property
+  def name(self):
+    return self._name
+
+  @property
+  def node(self):
+    return self._node
+
+  @property
+  def child_nodes_by_name(self):
+    if self._child_nodes_by_name is None:
+      self._child_nodes_by_name = self.node.get_child_nodes_by_name()
+    return self._child_nodes_by_name
+
 
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
 VIDEO_EXT = ['mov', 'mp4']
@@ -26,6 +47,18 @@ VIDEO_EXT = ['mov', 'mp4']
 
 class Error(Exception):
   """Base class for all exception of this module."""
+
+
+class InvalidArgumentError(Error):
+  """Error raised when an invalid argument is specified."""
+
+
+class RemoteDataError(Error):
+  """Error raised when the remote structure is incompatible with SmugCLI."""
+
+
+class SmugMugLimitsError(Error):
+  """Error raised when SmugMug limits are reached (folder depth, size. etc.)"""
 
 
 class UnexpectedResponseError(Error):
@@ -51,13 +84,21 @@ class SmugMugFS(object):
   def path_to_node(self, user, path):
     current_node = self.get_root_node(user)
     parts = filter(bool, path.split(os.sep))
-    matched_nodes = [NodeInfo('', current_node)]
-    unmatched_dirs = collections.deque(parts)
-    for part in parts:
-      current_node = current_node.get_child(part)
-      if not current_node:
+    nodes = [NodeInfo('', current_node)]
+    return self._match_nodes(nodes, parts)
+
+  def _match_nodes(self, matched_nodes, dirs):
+    unmatched_dirs = collections.deque(dirs)
+    for dir in dirs:
+      child_nodes = matched_nodes[-1].child_nodes_by_name.get(dir)
+      if not child_nodes:
         break
-      matched_nodes.append(NodeInfo(part, current_node))
+      if len(child_nodes) > 1:
+        raise RemoteDataError(
+          'Multiple remote nodes matches "%s".' % os.path.join(
+            *([n.name for n in matched_nodes] + [dir])))
+
+      matched_nodes.append(NodeInfo(dir, child_nodes[0]))
       unmatched_dirs.popleft()
     return matched_nodes, list(unmatched_dirs)
 
@@ -113,9 +154,9 @@ class SmugMugFS(object):
   def make_childnode(self, node, path, params=None):
     parent, name = os.path.split(path)
     if node['Type'] != 'Folder':
-      print 'Nodes can only be created in folders.'
-      print '"%s" is of type "%s".' % (parent, node['Type'])
-      return None
+      raise InvalidArgumentError(
+        'Nodes can only be created in folders.\n'
+        '"%s" is of type "%s".' % (parent, node['Type']))
 
     remote_name = name.strip()
     node_params = {
@@ -128,15 +169,15 @@ class SmugMugFS(object):
 
     response = node.post('ChildNodes', data=node_params)
     if response.status_code != 201:
-      print 'Error creating node "%s".' % path
-      print 'Server responded with status code %d: %s.' % (
-        response.status_code, response.json()['Message'])
-      return None
+      raise UnexpectedResponseError(
+        'Error creating node "%s".\n'
+        'Server responded with status code %d: %s.' % (
+          path, response.status_code, response.json()['Message']))
 
     node = node.get_child(remote_name)
     if not node:
-      print 'Cannot find newly created node "%s".' % path
-      return None
+      raise UnexpectedResponseError(
+        'Cannot find newly created node "%s".' % path)
 
     if node['Type'] == 'Album':
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
@@ -160,25 +201,32 @@ class SmugMugFS(object):
         print 'Path "%s" already exists.' % path
         continue
 
-      folder_depth = len(matched_nodes) + len(unmatched_dirs)
-      folder_depth -= 1 if node_type == 'Album' else 0
-      if folder_depth >= 7:  # matched_nodes include an extra node for the root.
-        print ('Cannot create "%s", SmugMug does not support folder more than '
-               '5 level deep.' % path)
-        return
+      self._create_children(matched_nodes, unmatched_dirs, node_type, privacy)
 
-      built_path = os.path.join(*[m.name for m in matched_nodes])
-      node = matched_nodes[-1].node
-      for i, part in enumerate(unmatched_dirs):
-        built_path = os.path.join(built_path, part)
-        params = {
-          'Type': node_type if i == len(unmatched_dirs) - 1 else 'Folder',
-          'Privacy': privacy,
-        }
-        print 'Creating %s "%s".' % (params['Type'], built_path)
-        node = self.make_childnode(node, part, params)
-        if not node:
-          break
+  def _create_children(
+      self, matched_nodes, new_children, node_type, privacy):
+    path = os.path.join(*[m.name for m in matched_nodes])
+
+    folder_depth = len(matched_nodes) + len(new_children)
+    folder_depth -= 1 if node_type == 'Album' else 0
+    if folder_depth >= 7:  # matched_nodes include an extra node for the root.
+      raise SmugMugLimitsError(
+        'Cannot create "%s", SmugMug does not support folder more than 5 level '
+        'deep.' % os.sep.join([path] + new_children))
+
+    node = matched_nodes[-1].node
+    all_matched = list(matched_nodes)
+    for i, part in enumerate(new_children):
+      path = os.path.join(path, part)
+      params = {
+        'Type': node_type if i == len(new_children) - 1 else 'Folder',
+        'Privacy': privacy,
+      }
+      print 'Creating %s "%s".' % (params['Type'], path)
+      node = self.make_childnode(node, part, params)
+      all_matched.append(NodeInfo(part, node))
+
+    return all_matched
 
   def rmdir(self, user, parents, dirs):
     user = user or self._smugmug.get_auth_user()
@@ -215,7 +263,7 @@ class SmugMugFS(object):
         print '"%s" not found.' % path
         continue
 
-      name, node = matched_nodes[-1]
+      node = matched_nodes[-1].node
       if recursive or len(node.get_children({'count': 1})) == 0:
         if force or self._ask('Remove %s node "%s"? ' % (node['Type'], path)):
           print 'Removing "%s".' % path
@@ -235,7 +283,7 @@ class SmugMugFS(object):
       print 'Cannot upload images in node of type "%s".' % node['Type']
       return
 
-    child_nodes = self._get_child_nodes_by_name(node)
+    child_nodes = node.get_child_nodes_by_name()
 
     for filename in itertools.chain(*(glob.glob(f) for f in filenames)):
       file_basename = os.path.basename(filename).strip()
@@ -253,112 +301,45 @@ class SmugMugFS(object):
         print 'Server responded with %s.' % str(response)
         return None
 
+  def _get_common_path(self, matched_nodes, local_dirs):
+    new_matched_nodes = []
+    unmatched_dirs = list(local_dirs)
+    for remote, local in zip(matched_nodes, unmatched_dirs):
+      if local != remote.name:
+        break
+      new_matched_nodes.append(remote)
+      unmatched_dirs.pop(0)
+    return new_matched_nodes, unmatched_dirs
 
   def sync(self, user, sources, target):
+    target = target if target.startswith(os.sep) else os.sep + target
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
-    print 'Syncing local folders %s to SmugMug folder %s.' % (
+    print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
       ', '.join(sources), target)
 
     user = user or self._smugmug.get_auth_user()
-    matched_nodes, unmatched_dirs = self.path_to_node(user, target)
+    matched, unmatched_dirs = self.path_to_node(user, target)
     if unmatched_dirs:
       print 'Target folder not found: "%s".' % target
       return
 
-    node = matched_nodes[-1].node
-    child_nodes = self._get_child_nodes_by_name(node)
-
     for source in sources:
-      if not os.path.isdir(source):
-        print 'Source folder not found: "%s".' % source
-        continue
+      for subdir, dirs, files in os.walk(source):
+        media_files = [f for f in files if self._is_media(f)]
+        if media_files:
+          local_dirs = os.path.join(target, subdir).split(os.sep)
+          if dirs:
+            local_dirs.append('Images from folder ' + local_dirs[-1])
 
-      folder, file = os.path.split(source)
-      configs = persistent_dict.PersistentDict(
-        os.path.join(folder, '.smugcli'))
-      if file in configs.get('ignore', []):
-        print 'Skipping ignored path "%s".' % source
-        continue
+          matched, unmatched = self._get_common_path(matched, local_dirs)
+          matched, unmatched = self._match_nodes(matched, unmatched)
+          if unmatched:
+            matched = self._create_children(matched, unmatched, 'Album', 'Public')
+          else:
+            print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
 
-      self._recursive_sync(source, node, child_nodes)
-
-  def _recursive_sync(self, current_folder, parent_node, current_nodes):
-    current_name = current_folder.split(os.sep)[-1].strip()
-    remote_matches = current_nodes.get(current_name, [])
-    if len(remote_matches) > 1:
-      print 'Skipping "%s", multiple remote nodes matches local path.' % current_folder
-      return None
-
-    folder_children = self._read_local_dir(current_folder)
-
-    if remote_matches:
-      print 'Found matching remote folder for "%s".' % current_folder
-      current_node = remote_matches[0]
-    else:
-      current_node_type = ('Folder' if any(details.isdir for _, details
-                                          in folder_children.iteritems())
-                           else 'Album')
-
-      print 'Making %s "%s".' % (current_node_type, current_folder)
-      current_node = self.make_childnode(parent_node,
-                                         current_folder,
-                                         params={
-                                           'Type': current_node_type,
-                                         })
-
-    if not current_node:
-      print 'Skipping "%s", no matching remote node.' % current_folder
-      return None
-
-    child_nodes = self._get_child_nodes_by_name(current_node)
-
-    configs = persistent_dict.PersistentDict(
-      os.path.join(current_folder, '.smugcli'))
-    to_ignore = set(configs.get('ignore', []))
-
-    side_album_node = None
-    for child_name, child_details in sorted(folder_children.items()):
-      new_path = os.path.join(current_folder, child_name)
-      if child_name in to_ignore:
-        print 'Skipping ignored path "%s".' % new_path
-        continue
-
-      if current_node['Type'] == 'Folder':
-        if child_details.isdir:
-          self._recursive_sync(new_path, current_node, child_nodes)
-        elif child_details.ismedia:
-          if side_album_node == None:
-            print ('Found media next to a sub-folder within "%s". '
-                   'Fork a side album to store images.') % current_folder
-            side_album_name = 'Images from folder ' + current_name
-            side_album_path = os.path.join(current_folder, side_album_name)
-            side_album_matches = child_nodes.get(side_album_name, [])
-            if len(side_album_matches) > 1:
-              print ('Skipping "%s", multiple remote nodes matches local '
-                     'path.' % side_album_path)
-              continue
-
-            if side_album_matches:
-              print 'Found matching remote folder for "%s".' % side_album_path
-              side_album_node = side_album_matches[0]
-            else:
-              side_album_node = self.make_childnode(
-                current_node, side_album_path, params={'Type': 'Album'})
-            if not side_album_node:
-              print 'Skipping "%s", no matching remote node.' % side_album_path
-              continue
-
-            side_album_child_nodes = self._get_child_nodes_by_name(
-              side_album_node)
-          self._sync_file(new_path, side_album_node, side_album_child_nodes)
-
-      elif current_node['Type'] == 'Album':
-        if child_details.isdir:
-          print ('Ignoring folder "%s" found inside %s "%s". '
-                 'SmugMug albums cannot have subfolders.' % (
-                   child_name, current_node['Type'], current_folder))
-        elif child_details.ismedia:
-          self._sync_file(new_path, current_node, child_nodes)
+          for f in media_files:
+            self._sync_file(os.path.join(subdir, f), matched[-1].node, matched[-1].child_nodes_by_name)
 
   def _sync_file(self, file_path, album_node, album_children):
     file_name = file_path.split(os.sep)[-1].strip()
@@ -404,34 +385,6 @@ class SmugMugFS(object):
       print 'Uploading "%s".' % file_path
     album_node.upload('Album', file_name, file_content)
 
-  def _resursive_album_sync(self, current_folder, album_node, image_nodes):
-    current_name = current_folder.split(os.sep)[-1].strip()
-    remote_matches = current_nodes.get(current_name, [])
-    if len(remote_matches) > 1:
-      print 'Skipping %s, multiple remote nodes matches local path.' % current_folder
-      return None
-
-    folder_children = self._read_local_dir(current_folder)
-
   def _is_media(self, path):
-    isfile = os.path.isfile(path)
     extension = os.path.splitext(path)[1][1:].lower().strip()
-    return isfile and (extension in self._media_ext)
-
-  def _read_local_dir(self, path):
-
-    def get_details(child):
-      full_path = os.path.join(path, child)
-      isdir = os.path.isdir(full_path)
-      ismedia = self._is_media(full_path)
-      return Details(path=full_path,
-                     isdir=isdir,
-                     ismedia=ismedia)
-
-    return {child: get_details(child) for child in os.listdir(path)}
-
-  def _get_child_nodes_by_name(self, node):
-    child_by_name = collections.defaultdict(list)
-    for child in node.get_children():
-      child_by_name[child.name].append(child)
-    return child_by_name
+    return extension in self._media_ext

@@ -1,5 +1,6 @@
 import smugcli
 
+import contextlib
 import difflib
 import glob
 import json
@@ -13,6 +14,14 @@ import sys
 import tempfile
 import unittest
 
+@contextlib.contextmanager
+def set_cwd(new_dir):
+  original_dir = os.getcwd()
+  try:
+    os.chdir(new_dir)
+    yield
+  finally:
+    os.chdir(original_dir)
 
 ROOT_DIR = '__smugcli_unit_tests__'
 
@@ -202,6 +211,7 @@ class EndToEndTest(unittest.TestCase):
   def _get_cache_base_folder(self):
     test_file, test_name = self.id().split('.', 1)
     return os.path.join(
+      os.path.dirname(os.path.realpath(__file__)),
       'testdata', 'request_cache', test_file, test_name)
 
   def _get_cache_folder(self, args):
@@ -287,7 +297,10 @@ class EndToEndTest(unittest.TestCase):
     except OSError:
       pass
     for f in files:
-      shutil.copy(format_path(f), dest_path)
+      if isinstance(f, basestring):
+        shutil.copy(format_path(f), dest_path)
+      else:
+        shutil.copyfile(format_path(f[0]), os.path.join(dest_path, f[1]))
 
   def test_get(self):
     self._do('get \\/api\\/v2\\/user',
@@ -480,27 +493,45 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files('{root}/dir/album', ['testdata/SmugCLI_4.jpg',
                                            'testdata/SmugCLI_5.jpg'])
     self._do('sync {root}',
-             ['Syncing local folders {root} to SmugMug folder /.\n'
-              'Making Folder "{root}".\n'
-              'Making Folder "{root}/dir".\n'
-              'Found media next to a sub-folder within "{root}/dir".'
-              ' Fork a side album to store images.\n'
+             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
+              'Creating Folder "{root}".\n'
+              'Creating Folder "{root}/dir".\n'
+              'Creating Album "{root}/dir/Images from folder dir".\n'
               'Uploading "{root}/dir/SmugCLI_1.jpg".\n'
               'Uploading "{root}/dir/SmugCLI_2.jpg".\n'
               'Uploading "{root}/dir/SmugCLI_3.jpg".\n'
-              'Making Album "{root}/dir/album".\n'
+              'Creating Album "{root}/dir/album".\n'
               'Uploading "{root}/dir/album/SmugCLI_4.jpg".\n'
               'Uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
 
     self._do(
       'sync {root}',
-      ['Syncing local folders {root} to SmugMug folder /.\n'
-       'Found matching remote folder for "{root}".\n'
-       'Found matching remote folder for "{root}/dir".\n'
-       'Found media next to a sub-folder within "{root}/dir".'
-       ' Fork a side album to store images.\n'
-       'Found matching remote folder for "{root}/dir/Images from folder dir".\n'
-       'Found matching remote folder for "{root}/dir/album".\n'])
+      ['Syncing local folders "{root}" to SmugMug folder "/".\n'
+       'Found matching remote album "{root}/dir/Images from folder dir".\n'
+       'Found matching remote album "{root}/dir/album".\n'])
+
+    with set_cwd(format_path('{root}')):
+      self._do(
+        'sync -t {root} dir',
+        ['Syncing local folders "dir" to SmugMug folder "/__smugcli_tests__".\n'
+         'Found matching remote album "{root}/dir/Images from folder dir".\n'
+         'Found matching remote album "{root}/dir/album".\n'])
+
+    self._stage_files('{root}/dir',
+                      [('testdata/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
+    self._stage_files('{root}/dir/album',
+                      [('testdata/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
+    self._do(
+      'sync {root}',
+      ['Syncing local folders "{root}" to SmugMug folder "/".\n'
+       'Found matching remote album "{root}/dir/Images from folder dir".\n'
+       'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.'
+       ' Deleting old version.\n'
+       'Re-uploading "{root}/dir/SmugCLI_2.jpg".\n'
+       'Found matching remote album "{root}/dir/album".\n'
+       'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
+       ' Deleting old version.\n'
+       'Re-uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
 
   def test_mkdir_folder_depth_limits(self):
     # Can't create more than 5 folder deep.
@@ -515,6 +546,35 @@ class EndToEndTest(unittest.TestCase):
               'folder more than 5 level deep.'])
     self._do('mkalbum -p {root}/1/2/3/4/5',
              ['Creating Album "{root}/1/2/3/4/5".'])
+
+  def test_sync_folder_depth_limits(self):
+    self._stage_files('{root}/1/2/3/4/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root}',
+             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
+              'Creating Folder "__smugcli_tests__".\n'
+              'Creating Folder "__smugcli_tests__/1".\n'
+              'Creating Folder "__smugcli_tests__/1/2".\n'
+              'Creating Folder "__smugcli_tests__/1/2/3".\n'
+              'Creating Folder "__smugcli_tests__/1/2/3/4".\n'
+              'Creating Album "__smugcli_tests__/1/2/3/4/album".\n'
+              'Uploading "__smugcli_tests__/1/2/3/4/album/SmugCLI_1.jpg".\n'])
+
+    with set_cwd(format_path('{root}/1')):
+      self._do('sync 2 -t {root}/1',
+               ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n'
+                'Found matching remote album "{root}/1/2/3/4/album".'])
+
+    self._stage_files('{root}/1/2/3/4/5/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync {root}',
+             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
+              'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+              ' support folder more than 5 level deep.'])
+
+    with set_cwd(format_path('{root}/1')):
+      self._do('sync 2 -t {root}/1',
+               ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n'
+                'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+                ' support folder more than 5 level deep.'])
 
 if __name__ == '__main__':
   unittest.main()

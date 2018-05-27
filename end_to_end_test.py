@@ -402,6 +402,23 @@ class EndToEndTest(unittest.TestCase):
               'Creating Folder "{root}/folder".\n'
               'Creating Album "{root}/folder/album".'])
 
+  def test_mkalbum_privacy(self):
+    self._do('mkalbum -p {root}/default/album')
+    self._do('ls -l {root}/default',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._do('mkalbum -p {root}/public/album --privacy=public')
+    self._do('ls -l {root}/public',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._do('mkalbum -p {root}/unlisted/album --privacy=unlisted')
+    self._do('ls -l {root}/unlisted',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+
+    self._do('mkalbum -p {root}/private/album --privacy=private')
+    self._do('ls -l {root}/private',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+
   def test_rmdir(self):
     # Create a test folder hierarchy.
     self._do('mkdir -p {root}/foo/bar/baz')

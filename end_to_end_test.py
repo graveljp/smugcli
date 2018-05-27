@@ -374,6 +374,23 @@ class EndToEndTest(unittest.TestCase):
               'buz\n'
               'foo'])
 
+  def test_mkdir_privacy(self):
+    self._do('mkdir -p {root}/default/folder')
+    self._do('ls -l {root}/default',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._do('mkdir -p {root}/public/folder --privacy=public')
+    self._do('ls -l {root}/public',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+
+    self._do('mkdir -p {root}/unlisted/folder --privacy=unlisted')
+    self._do('ls -l {root}/unlisted',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+
+    self._do('mkdir -p {root}/private/folder --privacy=private')
+    self._do('ls -l {root}/private',
+             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+
   def test_mkalbum(self):
     # Missing parent.
     self._do('mkalbum {root}/folder/album',

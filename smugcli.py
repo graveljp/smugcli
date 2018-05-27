@@ -11,7 +11,6 @@ import inspect
 import json
 import persistent_dict
 import os
-import requests
 import sys
 
 

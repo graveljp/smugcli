@@ -19,28 +19,6 @@ hachoir_config.quiet = True
 
 Details = collections.namedtuple('Details', ['path', 'isdir', 'ismedia'])
 
-class NodeInfo(object):
-
-  def __init__(self, name, node):
-    self._name = name
-    self._node = node
-    self._child_nodes_by_name = None
-
-  @property
-  def name(self):
-    return self._name
-
-  @property
-  def node(self):
-    return self._node
-
-  @property
-  def child_nodes_by_name(self):
-    if self._child_nodes_by_name is None:
-      self._child_nodes_by_name = self.node.get_child_nodes_by_name()
-    return self._child_nodes_by_name
-
-
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
 VIDEO_EXT = ['mov', 'mp4']
 
@@ -84,7 +62,7 @@ class SmugMugFS(object):
   def path_to_node(self, user, path):
     current_node = self.get_root_node(user)
     parts = filter(bool, path.split(os.sep))
-    nodes = [NodeInfo('', current_node)]
+    nodes = [current_node]
     return self._match_nodes(nodes, parts)
 
   def _match_nodes(self, matched_nodes, dirs):
@@ -98,7 +76,7 @@ class SmugMugFS(object):
           'Multiple remote nodes matches "%s".' % os.path.join(
             *([n.name for n in matched_nodes] + [dir])))
 
-      matched_nodes.append(NodeInfo(dir, child_nodes[0]))
+      matched_nodes.append(child_nodes[0])
       unmatched_dirs.popleft()
     return matched_nodes, list(unmatched_dirs)
 
@@ -140,7 +118,7 @@ class SmugMugFS(object):
         unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes))
       return
 
-    node = matched_nodes[-1].node
+    node = matched_nodes[-1]
     nodes = ([(path, node)] if 'FileName' in node else
              [(child.name, child) for child in node.get_children()])
 
@@ -214,7 +192,7 @@ class SmugMugFS(object):
         'Cannot create "%s", SmugMug does not support folder more than 5 level '
         'deep.' % os.sep.join([path] + new_children))
 
-    node = matched_nodes[-1].node
+    node = matched_nodes[-1]
     all_matched = list(matched_nodes)
     for i, part in enumerate(new_children):
       path = os.path.join(path, part)
@@ -224,7 +202,7 @@ class SmugMugFS(object):
       }
       print 'Creating %s "%s".' % (params['Type'], path)
       node = self.make_childnode(node, part, params)
-      all_matched.append(NodeInfo(part, node))
+      all_matched.append(node)
 
     return all_matched
 
@@ -239,7 +217,7 @@ class SmugMugFS(object):
       matched_nodes.pop(0)
       while matched_nodes:
         current_dir = os.sep.join(m.name for m in matched_nodes)
-        node = matched_nodes.pop().node
+        node = matched_nodes.pop()
         if len(node.get_children({'count': 1})):
           print 'Cannot delete %s: "%s" is not empty.' % (
             node['Type'], current_dir)
@@ -263,7 +241,7 @@ class SmugMugFS(object):
         print '"%s" not found.' % path
         continue
 
-      node = matched_nodes[-1].node
+      node = matched_nodes[-1]
       if recursive or len(node.get_children({'count': 1})) == 0:
         if force or self._ask('Remove %s node "%s"? ' % (node['Type'], path)):
           print 'Removing "%s".' % path
@@ -278,12 +256,12 @@ class SmugMugFS(object):
       print 'Album not found: "%s".' % album
       return
 
-    node = matched_nodes[-1].node
+    node = matched_nodes[-1]
     if node['Type'] != 'Album':
       print 'Cannot upload images in node of type "%s".' % node['Type']
       return
 
-    child_nodes = node.get_child_nodes_by_name()
+    child_nodes = node.child_nodes_by_name
 
     for filename in itertools.chain(*(glob.glob(f) for f in filenames)):
       file_basename = os.path.basename(filename).strip()
@@ -343,10 +321,10 @@ class SmugMugFS(object):
           for f in media_files:
             self._sync_file(os.path.join(subdir, f), matched[-1])
 
-  def _sync_file(self, file_path, node_info):
+  def _sync_file(self, file_path, node):
     file_name = file_path.split(os.sep)[-1].strip()
     file_content = open(file_path, 'rb').read()
-    remote_matches = node_info.child_nodes_by_name.get(file_name, [])
+    remote_matches = node.child_nodes_by_name.get(file_name, [])
     if len(remote_matches) > 1:
       print 'Skipping %s, multiple remote nodes matches local file.' % file_path
       return
@@ -385,7 +363,7 @@ class SmugMugFS(object):
         print 'Re-uploading "%s".' % file_path
     else:
       print 'Uploading "%s".' % file_path
-    node_info.node.upload('Album', file_name, file_content)
+    node.upload('Album', file_name, file_content)
 
   def _is_media(self, path):
     extension = os.path.splitext(path)[1][1:].lower().strip()

@@ -64,50 +64,50 @@ class TestSmugMugFS(unittest.TestCase):
   def test_path_to_node(self):
     matched_nodes, unmatched_dirs = self._fs.path_to_node('cmac', '')
     self.assertEquals(len(matched_nodes), 1)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
+    self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac',
                                                           os.path.normpath('/'))
     self.assertEquals(len(matched_nodes), 1)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
+    self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac', 'Photography')
     self.assertEquals(len(matched_nodes), 2)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
+    self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEquals(matched_nodes[1].name, 'Photography')
-    self.assertEquals(matched_nodes[1].node['Name'],'Photography')
+    self.assertEquals(matched_nodes[1]['Name'],'Photography')
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, ummatched_dirs = self._fs.path_to_node(
       'cmac', os.path.normpath('/Photography'))
     self.assertEquals(matched_nodes[-1].name, 'Photography')
-    self.assertEquals(matched_nodes[-1].node['Name'], 'Photography')
+    self.assertEquals(matched_nodes[-1]['Name'], 'Photography')
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
       'cmac',
       os.path.normpath('/Photography/San Francisco by helicopter 2014'))
     self.assertEquals(len(matched_nodes), 3)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
-    self.assertEquals(matched_nodes[1].node['Name'], 'Photography')
-    self.assertEquals(matched_nodes[2].node['Name'],
+    self.assertTrue(matched_nodes[0]['IsRoot'])
+    self.assertEquals(matched_nodes[1]['Name'], 'Photography')
+    self.assertEquals(matched_nodes[2]['Name'],
                       'San Francisco by helicopter 2014')
     self.assertEquals(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
       'cmac', os.path.normpath('/invalid1'))
     self.assertEquals(len(matched_nodes), 1)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
+    self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEquals(unmatched_dirs, ['invalid1'])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
       'cmac', os.path.normpath('/Photography/invalid2'))
     self.assertEquals(len(matched_nodes), 2)
-    self.assertTrue(matched_nodes[0].node['IsRoot'])
+    self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEquals(matched_nodes[1].name, 'Photography')
-    self.assertEquals(matched_nodes[1].node['Name'], 'Photography')
+    self.assertEquals(matched_nodes[1]['Name'], 'Photography')
     self.assertEquals(unmatched_dirs, ['invalid2'])
 
   @responses.activate

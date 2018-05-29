@@ -66,6 +66,7 @@ class Node(object):
   def __init__(self, smugmug, json):
     self._smugmug = smugmug
     self._json = json
+    self._child_nodes_by_name = None
 
   @property
   def json(self):
@@ -133,12 +134,13 @@ class Node(object):
         return child
     return None
 
-  def get_child_nodes_by_name(self):
-    child_by_name = collections.defaultdict(list)
-    for child in self.get_children():
-      child_by_name[child.name].append(child)
-    return child_by_name
-
+  @property
+  def child_nodes_by_name(self):
+    if self._child_nodes_by_name is None:
+      self._child_nodes_by_name = collections.defaultdict(list)
+      for child in self.get_children():
+        self._child_nodes_by_name[child.name].append(child)
+    return self._child_nodes_by_name
 
 def Wrapper(smugmug, json):
   response = json['Response']

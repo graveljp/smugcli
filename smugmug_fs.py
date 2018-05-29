@@ -27,10 +27,6 @@ class Error(Exception):
   """Base class for all exception of this module."""
 
 
-class InvalidArgumentError(Error):
-  """Error raised when an invalid argument is specified."""
-
-
 class RemoteDataError(Error):
   """Error raised when the remote structure is incompatible with SmugCLI."""
 
@@ -129,43 +125,6 @@ class SmugMugFS(object):
       else:
         print name
 
-  def make_childnode(self, node, path, params=None):
-    parent, name = os.path.split(path)
-    if node['Type'] != 'Folder':
-      raise InvalidArgumentError(
-        'Nodes can only be created in folders.\n'
-        '"%s" is of type "%s".' % (parent, node['Type']))
-
-    remote_name = name.strip()
-    node_params = {
-      'Name': remote_name,
-      'Privacy': 'Public',
-      'SortDirection': 'Ascending',
-      'SortMethod': 'Name',
-    }
-    node_params.update(params or {})
-
-    response = node.post('ChildNodes', data=node_params)
-    if response.status_code != 201:
-      raise UnexpectedResponseError(
-        'Error creating node "%s".\n'
-        'Server responded with status code %d: %s.' % (
-          path, response.status_code, response.json()['Message']))
-
-    node = node.get_child(remote_name)
-    if not node:
-      raise UnexpectedResponseError(
-        'Cannot find newly created node "%s".' % path)
-
-    if node['Type'] == 'Album':
-      response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
-      if response.status_code != 200:
-        print 'Failed setting SortMethod on Album "%s".' % name
-        print 'Server responded with status code %d: %s.' % (
-          response.status_code, response.json()['Message'])
-
-    return node
-
   def make_node(self, user, paths, create_parents, node_type, privacy):
     user = user or self._smugmug.get_auth_user()
     for path in paths:
@@ -201,7 +160,7 @@ class SmugMugFS(object):
         'Privacy': privacy,
       }
       print 'Creating %s "%s".' % (params['Type'], path)
-      node = self.make_childnode(node, part, params)
+      node = node.create_child_node(part, params)
       all_matched.append(node)
 
     return all_matched

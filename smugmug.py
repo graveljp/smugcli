@@ -20,6 +20,10 @@ class Error(Exception):
   """Base class for all exception of this module."""
 
 
+class InvalidArgumentError(Error):
+  """Error raised when an invalid argument is specified."""
+
+
 class NotLoggedInError(Error):
   """Error raised if the user is not logged in."""
 
@@ -141,6 +145,48 @@ class Node(object):
       for child in self.get_children():
         self._child_nodes_by_name[child.name].append(child)
     return self._child_nodes_by_name
+
+  def create_child_node(self, name, params):
+    if self._json['Type'] != 'Folder':
+      raise InvalidArgumentError(
+        'Nodes can only be created in folders.\n'
+        '"%s" is of type "%s".' % (self.name, self._json['Type']))
+
+    if name in self.child_nodes_by_name:
+      raise InvalidArgumentError('Node %s already exists in folder %s' % (
+                                 name, self.name))
+
+    remote_name = name.strip()
+    node_params = {
+      'Name': remote_name,
+      'Privacy': 'Public',
+      'SortDirection': 'Ascending',
+      'SortMethod': 'Name',
+    }
+    node_params.update(params or {})
+
+    response = self.post('ChildNodes', data=node_params)
+    if response.status_code != 201:
+      raise UnexpectedResponseError(
+        'Error creating node "%s".\n'
+        'Server responded with status code %d: %s.' % (
+          name, response.status_code, response.json()['Message']))
+
+    node_json = (response.json().get('Response', {}).get('Node'))
+    if not node_json:
+      raise UnexpectedResponseError('Cannot resolve created node JSON')
+
+    node = Node(self._smugmug, node_json)
+    node._child_nodes_by_name = {}
+    self.child_nodes_by_name[name] = node
+
+    if node['Type'] == 'Album':
+      response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
+      if response.status_code != 200:
+        print 'Failed setting SortMethod on Album "%s".' % name
+        print 'Server responded with status code %d: %s.' % (
+          response.status_code, response.json()['Message'])
+    return node
 
 def Wrapper(smugmug, json):
   response = json['Response']

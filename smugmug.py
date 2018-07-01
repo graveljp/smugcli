@@ -2,13 +2,16 @@
 
 import base64
 import collections
+import io
 import json
 import math
 import md5
+import os
 import re
 import requests
 import smugmug_oauth
 import smugmug_fs
+import threading
 
 API_ROOT = 'https://api.smugmug.com'
 API_UPLOAD = 'https://upload.smugmug.com/'
@@ -28,13 +31,22 @@ class NotLoggedInError(Error):
   """Error raised if the user is not logged in."""
 
 
+class RemoteDataError(Error):
+  """Error raised when the remote structure is incompatible with SmugCLI."""
+
+
 class UnexpectedResponseError(Error):
   """Error raised when encountering unexpected data returned by SmugMug."""
 
 
+class InterruptedError(Error):
+  """Error raised when a network operation is interrupted."""
+
+
 class NodeList(object):
-  def __init__(self, smugmug, json):
+  def __init__(self, smugmug, json, parent):
     self._smugmug = smugmug
+    self._parent = parent
 
     response = json['Response']
     locator = response['Locator']
@@ -63,14 +75,17 @@ class NodeList(object):
       locator = response['Locator']
       self._pages[page_index] = response[locator]
     return Node(self._smugmug,
-                self._pages[page_index][item - page_index * self._page_size])
+                self._pages[page_index][item - page_index * self._page_size],
+                self._parent)
 
 
 class Node(object):
-  def __init__(self, smugmug, json):
+  def __init__(self, smugmug, json, parent=None):
     self._smugmug = smugmug
     self._json = json
+    self._parent = parent
     self._child_nodes_by_name = None
+    self._lock = threading.Lock()
 
   @property
   def json(self):
@@ -80,9 +95,16 @@ class Node(object):
   def name(self):
     return self._json.get('FileName') or self._json['Name']
 
+  @property
+  def path(self):
+    if self._parent is not None:
+      return os.path.join(self._parent.path, self.name)
+    else:
+      return self.name
+
   def get(self, url_name, **kwargs):
     uri = self.uri(url_name)
-    return self._smugmug.get(uri, **kwargs)
+    return self._smugmug.get(uri, parent=self, **kwargs)
 
   def post(self, uri_name, data=None, json=None, **kwargs):
     uri = self.uri(uri_name)
@@ -96,9 +118,9 @@ class Node(object):
     uri = self._json.get('Uri')
     return self._smugmug.delete(uri, **kwargs)
 
-  def upload(self, uri_name, filename, data, headers=None):
+  def upload(self, uri_name, filename, data, progress_fn=None, headers=None):
     uri = self.uri(uri_name)
-    return self._smugmug.upload(uri, filename, data, headers)
+    return self._smugmug.upload(uri, filename, data, progress_fn, headers)
 
   def uri(self, url_name):
     uri = self._json.get('Uris', {}).get(url_name, {}).get('Uri')
@@ -165,6 +187,8 @@ class Node(object):
     }
     node_params.update(params or {})
 
+    print 'Creating %s "%s".' % (params['Type'], os.path.join(self.path,
+                                                              remote_name))
     response = self.post('ChildNodes', data=node_params)
     if response.status_code != 201:
       raise UnexpectedResponseError(
@@ -172,13 +196,13 @@ class Node(object):
         'Server responded with status code %d: %s.' % (
           name, response.status_code, response.json()['Message']))
 
-    node_json = (response.json().get('Response', {}).get('Node'))
+    node_json = response.json().get('Response', {}).get('Node')
     if not node_json:
       raise UnexpectedResponseError('Cannot resolve created node JSON')
 
-    node = Node(self._smugmug, node_json)
+    node = Node(self._smugmug, node_json, parent=self)
     node._child_nodes_by_name = {}
-    self.child_nodes_by_name[name] = node
+    self.child_nodes_by_name[name] = [node]
 
     if node['Type'] == 'Album':
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
@@ -188,14 +212,65 @@ class Node(object):
           response.status_code, response.json()['Message'])
     return node
 
-def Wrapper(smugmug, json):
+  def get_child(self, name):
+    with self._lock:
+      match = self.child_nodes_by_name.get(name)
+
+    if not match:
+      return None
+
+    if len(match) > 1:
+      raise RemoteDataError(
+        'Multiple remote nodes matches "%s" in node "%s".' % (name, self.name))
+
+    return match[0]
+
+  def get_or_create_child(self, name, params):
+    with self._lock:
+      match = self.child_nodes_by_name.get(name)
+      if not match:
+        return self.create_child_node(name, params)
+
+    if len(match) > 1:
+      raise RemoteDataError(
+        'Multiple remote nodes matches "%s" in node "%s".' % (name, self.name))
+
+    return match[0]
+
+def Wrapper(smugmug, json, parent=None):
   response = json['Response']
   if 'Pages' in response:
-    return NodeList(smugmug, json)
+    return NodeList(smugmug, json, parent)
   else:
     locator = response['Locator']
     endpoint = response[locator]
-    return Node(smugmug, endpoint)
+    return Node(smugmug, endpoint, parent)
+
+
+class StreamingUpload(object):
+  def __init__(self, data, progress_fn, chunk_size=1<<13):
+    self._data = io.BytesIO(data)
+    self._len = len(data)
+    self._progress_fn = progress_fn
+    self._progress = 0
+
+  def __len__(self):
+    return self._len
+
+  def read(self, n=-1):
+    chunk = self._data.read(n)
+    self._progress += len(chunk)
+    if self._progress_fn:
+      aborting = self._progress_fn(100 * self._progress / self._len)
+      if aborting:
+        raise InterruptedError('File transfer interrupted.')
+    return chunk
+
+  def tell(self):
+    return self._data.tell()
+
+  def seek(self, offset, whence=0):
+    self._data.seek(offset, whence)
 
 
 class SmugMug(object):
@@ -203,6 +278,7 @@ class SmugMug(object):
     self._config = config
     self._smugmug_oauth = None
     self._oauth = None
+    self._user_root_node = None
     self._fs = smugmug_fs.SmugMugFS(self)
     self._session = requests.Session()
     self._requests_sent = requests_sent
@@ -260,12 +336,16 @@ class SmugMug(object):
       self.config['authuser_uri'] = self.get_user_uri(self.get_auth_user())
     return self.config['authuser_uri']
 
+  def get_auth_user_root_node(self):
+    if self._user_root_node is None:
+      self._user_root_node = self.get(self.get_auth_user_uri())
+    return self._user_root_node
+
   def get_root_node(self, user):
     if user == self.get_auth_user():
-      uri = self.get_auth_user_uri()
+      return self.get_auth_user_root_node()
     else:
-      uri = self.get_user_uri(user)
-    return self.get(uri)
+      return self.get(self.get_user_uri(user))
 
   def get_json(self, path, **kwargs):
     req = requests.Request('GET', API_ROOT + path,
@@ -278,9 +358,9 @@ class SmugMug(object):
     resp.raise_for_status()
     return resp.json()
 
-  def get(self, path, **kwargs):
+  def get(self, path, parent=None, **kwargs):
     reply = self.get_json(path, **kwargs)
-    return Wrapper(self, reply)
+    return Wrapper(self, reply, parent)
 
   def post(self, path, data=None, json=None, **kwargs):
     req = requests.Request('POST',
@@ -318,7 +398,8 @@ class SmugMug(object):
       self._requests_sent.append((req, resp))
     return resp
 
-  def upload(self, uri, filename, data, additional_headers=None):
+  def upload(self, uri, filename, data, progress_fn=None,
+             additional_headers=None):
     headers = {'Content-Length': str(len(data)),
                'Content-MD5': base64.b64encode(md5.new(data).digest()),
                'X-Smug-AlbumUri': uri,
@@ -328,7 +409,7 @@ class SmugMug(object):
     headers.update(additional_headers or {})
     req = requests.Request('POST',
                            API_UPLOAD,
-                           data=data,
+                           data=StreamingUpload(data, progress_fn),
                            headers=headers,
                            auth=self.oauth).prepare()
     resp = self._session.send(req)

@@ -1,6 +1,8 @@
 import persistent_dict
+import task_manager  # Must be included before hachoir so stdout override works.
+import thread_pool
+import thread_safe_print
 
-import base64
 from datetime import datetime
 import collections
 import glob
@@ -15,9 +17,8 @@ import os
 import requests
 import urlparse
 
-hachoir_config.quiet = True
 
-Details = collections.namedtuple('Details', ['path', 'isdir', 'ismedia'])
+hachoir_config.quiet = True
 
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
 VIDEO_EXT = ['mov', 'mp4']
@@ -42,6 +43,7 @@ class UnexpectedResponseError(Error):
 class SmugMugFS(object):
   def __init__(self, smugmug):
     self._smugmug = smugmug
+    self._aborting = False
 
     # Pre-compute some common variables.
     self._media_ext = [
@@ -51,6 +53,9 @@ class SmugMugFS(object):
   @property
   def smugmug(self):
     return self._smugmug
+
+  def abort(self):
+    self._aborting = True
 
   def get_root_node(self, user):
     return self._smugmug.get_root_node(user)
@@ -64,17 +69,30 @@ class SmugMugFS(object):
   def _match_nodes(self, matched_nodes, dirs):
     unmatched_dirs = collections.deque(dirs)
     for dir in dirs:
-      child_nodes = matched_nodes[-1].child_nodes_by_name.get(dir)
-      if not child_nodes:
+      child_node = matched_nodes[-1].get_child(dir)
+      if not child_node:
         break
-      if len(child_nodes) > 1:
-        raise RemoteDataError(
-          'Multiple remote nodes matches "%s".' % os.path.join(
-            *([n.name for n in matched_nodes] + [dir])))
 
-      matched_nodes.append(child_nodes[0])
+      matched_nodes.append(child_node)
       unmatched_dirs.popleft()
     return matched_nodes, list(unmatched_dirs)
+
+  def _match_or_create_nodes(self, matched_nodes, dirs, node_type, privacy):
+    folder_depth = len(matched_nodes) + len(dirs)
+    folder_depth -= 1 if node_type == 'Album' else 0
+    if folder_depth >= 7:  # matched_nodes include an extra node for the root.
+      raise SmugMugLimitsError(
+        'Cannot create "%s", SmugMug does not support folder more than 5 level '
+        'deep.' % os.sep.join([matched_nodes[-1].path] + dirs))
+
+    all_nodes = list(matched_nodes)
+    for i, dir in enumerate(dirs):
+      params = {
+        'Type': node_type if i == len(dirs) - 1 else 'Folder',
+        'Privacy': privacy,
+      }
+      all_nodes.append(all_nodes[-1].get_or_create_child(dir, params))
+    return all_nodes
 
   def get(self, url):
     scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
@@ -138,32 +156,8 @@ class SmugMugFS(object):
         print 'Path "%s" already exists.' % path
         continue
 
-      self._create_children(matched_nodes, unmatched_dirs, node_type, privacy)
-
-  def _create_children(
-      self, matched_nodes, new_children, node_type, privacy):
-    path = os.path.join(*[m.name for m in matched_nodes])
-
-    folder_depth = len(matched_nodes) + len(new_children)
-    folder_depth -= 1 if node_type == 'Album' else 0
-    if folder_depth >= 7:  # matched_nodes include an extra node for the root.
-      raise SmugMugLimitsError(
-        'Cannot create "%s", SmugMug does not support folder more than 5 level '
-        'deep.' % os.sep.join([path] + new_children))
-
-    node = matched_nodes[-1]
-    all_matched = list(matched_nodes)
-    for i, part in enumerate(new_children):
-      path = os.path.join(path, part)
-      params = {
-        'Type': node_type if i == len(new_children) - 1 else 'Folder',
-        'Privacy': privacy,
-      }
-      print 'Creating %s "%s".' % (params['Type'], path)
-      node = node.create_child_node(part, params)
-      all_matched.append(node)
-
-    return all_matched
+      self._match_or_create_nodes(
+        matched_nodes, unmatched_dirs, node_type, privacy)
 
   def rmdir(self, user, parents, dirs):
     user = user or self._smugmug.get_auth_user()
@@ -248,7 +242,22 @@ class SmugMugFS(object):
       unmatched_dirs.pop(0)
     return new_matched_nodes, unmatched_dirs
 
-  def sync(self, user, sources, target, privacy):
+  def sync(self,
+           user,
+           sources,
+           target,
+           privacy,
+           folder_threads,
+           file_threads,
+           upload_threads,
+           set_defaults):
+    if set_defaults:
+      self.smugmug.config['folder_threads'] = folder_threads
+      self.smugmug.config['file_threads'] = file_threads
+      self.smugmug.config['upload_threads'] = upload_threads
+      print 'Defaults updated.'
+      return
+
     target = target if target.startswith(os.sep) else os.sep + target
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
     print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
@@ -260,69 +269,131 @@ class SmugMugFS(object):
       print 'Target folder not found: "%s".' % target
       return
 
-    for source in sources:
-      for subdir, dirs, files in os.walk(source):
-        media_files = [f for f in files if self._is_media(f)]
-        if media_files:
-          local_dirs = os.path.join(target, subdir).split(os.sep)
-          if dirs:
-            local_dirs.append('Images from folder ' + local_dirs[-1])
+    with task_manager.TaskManager() as manager, \
+         thread_safe_print.ThreadSafePrint(), \
+         thread_pool.ThreadPool(upload_threads) as upload_pool, \
+         thread_pool.ThreadPool(file_threads) as file_pool, \
+         thread_pool.ThreadPool(folder_threads) as folder_pool:
+      for source in sources:
+        for walk_step in os.walk(source):
+          if self._aborting:
+            return
+          folder_pool.add(self._sync_folder,
+                          manager,
+                          file_pool,
+                          upload_pool,
+                          target,
+                          privacy,
+                          walk_step,
+                          matched,
+                          unmatched_dirs)
+    print 'Sync complete.'
 
-          matched, unmatched = self._get_common_path(matched, local_dirs)
-          matched, unmatched = self._match_nodes(matched, unmatched)
-          if unmatched:
-            matched = self._create_children(
-              matched, unmatched, 'Album', privacy)
-          else:
-            print 'Found matching remote album "%s".' % os.path.join(
-              *local_dirs)
-
-          for f in media_files:
-            self._sync_file(os.path.join(subdir, f), matched[-1])
-
-  def _sync_file(self, file_path, node):
-    file_name = file_path.split(os.sep)[-1].strip()
-    file_content = open(file_path, 'rb').read()
-    remote_matches = node.child_nodes_by_name.get(file_name, [])
-    if len(remote_matches) > 1:
-      print 'Skipping %s, multiple remote nodes matches local file.' % file_path
+  def _sync_folder(self,
+                   manager,
+                   file_pool,
+                   upload_pool,
+                   target,
+                   privacy,
+                   walk_step,
+                   matched,
+                   unmatched_dirs):
+    if self._aborting:
       return
+    subdir, dirs, files = walk_step
+    media_files = [f for f in files if self._is_media(f)]
+    if media_files:
+      local_dirs = os.path.join(target, subdir).split(os.sep)
+      if dirs:
+        local_dirs.append('Images from folder ' + local_dirs[-1])
 
-    if remote_matches:
-      remote_file = remote_matches[0]
-      if remote_file['Format'].lower() in VIDEO_EXT:
-        # Video files are modified by SmugMug server side, so we cannot use the
-        # MD5 to check if the file needs a re-sync. Use the last modification
-        # time instead.
-        remote_time = datetime.strptime(
-          remote_file.get('ImageMetadata')['DateTimeModified'],
-          '%Y-%m-%dT%H:%M:%S')
-
-        try:
-          parser = guessParser(StringInputStream(file_content))
-          metadata = extractMetadata(parser)
-          file_time = max(metadata.getValues('last_modification') +
-                          metadata.getValues('creation_date'))
-        except Exception as err:
-          print 'Failed extracting metadata for file "%s".' % file_path
-          file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
-
-        same_file = (remote_time == file_time)
+      matched, unmatched = self._get_common_path(matched, local_dirs)
+      matched, unmatched = self._match_nodes(matched, unmatched)
+      if unmatched:
+        matched = self._match_or_create_nodes(
+          matched, unmatched, 'Album', privacy)
       else:
-        remote_md5 = remote_file['ArchivedMD5']
-        file_md5 = md5.new(file_content).hexdigest()
-        same_file = (remote_md5 == file_md5)
+        print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
 
-      if same_file:
-        return  # File already exists on Smugmug
-      else:
-        print ('File "%s" exists, but has changed. '
-               'Deleting old version.' % file_path)
-        remote_file.delete()
-        print 'Re-uploading "%s".' % file_path
+      for f in media_files:
+        if self._aborting:
+          return
+        file_pool.add(self._sync_file,
+                      manager,
+                      os.path.join(subdir, f),
+                      matched[-1],
+                      upload_pool)
+
+  def _sync_file(self, manager, file_path, node, upload_pool):
+    if self._aborting:
+      return
+    with manager.start_task(1, '* Syncing file "%s"...' % file_path):
+      file_name = file_path.split(os.sep)[-1].strip()
+      file_content = open(file_path, 'rb').read()
+      remote_file = node.get_child(file_name)
+
+      if remote_file:
+        if remote_file['Format'].lower() in VIDEO_EXT:
+          # Video files are modified by SmugMug server side, so we cannot use
+          # the MD5 to check if the file needs a re-sync. Use the last
+          # modification time instead.
+          remote_time = datetime.strptime(
+            remote_file.get('ImageMetadata')['DateTimeModified'],
+            '%Y-%m-%dT%H:%M:%S')
+
+          try:
+            parser = guessParser(StringInputStream(file_content))
+            metadata = extractMetadata(parser)
+            file_time = max(metadata.getValues('last_modification') +
+                            metadata.getValues('creation_date'))
+          except Exception as err:
+            print 'Failed extracting metadata for file "%s".' % file_path
+            file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+
+          same_file = (remote_time == file_time)
+        else:
+          remote_md5 = remote_file['ArchivedMD5']
+          file_md5 = md5.new(file_content).hexdigest()
+          same_file = (remote_md5 == file_md5)
+
+        if same_file:
+          return  # File already exists on Smugmug
+
+      if self._aborting:
+        return
+      upload_pool.add(self._upload_media,
+                      manager,
+                      node,
+                      remote_file,
+                      file_path,
+                      file_name,
+                      file_content)
+
+  def _upload_media(self, manager, node, remote_file, file_path, file_name, file_content):
+    if self._aborting:
+      return
+    if remote_file:
+      print ('File "%s" exists, but has changed. '
+             'Deleting old version.' % file_path)
+      remote_file.delete()
+      task = '+ Re-uploading "%s"' % file_path
     else:
-      print 'Uploading "%s".' % file_path
-    node.upload('Album', file_name, file_content)
+      task = '+ Uploading "%s"' % file_path
+
+    def get_progress_fn(task):
+      def progress_fn(percent):
+        manager.update_progress(0, task, ': %d%%' % percent)
+        return self._aborting
+      return progress_fn
+
+    with manager.start_task(0, task):
+      node.upload('Album', file_name, file_content,
+                  progress_fn=get_progress_fn(task))
+
+    if remote_file:
+      print 'Re-uploaded "%s".' % file_path
+    else:
+      print 'Uploaded "%s".' % file_path
 
   def _is_media(self, path):
     extension = os.path.splitext(path)[1][1:].lower().strip()

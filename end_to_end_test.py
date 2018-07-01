@@ -14,6 +14,10 @@ import sys
 import tempfile
 import unittest
 
+
+CONFIG_FILE = os.path.expanduser('~/.smugcli')
+
+
 @contextlib.contextmanager
 def set_cwd(new_dir):
   original_dir = os.getcwd()
@@ -23,7 +27,7 @@ def set_cwd(new_dir):
   finally:
     os.chdir(original_dir)
 
-ROOT_DIR = '__smugcli_unit_tests__'
+ROOT_DIR = '__smugcli_tests__'
 
 
 def format_path(path):
@@ -42,16 +46,14 @@ def format_path(path):
 class ExpectBase(object):
   # Base class for all expected response string matchers.
 
-  def __ne__(self, other):
-    return not self.__eq__(other)
-
+  pass
 
 class Expect(ExpectBase):
 
   def __init__(self, string):
     self._string = format_path(string)
 
-  def __eq__(self, other):
+  def match(self, other):
     return other.strip() == self._string.strip()
 
   def __str__(self):
@@ -61,12 +63,27 @@ class Expect(ExpectBase):
     return repr(self._string)
 
 
+class ExpectContains(ExpectBase):
+
+  def __init__(self, string):
+    self._string = format_path(string)
+
+  def match(self, other):
+    return self._string.strip() in other.strip()
+
+  def __str__(self):
+    return str(self._string)
+
+  def __repr__(self):
+    return 'ExpectContains(' + repr(self._string) + ')'
+
+
 class ExpectPrefix(ExpectBase):
 
   def __init__(self, prefix):
     self._prefix = format_path(prefix)
 
-  def __eq__(self, other):
+  def match(self, other):
     return other.strip().startswith(self._prefix.strip())
 
   def __str__(self):
@@ -81,11 +98,30 @@ class ExpectRegex(ExpectBase):
   def __init__(self, regex):
     self._regex = regex
 
-  def __eq__(self, other):
+  def match(self, other):
     return re.match(self._regex, other, re.DOTALL | re.MULTILINE)
 
   def __repr__(self):
     return 'ExpectRegex(' + repr(self._regex) + ')'
+
+
+class AnyOrder(ExpectBase):
+
+  def __init__(self, expected_list):
+    self._expected_list = [
+      ExpectContains(expected) if isinstance(expected, basestring)
+      else expected for expected in expected_list]
+
+  def consume(self, string):
+    for expected in list(self._expected_list):
+      if expected.match(string):
+        self._expected_list.remove(expected)
+
+  def is_fulfilled(self):
+    return len(self._expected_list) == 0
+
+  def __repr__(self):
+    return 'AnyOrder(' + repr(self._expected_list) + ')'
 
 
 class Reply(object):
@@ -105,6 +141,8 @@ class ExpectedInputOutput(object):
   def __init__(self):
     self._expected_io = None
     self._cmd_output = StringIO.StringIO()
+    self._original_stdin = sys.stdin
+    self._original_stdout = sys.stdout
 
   def set_expected_io(self, expected_io):
     self._expected_io = (
@@ -120,8 +158,11 @@ class ExpectedInputOutput(object):
     self.set_expected_io(None)
 
   def write(self, string):
-    sys.__stdout__.write(string)
+    self._original_stdout.write(string)
     self._cmd_output.write(string)
+
+  def flush(self):
+    self._original_stdout.flush()
 
   def readline(self):
     self._CheckExpectedOutput()
@@ -134,7 +175,7 @@ class ExpectedInputOutput(object):
       raise AssertionError('Not expecting input request.')
 
     reply = format_path(str(io)) + '\n'
-    sys.__stdout__.write(reply)
+    self._original_stdout.write(reply)
     return reply
 
   def _CheckExpectedOutput(self):
@@ -153,7 +194,12 @@ class ExpectedInputOutput(object):
       raise AssertionError('Not expecting output message but got: %s' %
                            repr(output))
 
-    if io != output:
+    if isinstance(io, AnyOrder):
+      io.consume(output)
+      if not io.is_fulfilled():
+        self._expected_io.insert(0, io)
+
+    elif not io.match(output):
       raise AssertionError('Unexpected output:\n'
                            '%s' % ''.join(difflib.ndiff(
                              str(io).splitlines(True),
@@ -165,6 +211,15 @@ class EndToEndTest(unittest.TestCase):
   def setUp(self):
     print '\n-------------------------'
     print 'Running: %s\n' % self.id()
+
+    # The response library cannot replay requests in a multi-threaded
+    # environment. We have to disable threading for testing...
+    self._config = json.load(open(CONFIG_FILE))
+    self._config.update({
+      'folder_threads': 1,
+      'file_threads': 1,
+      'upload_threads': 1,
+    })
 
     cache_folder = self._get_cache_base_folder()
     if bool(os.environ.get('RESET_CACHE')):
@@ -197,8 +252,8 @@ class EndToEndTest(unittest.TestCase):
         'Not all requests have been executed:\n%s' % (
           '\n'.join(sorted(self._pending))))
 
-    sys.stdin = sys.__stdin__
-    sys.stdout = sys.__stdout__
+    sys.stdin = self._io._original_stdin
+    sys.stdout = self._io._original_stdout
 
   def _url_path(self, request):
     match = (self._api_url_re.match(request.url) or
@@ -220,10 +275,19 @@ class EndToEndTest(unittest.TestCase):
 
   def _encode_body(self, body):
     if body:
+      if hasattr(body, 'read'):
+        pos = body.tell()
+        body.seek(0)
+        data = body.read()
+        body.seek(pos)
+      else:
+        data = body
+
+      # Base-64 encode any data that is not UTF-8.
       try:
-        body.encode('UTF-8')
+        data.encode('UTF-8')
       except:
-        return body.encode('base64')
+        return data.encode('base64')
 
     return body
 
@@ -273,7 +337,7 @@ class EndToEndTest(unittest.TestCase):
       with responses.RequestsMock() as rsps:
         self._mock_requests(cache_folder, rsps)
         try:
-          smugcli.run(args)
+          smugcli.run(args, self._config)
         finally:
           # assert_all_requests_are_fired has to be True duing code execution
           # so that RequestMock could advance in the pending HTTP reques list
@@ -284,7 +348,7 @@ class EndToEndTest(unittest.TestCase):
           rsps.assert_all_requests_are_fired = False
     else:
       requests_sent = []
-      smugcli.run(args, requests_sent=requests_sent)
+      smugcli.run(args, self._config, requests_sent=requests_sent)
       self._save_requests(cache_folder, requests_sent)
 
     self._command_index += 1
@@ -541,29 +605,32 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files('{root}/dir/album', ['testdata/SmugCLI_4.jpg',
                                            'testdata/SmugCLI_5.jpg'])
     self._do('sync {root}',
-             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
-              'Creating Folder "{root}".\n'
-              'Creating Folder "{root}/dir".\n'
-              'Creating Album "{root}/dir/Images from folder dir".\n'
-              'Uploading "{root}/dir/SmugCLI_1.jpg".\n'
-              'Uploading "{root}/dir/SmugCLI_2.jpg".\n'
-              'Uploading "{root}/dir/SmugCLI_3.jpg".\n'
-              'Creating Album "{root}/dir/album".\n'
-              'Uploading "{root}/dir/album/SmugCLI_4.jpg".\n'
-              'Uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
+             [AnyOrder(
+               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+                'Creating Folder "{root}".\n',
+                'Creating Folder "{root}/dir".\n',
+                'Creating Album "{root}/dir/Images from folder dir".\n',
+                'Uploaded "{root}/dir/SmugCLI_1.jpg".\n',
+                'Uploaded "{root}/dir/SmugCLI_2.jpg".\n',
+                'Uploaded "{root}/dir/SmugCLI_3.jpg".\n',
+                'Creating Album "{root}/dir/album".\n',
+                'Uploaded "{root}/dir/album/SmugCLI_4.jpg".\n',
+                'Uploaded "{root}/dir/album/SmugCLI_5.jpg".\n'])])
 
     self._do(
       'sync {root}',
-      ['Syncing local folders "{root}" to SmugMug folder "/".\n'
-       'Found matching remote album "{root}/dir/Images from folder dir".\n'
-       'Found matching remote album "{root}/dir/album".\n'])
+      [AnyOrder(
+        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+         'Found matching remote album "{root}/dir/Images from folder dir".\n',
+         'Found matching remote album "{root}/dir/album".\n'])])
 
     with set_cwd(format_path('{root}')):
       self._do(
         'sync -t {root} dir',
-        ['Syncing local folders "dir" to SmugMug folder "/__smugcli_tests__".\n'
-         'Found matching remote album "{root}/dir/Images from folder dir".\n'
-         'Found matching remote album "{root}/dir/album".\n'])
+        [AnyOrder(
+          ['Syncing local folders "dir" to SmugMug folder "/__smugcli_tests__".\n',
+           'Found matching remote album "{root}/dir/Images from folder dir".\n',
+           'Found matching remote album "{root}/dir/album".\n'])])
 
     self._stage_files('{root}/dir',
                       [('testdata/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
@@ -571,15 +638,16 @@ class EndToEndTest(unittest.TestCase):
                       [('testdata/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
     self._do(
       'sync {root}',
-      ['Syncing local folders "{root}" to SmugMug folder "/".\n'
-       'Found matching remote album "{root}/dir/Images from folder dir".\n'
-       'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.'
-       ' Deleting old version.\n'
-       'Re-uploading "{root}/dir/SmugCLI_2.jpg".\n'
-       'Found matching remote album "{root}/dir/album".\n'
-       'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
-       ' Deleting old version.\n'
-       'Re-uploading "{root}/dir/album/SmugCLI_5.jpg".\n'])
+      [AnyOrder(
+        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+         'Found matching remote album "{root}/dir/Images from folder dir".\n',
+         'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.',
+         ' Deleting old version.\n',
+         'Re-uploaded "{root}/dir/SmugCLI_2.jpg".\n',
+         'Found matching remote album "{root}/dir/album".\n',
+         'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.',
+         ' Deleting old version.\n',
+         'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".\n'])])
 
   def test_sync_privacy(self):
     self._stage_files('{root}/default/album', ['testdata/SmugCLI_1.jpg'])
@@ -604,32 +672,38 @@ class EndToEndTest(unittest.TestCase):
 
   def test_sync_folder_depth_limits(self):
     self._stage_files('{root}/1/2/3/4/album', ['testdata/SmugCLI_1.jpg'])
-    self._do('sync {root}',
-             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
-              'Creating Folder "__smugcli_tests__".\n'
-              'Creating Folder "__smugcli_tests__/1".\n'
-              'Creating Folder "__smugcli_tests__/1/2".\n'
-              'Creating Folder "__smugcli_tests__/1/2/3".\n'
-              'Creating Folder "__smugcli_tests__/1/2/3/4".\n'
-              'Creating Album "__smugcli_tests__/1/2/3/4/album".\n'
-              'Uploading "__smugcli_tests__/1/2/3/4/album/SmugCLI_1.jpg".\n'])
+    self._do(
+      'sync {root}',
+      [AnyOrder(
+        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+         'Creating Folder "__smugcli_tests__".\n',
+         'Creating Folder "__smugcli_tests__/1".\n',
+         'Creating Folder "__smugcli_tests__/1/2".\n',
+         'Creating Folder "__smugcli_tests__/1/2/3".\n',
+         'Creating Folder "__smugcli_tests__/1/2/3/4".\n',
+         'Creating Album "__smugcli_tests__/1/2/3/4/album".\n',
+         'Uploaded "__smugcli_tests__/1/2/3/4/album/SmugCLI_1.jpg".\n'])])
 
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 -t {root}/1',
-               ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n'
-                'Found matching remote album "{root}/1/2/3/4/album".'])
+               [AnyOrder(
+                 ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n',
+                  'Found matching remote album "{root}/1/2/3/4/album".'])])
 
     self._stage_files('{root}/1/2/3/4/5/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root}',
-             ['Syncing local folders "{root}" to SmugMug folder "/".\n'
-              'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
-              ' support folder more than 5 level deep.'])
+             [AnyOrder(
+               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+                'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+                ' support folder more than 5 level deep.'])])
 
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 -t {root}/1',
-               ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n'
-                'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
-                ' support folder more than 5 level deep.'])
+               [AnyOrder(
+                 ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n',
+                  'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not',
+                  ' support folder more than 5 level deep.'])])
+
 
 if __name__ == '__main__':
   unittest.main()

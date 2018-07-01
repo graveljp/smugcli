@@ -6,20 +6,22 @@ import smugmug_fs
 import smugmug_shell
 
 import argparse
+import atexit
 import collections
 import inspect
 import json
 import persistent_dict
 import os
+import signal
 import sys
 
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
 
-def run(args, requests_sent=None):
+def run(args, config=None, requests_sent=None):
   try:
-    config = persistent_dict.PersistentDict(CONFIG_FILE)
+    config = config or persistent_dict.PersistentDict(CONFIG_FILE)
   except persistent_dict.InvalidFileError:
     print ('Config file (%s) is invalid. '
            'Please fix or delete the file.' % CONFIG_FILE)
@@ -28,7 +30,19 @@ def run(args, requests_sent=None):
   smugmug = smugmug_lib.SmugMug(config, requests_sent)
   fs = smugmug_fs.SmugMugFS(smugmug)
 
-  main_parser = argparse.ArgumentParser(description='SmugMug commandline interface.')
+  def signal_handler(signum, frame):
+    print 'Aborting...'
+    fs.abort()
+  def atexit_handler():
+    fs.abort()
+
+  atexit.register(atexit_handler)
+  signal.signal(signal.SIGINT, signal_handler)
+  signal.signal(signal.SIGABRT, signal_handler)
+  signal.signal(signal.SIGTERM, signal_handler)
+
+  main_parser = argparse.ArgumentParser(
+    description='SmugMug commandline interface.')
   subparsers = main_parser.add_subparsers(title='sub commands')
 
   # ---------------
@@ -60,7 +74,9 @@ def run(args, requests_sent=None):
                                 'fetch.'))
   # ---------------
   ls_parser = subparsers.add_parser(
-    'ls', help='List the content of a folder or album.')
+    'ls',
+    help='List the content of a folder or album.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   ls_parser.set_defaults(func=lambda a: fs.ls(a.user, a.path, a.l))
   ls_parser.add_argument('path',
                          type=lambda s: unicode(s, 'utf8'),
@@ -81,7 +97,9 @@ def run(args, requests_sent=None):
   # ---------------
   for cmd, node_type in (('mkdir', 'Folder'), ('mkalbum', 'Album')):
     mkdir_parser = subparsers.add_parser(
-      cmd, help='Create a %s.' % node_type.lower())
+      cmd,
+      help='Create a %s.' % node_type.lower(),
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     mkdir_parser.set_defaults(
       func=lambda a, t=node_type: fs.make_node(a.user, a.path, a.p, t,
                                                a.privacy.title()))
@@ -156,9 +174,15 @@ def run(args, requests_sent=None):
                                    'default.'))
   # ---------------
   sync_parser = subparsers.add_parser(
-    'sync', help='Synchronize all local albums with SmugMug.')
+    'sync',
+    help='Synchronize all local albums with SmugMug.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target,
-                                                  a.privacy.title()))
+                                                  a.privacy.title(),
+                                                  a.folder_threads,
+                                                  a.file_threads,
+                                                  a.upload_threads,
+                                                  a.set_defaults))
   sync_parser.add_argument('source',
                            type=lambda s: unicode(s, 'utf8'),
                            nargs='*',
@@ -183,6 +207,25 @@ def run(args, requests_sent=None):
                            help=('User whose SmugMug account is to be '
                                  'accessed. Uses the logged-in user by '
                                  'default.'))
+  sync_parser.add_argument('-Ft', '--folder_threads',
+                           type=int,
+                           default=config.get('folder_threads', 4),
+                           help='Number of folders scanned in parallel.')
+  sync_parser.add_argument('-ft', '--file_threads',
+                           type=int,
+                           default=config.get('file_threads', 16),
+                           help=('Number of files scanned in parallel. Files '
+                                 'read from disk and compared to the content '
+                                 'the SmugMug servers.'))
+  sync_parser.add_argument('-ut', '--upload_threads',
+                           type=int,
+                           default=config.get('upload_threads', 3),
+                           help='Number of file upload happening in parallel.')
+  sync_parser.add_argument('--set_defaults',
+                           action='store_true',
+                           help=('Save the current settings (thread count) as '
+                                 'defaults to be used next time.'))
+
   # ---------------
   ignore_parser = subparsers.add_parser(
     'ignore', help='Mark paths to be ignored during sync.')

@@ -3,26 +3,10 @@ Command line tool for SmugMug, useful for automatically synchronizing a local fo
 
 Implemented using the V2 API and tested with Python 2.7.10.
 
-# Prerequisites
-Depends on the following Python libraries:
+# Installation
 
- * For authentification and communication with SmugMug:
-   * bottle
-   * rauth
-   * requests
-   * requests_oauthlib
-
- * For parsing metadata from local files:
-   * hachoir_core
-   * hachoir_parser
-   * hachoir_metadata
-
- * To run unit-tests:
-   * parameterized
-   * mock
-   * responses
-
-You may install any missing library using `pip` (e.g. `pip install requests`)
+* `git clone` the repository from github.
+* `pip install -r requirements.txt`
 
 # Sample usage
 
@@ -39,13 +23,13 @@ $ ./smugcli.py ls
  Photography
  Portfolio
  Other
- 
+
 $ ./smugcli.py ls Photography
  2014
  2015
  2016
 
- 
+
 $ ./smugcli.py ls Photography/2015
  Photoshoot with Dave
 ```

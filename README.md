@@ -84,7 +84,32 @@ Uploading local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0052.JPG
 ...
 ```
 
-The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded. To exclude paths from the sync operation, run the command:
+The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded.
+
+The sync command uses multiple threads to speed-up the file scanning and upload.
+You may want to tune the number of threads used by SmugCLI depending on your
+machine's performance. For instance:
+```
+$ ./smugcli.py sync local/folder --target remote/folder --folder_threads=4 --file_threads=8 --upload_threads=2
+```
+
+`folder_threads` control the number of album folders that are processed in
+parallel.  `file_threads` specifies the number fo files that are read from disk
+and compared with the server side version in parallel. `upload_threads` controls
+the number of parallel upload operations allowed when sending content to
+SmugMug. Keep in mind that too many or too few threads can be harmful to
+performance. Also keep in mind that increasing file_threads or upload_threads
+means that more files will be loaded in memory at the same time. If you have
+many large video files, loading too many in parallel could hog your system's
+resources.
+
+When you are happy with the performance using certain thread counts, you may
+save these preferences so that they'd be used as defaults next time:
+```
+$ ./smugcli.py sync --set_defaults --folder_threads=4 --file_threads=8 --upload_threads=2
+```
+
+To exclude paths from the sync operation, run the command:
 ```
 $ ./smugcli.py ignore local/folder/export-tmp
 ```

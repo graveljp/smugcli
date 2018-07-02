@@ -306,6 +306,7 @@ class SmugMugFS(object):
     media_files = [f for f in files if self._is_media(f)]
     if media_files:
       local_dirs = os.path.join(target, subdir).split(os.sep)
+      local_dirs = [d.strip() for d in local_dirs]
       if dirs:
         local_dirs.append('Images from folder ' + local_dirs[-1])
 

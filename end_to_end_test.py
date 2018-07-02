@@ -704,6 +704,20 @@ class EndToEndTest(unittest.TestCase):
                   'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not',
                   ' support folder more than 5 level deep.'])])
 
+  def test_sync_whitespace(self):
+    self._stage_files('{root}/ folder / album ',
+                      [('testdata/SmugCLI_1.jpg', ' file . jpg ')])
+    self._do('sync {root}',
+             [AnyOrder(
+               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+                'Creating Folder "{root}".\n',
+                'Creating Folder "{root}/folder".\n',
+                'Creating Album "{root}/folder/album".\n',
+                'Uploaded "{root}/ folder / album / file . jpg ".\n'])])
+    self._do('sync {root}',
+             [AnyOrder(
+               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+                'Found matching remote album "{root}/folder/album".\n'])])
 
 if __name__ == '__main__':
   unittest.main()

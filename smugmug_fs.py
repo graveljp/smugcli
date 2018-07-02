@@ -17,7 +17,6 @@ import os
 import requests
 import urlparse
 
-
 hachoir_config.quiet = True
 
 DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
@@ -214,11 +213,9 @@ class SmugMugFS(object):
       print 'Cannot upload images in node of type "%s".' % node['Type']
       return
 
-    child_nodes = node.child_nodes_by_name
-
     for filename in itertools.chain(*(glob.glob(f) for f in filenames)):
       file_basename = os.path.basename(filename).strip()
-      if file_basename in child_nodes:
+      if node.get_child(file_basename):
         print 'Skipping "%s", file already exists in Album "%s".' % (filename,
                                                                      album)
         continue
@@ -257,6 +254,11 @@ class SmugMugFS(object):
       self.smugmug.config['upload_threads'] = upload_threads
       print 'Defaults updated.'
       return
+
+    # Approximate worse case: each folder and file threads work on a different
+    # folders, and all folders are 5 level deep.
+    self._smugmug.garbage_collector.set_max_children_cache(
+      folder_threads + file_threads + 5)
 
     target = target if target.startswith(os.sep) else os.sep + target
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))

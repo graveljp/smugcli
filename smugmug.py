@@ -2,6 +2,7 @@
 
 import base64
 import collections
+import heapq
 import io
 import json
 import math
@@ -10,8 +11,8 @@ import os
 import re
 import requests
 import smugmug_oauth
-import smugmug_fs
 import threading
+import time
 
 API_ROOT = 'https://api.smugmug.com'
 API_UPLOAD = 'https://upload.smugmug.com/'
@@ -41,6 +42,64 @@ class UnexpectedResponseError(Error):
 
 class InterruptedError(Error):
   """Error raised when a network operation is interrupted."""
+
+
+class ChildCacheGarbageCollector(object):
+  """Garbage collector for clearing the node's children cache.
+
+  Because multiple threads could process the same nodes in parallel, the nodes
+  and their children are cached so that we only fetch nodes once form the
+  server. It's important to eventually clear this cache though, otherwise the
+  JSON data of the whole SmugMug account could end up being stored in memory
+  after a complete sync.  This garbage collector trims the node tree by clearing
+  out the node's children cache, keeping the number of cached nodes under a
+  certain threshold. Nodes are discarded by clearing the nodes that were visited
+  the longest ago first.
+  """
+
+  def __init__(self, max_nodes):
+    self._max_nodes = max_nodes
+    self._oldest = []
+    self._nodes = {}
+    self._mutex = threading.Lock()
+    self._DELETED = '__DELETED__'
+
+  def set_max_children_cache(self, max_nodes):
+    """Set the maximum number of children cache to keep in memory.
+
+    As a rule of thumb, the number of cached nodes should be proportional to the
+    number of threads processing the tree.
+
+    Args:
+      max_nodes: int, the number of nodes that should be allows to keep a
+          children cache.
+    """
+    self._max_nodes = max_nodes
+
+  def visited(self, node):
+    """Record a node a just visited and clear the cache of the oldest visit.
+
+    Args:
+      node: Node object, the node object to mark as visited.
+    """
+    to_clear = []
+    with self._mutex:
+      if node in self._nodes:
+        entry = self._nodes.pop(node)
+        entry[1] = self._DELETED
+
+      new_entry = [time.time(), node]
+      self._nodes[node] = new_entry
+      heapq.heappush(self._oldest, new_entry)
+
+      while len(self._nodes) > self._max_nodes:
+        priority, node_to_clear = heapq.heappop(self._oldest)
+        if node_to_clear is not self._DELETED:
+          to_clear.append(node_to_clear)
+          del self._nodes[node_to_clear]
+
+    for n in to_clear:
+      n.reset_cache()
 
 
 class NodeList(object):
@@ -154,27 +213,22 @@ class Node(object):
     else:
       return self.get('ChildNodes', params=params)
 
-  def get_child(self, child_name):
-    for child in self.get_children():
-      if child.name == child_name:
-        return child
-    return None
-
-  @property
-  def child_nodes_by_name(self):
+  def _get_child_nodes_by_name(self):
     if self._child_nodes_by_name is None:
       self._child_nodes_by_name = collections.defaultdict(list)
       for child in self.get_children():
         self._child_nodes_by_name[child.name].append(child)
+
+    self._smugmug.garbage_collector.visited(self)
     return self._child_nodes_by_name
 
-  def create_child_node(self, name, params):
+  def _create_child_node(self, name, params):
     if self._json['Type'] != 'Folder':
       raise InvalidArgumentError(
         'Nodes can only be created in folders.\n'
         '"%s" is of type "%s".' % (self.name, self._json['Type']))
 
-    if name in self.child_nodes_by_name:
+    if name in self._get_child_nodes_by_name():
       raise InvalidArgumentError('Node %s already exists in folder %s' % (
                                  name, self.name))
 
@@ -202,7 +256,8 @@ class Node(object):
 
     node = Node(self._smugmug, node_json, parent=self)
     node._child_nodes_by_name = {}
-    self.child_nodes_by_name[name] = [node]
+    self._smugmug.garbage_collector.visited(node)
+    self._get_child_nodes_by_name()[name] = [node]
 
     if node['Type'] == 'Album':
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
@@ -214,7 +269,7 @@ class Node(object):
 
   def get_child(self, name):
     with self._lock:
-      match = self.child_nodes_by_name.get(name)
+      match = self._get_child_nodes_by_name().get(name)
 
     if not match:
       return None
@@ -227,15 +282,20 @@ class Node(object):
 
   def get_or_create_child(self, name, params):
     with self._lock:
-      match = self.child_nodes_by_name.get(name)
+      match = self._get_child_nodes_by_name().get(name)
       if not match:
-        return self.create_child_node(name, params)
+        return self._create_child_node(name, params)
 
     if len(match) > 1:
       raise RemoteDataError(
         'Multiple remote nodes matches "%s" in node "%s".' % (name, self.name))
 
     return match[0]
+
+  def reset_cache(self):
+    with self._lock:
+      self._child_nodes_by_name = None
+
 
 def Wrapper(smugmug, json, parent=None):
   response = json['Response']
@@ -279,13 +339,17 @@ class SmugMug(object):
     self._smugmug_oauth = None
     self._oauth = None
     self._user_root_node = None
-    self._fs = smugmug_fs.SmugMugFS(self)
     self._session = requests.Session()
     self._requests_sent = requests_sent
+    self._garbage_collector = ChildCacheGarbageCollector(8)
 
   @property
   def config(self):
     return self._config
+
+  @property
+  def garbage_collector(self):
+    return self._garbage_collector
 
   @property
   def service(self):

@@ -210,16 +210,19 @@ def run(args, config=None, requests_sent=None):
   sync_parser.add_argument('-Ft', '--folder_threads',
                            type=int,
                            default=config.get('folder_threads', 4),
+                           metavar='N',
                            help='Number of folders scanned in parallel.')
   sync_parser.add_argument('-ft', '--file_threads',
                            type=int,
                            default=config.get('file_threads', 16),
+                           metavar='N',
                            help=('Number of files scanned in parallel. Files '
                                  'read from disk and compared to the content '
                                  'the SmugMug servers.'))
   sync_parser.add_argument('-ut', '--upload_threads',
                            type=int,
                            default=config.get('upload_threads', 3),
+                           metavar='N',
                            help='Number of file upload happening in parallel.')
   sync_parser.add_argument('--set_defaults',
                            action='store_true',

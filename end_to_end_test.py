@@ -628,7 +628,7 @@ class EndToEndTest(unittest.TestCase):
       self._do(
         'sync -t {root} dir',
         [AnyOrder(
-          ['Syncing local folders "dir" to SmugMug folder "/__smugcli_tests__".\n',
+          ['Syncing local folders "dir" to SmugMug folder "/{root}".\n',
            'Found matching remote album "{root}/dir/Images from folder dir".\n',
            'Found matching remote album "{root}/dir/album".\n'])])
 
@@ -676,13 +676,13 @@ class EndToEndTest(unittest.TestCase):
       'sync {root}',
       [AnyOrder(
         ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-         'Creating Folder "__smugcli_tests__".\n',
-         'Creating Folder "__smugcli_tests__/1".\n',
-         'Creating Folder "__smugcli_tests__/1/2".\n',
-         'Creating Folder "__smugcli_tests__/1/2/3".\n',
-         'Creating Folder "__smugcli_tests__/1/2/3/4".\n',
-         'Creating Album "__smugcli_tests__/1/2/3/4/album".\n',
-         'Uploaded "__smugcli_tests__/1/2/3/4/album/SmugCLI_1.jpg".\n'])])
+         'Creating Folder "{root}".\n',
+         'Creating Folder "{root}/1".\n',
+         'Creating Folder "{root}/1/2".\n',
+         'Creating Folder "{root}/1/2/3".\n',
+         'Creating Folder "{root}/1/2/3/4".\n',
+         'Creating Album "{root}/1/2/3/4/album".\n',
+         'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".\n'])])
 
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 -t {root}/1',

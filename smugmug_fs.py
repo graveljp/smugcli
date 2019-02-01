@@ -260,15 +260,17 @@ class SmugMugFS(object):
     self._smugmug.garbage_collector.set_max_children_cache(
       folder_threads + file_threads + 5)
 
+    user = user or self._smugmug.get_auth_user()
     target = target if target.startswith(os.sep) else os.sep + target
     sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
-    print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
-      ', '.join(sources), target)
-
-    user = user or self._smugmug.get_auth_user()
     matched, unmatched_dirs = self.path_to_node(user, target)
     if unmatched_dirs:
       print 'Target folder not found: "%s".' % target
+      return
+
+    print 'Will sync local folders "%s" to SmugMug folder "%s".' % (
+      ', '.join(sources), target)
+    if not self._ask('Proceed (yes/no)? '):
       return
 
     with task_manager.TaskManager() as manager, \

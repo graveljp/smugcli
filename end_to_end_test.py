@@ -1,17 +1,14 @@
 import smugcli
 
 import contextlib
-import difflib
+import io_expectation as expect
 import glob
 import json
 import os
 import re
 import responses
 import shutil
-import StringIO
-import subprocess
 import sys
-import tempfile
 import unittest
 
 
@@ -43,169 +40,6 @@ def format_path(path):
   return path
 
 
-class ExpectBase(object):
-  # Base class for all expected response string matchers.
-
-  pass
-
-class Expect(ExpectBase):
-
-  def __init__(self, string):
-    self._string = format_path(string)
-
-  def match(self, other):
-    return other.strip() == self._string.strip()
-
-  def __str__(self):
-    return str(self._string)
-
-  def __repr__(self):
-    return repr(self._string)
-
-
-class ExpectContains(ExpectBase):
-
-  def __init__(self, string):
-    self._string = format_path(string)
-
-  def match(self, other):
-    return self._string.strip() in other.strip()
-
-  def __str__(self):
-    return str(self._string)
-
-  def __repr__(self):
-    return 'ExpectContains(' + repr(self._string) + ')'
-
-
-class ExpectPrefix(ExpectBase):
-
-  def __init__(self, prefix):
-    self._prefix = format_path(prefix)
-
-  def match(self, other):
-    return other.strip().startswith(self._prefix.strip())
-
-  def __str__(self):
-    return str(self._prefix)
-
-  def __repr__(self):
-    return 'ExpectPrefix(' + repr(self._prefix) + ')'
-
-
-class ExpectRegex(ExpectBase):
-
-  def __init__(self, regex):
-    self._regex = regex
-
-  def match(self, other):
-    return re.match(self._regex, other, re.DOTALL | re.MULTILINE)
-
-  def __repr__(self):
-    return 'ExpectRegex(' + repr(self._regex) + ')'
-
-
-class AnyOrder(ExpectBase):
-
-  def __init__(self, expected_list):
-    self._expected_list = [
-      ExpectContains(expected) if isinstance(expected, basestring)
-      else expected for expected in expected_list]
-
-  def consume(self, string):
-    for expected in list(self._expected_list):
-      if expected.match(string):
-        self._expected_list.remove(expected)
-
-  def is_fulfilled(self):
-    return len(self._expected_list) == 0
-
-  def __repr__(self):
-    return 'AnyOrder(' + repr(self._expected_list) + ')'
-
-
-class Reply(object):
-
-  def __init__(self, string):
-    self._string = string
-
-  def __str__(self):
-    return str(self._string)
-
-  def __repr__(self):
-    return 'Reply(%s)' % repr(self._string)
-
-
-class ExpectedInputOutput(object):
-
-  def __init__(self):
-    self._expected_io = None
-    self._cmd_output = StringIO.StringIO()
-    self._original_stdin = sys.stdin
-    self._original_stdout = sys.stdout
-
-  def set_expected_io(self, expected_io):
-    self._expected_io = (
-      [Expect(io) if isinstance(io, basestring) else io for io in expected_io]
-      if expected_io is not None else None)
-    self._cmd_output = StringIO.StringIO()
-
-  def assert_no_pending(self):
-    self._CheckExpectedOutput()
-
-    if self._expected_io:
-      raise AssertionError('Pending IO expectation never fulfulled:\n%s' % str(self._expected_io))
-    self.set_expected_io(None)
-
-  def write(self, string):
-    self._original_stdout.write(string)
-    self._cmd_output.write(string)
-
-  def flush(self):
-    self._original_stdout.flush()
-
-  def readline(self):
-    self._CheckExpectedOutput()
-
-    if not self._expected_io:
-      raise AssertionError('Not expecting any more IOs.')
-
-    io = self._expected_io.pop(0)
-    if not isinstance(io, Reply):
-      raise AssertionError('Not expecting input request.')
-
-    reply = format_path(str(io)) + '\n'
-    self._original_stdout.write(reply)
-    return reply
-
-  def _CheckExpectedOutput(self):
-    output = self._cmd_output.getvalue()
-    self._cmd_output = StringIO.StringIO()
-
-    if not output or self._expected_io is None:
-      return
-
-    if not self._expected_io:
-      raise AssertionError('Not expecting any more IOs but got: %s' %
-                           repr(output))
-
-    io = self._expected_io.pop(0)
-    if not isinstance(io, ExpectBase):
-      raise AssertionError('Not expecting output message but got: %s' %
-                           repr(output))
-
-    if isinstance(io, AnyOrder):
-      io.consume(output)
-      if not io.is_fulfilled():
-        self._expected_io.insert(0, io)
-
-    elif not io.match(output):
-      raise AssertionError('Unexpected output:\n'
-                           '%s' % ''.join(difflib.ndiff(
-                             str(io).splitlines(True),
-                             str(output).splitlines(True))))
-
-
 class EndToEndTest(unittest.TestCase):
 
   def setUp(self):
@@ -225,7 +59,8 @@ class EndToEndTest(unittest.TestCase):
     if bool(os.environ.get('RESET_CACHE')):
       shutil.rmtree(cache_folder, ignore_errors=True)
 
-    self._io = ExpectedInputOutput()
+    self._io = expect.ExpectedInputOutput()
+    self._io.set_transform_fn(format_path)
     sys.stdin = self._io
     sys.stdout = self._io
 
@@ -352,7 +187,7 @@ class EndToEndTest(unittest.TestCase):
       self._save_requests(cache_folder, requests_sent)
 
     self._command_index += 1
-    self._io.assert_no_pending()
+    self._io.assert_expectations_fulfilled()
 
   def _stage_files(self, dest, files):
     dest_path = format_path(dest)
@@ -368,101 +203,103 @@ class EndToEndTest(unittest.TestCase):
 
   def test_get(self):
     self._do('get \\/api\\/v2\\/user',
-             [ExpectPrefix('{\n  "Code": 200,\n  "Message": "Ok"')])
+             expect.Somewhere(
+               ['"Code": 200,',
+                '"Message": "Ok",']))
 
   def test_ls(self):
     # Fails if node doesn't exists.
     self._do('ls {root}',
-             ['"{root}" not found in "".'])
+             '"{root}" not found in "".')
     self._do('ls {root}/foo',
-             ['"{root}" not found in "".'])
+             '"{root}" not found in "".')
 
     # Works if node exists:
     self._do('mkdir -p {root}/foo/bar {root}/foo/baz')
     self._do('ls {root}',
-             ['foo'])
+             'foo')
     self._do('ls {root}/foo',
-             ['bar\n'
+             ['bar',
               'baz'])
 
     # Shows full node JSON info in -l mode:
     self._do('ls -l {root}',
-             [ExpectRegex(r'{\n  .*  "Name": "foo"')])
+             expect.Somewhere('"Name": "foo",'))
 
     # Lists other user's folder
     self._do('ls -u cmac',
-             [ExpectRegex(r'.*^Photography$')])
+             expect.Somewhere('Photography'))
 
   def test_mkdir(self):
     # Missing parent.
     self._do('mkdir {root}/foo',
-             ['"{root}" not found in "".'])
+             '"{root}" not found in "".')
 
     # Creating root folder.
     self._do('mkdir {root}',
-             ['Creating Folder "{root}".'])
+             'Creating Folder "{root}".')
 
     # Cannot create existing folder.
     self._do('mkdir {root}',
-             ['Path "{root}" already exists.'])
+             'Path "{root}" already exists.')
 
     # Missing sub-folder parent.
     self._do('mkdir {root}/foo/bar/baz',
-             ['"foo" not found in "/{root}".'])
+             '"foo" not found in "/{root}".')
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
-             ['Creating Folder "{root}/foo".\n'
-              'Creating Folder "{root}/foo/bar".\n'
+             ['Creating Folder "{root}/foo".',
+              'Creating Folder "{root}/foo/bar".',
               'Creating Folder "{root}/foo/bar/baz".'])
 
     # Check that all folders were properly created.
     self._do('ls {root}/foo/bar',
-             ['baz'])
+             'baz')
     self._do('ls {root}/foo/bar/baz',
              [])  # Folder exists, but is empty.
 
     # Can create many folders in one command.
     self._do('mkdir {root}/buz {root}/biz',
-             ['Creating Folder "{root}/buz".\n'
+             ['Creating Folder "{root}/buz".',
               'Creating Folder "{root}/biz".'])
 
     self._do('mkdir {root}/baz/biz {root}/buz {root}/baz',
-             ['"baz" not found in "/{root}".\n'
-              'Path "{root}/buz" already exists.\n'
+             ['"baz" not found in "/{root}".',
+              'Path "{root}/buz" already exists.',
               'Creating Folder "{root}/baz".'])
 
     self._do('ls {root}',
-             ['baz\n'
-              'biz\n'
-              'buz\n'
+             ['baz',
+              'biz',
+              'buz',
               'foo'])
 
   def test_mkdir_privacy(self):
     self._do('mkdir -p {root}/default/folder')
     self._do('ls -l {root}/default',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._do('mkdir -p {root}/public/folder --privacy=public')
     self._do('ls -l {root}/public',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._do('mkdir -p {root}/unlisted/folder --privacy=unlisted')
     self._do('ls -l {root}/unlisted',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+             expect.Somewhere('"Privacy": "Unlisted",'))
 
     self._do('mkdir -p {root}/private/folder --privacy=private')
     self._do('ls -l {root}/private',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+             expect.Somewhere('"Privacy": "Private",'))
 
   def test_mkdir_folder_depth_limits(self):
     # Can't create more than 5 folder deep.
     self._do('mkdir -p {root}/1/2/3/4',
-             ['Creating Folder "{root}".\n'
-              'Creating Folder "{root}/1".\n'
-              'Creating Folder "{root}/1/2".\n'
-              'Creating Folder "{root}/1/2/3".\n'
-              'Creating Folder "{root}/1/2/3/4".\n'])
+             ['Creating Folder "{root}".',
+              'Creating Folder "{root}/1".',
+              'Creating Folder "{root}/1/2".',
+              'Creating Folder "{root}/1/2/3".',
+              'Creating Folder "{root}/1/2/3/4".'])
     self._do('mkdir -p {root}/1/2/3/4/5',
              ['Cannot create "{root}/1/2/3/4/5", SmugMug does not support '
               'folder more than 5 level deep.'])
@@ -476,26 +313,26 @@ class EndToEndTest(unittest.TestCase):
 
     # Create all missing folders.
     self._do('mkalbum -p {root}/folder/album',
-             ['Creating Folder "{root}".\n'
-              'Creating Folder "{root}/folder".\n'
+             ['Creating Folder "{root}".',
+              'Creating Folder "{root}/folder".',
               'Creating Album "{root}/folder/album".'])
 
   def test_mkalbum_privacy(self):
     self._do('mkalbum -p {root}/default/album')
     self._do('ls -l {root}/default',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._do('mkalbum -p {root}/public/album --privacy=public')
     self._do('ls -l {root}/public',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._do('mkalbum -p {root}/unlisted/album --privacy=unlisted')
     self._do('ls -l {root}/unlisted',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+             expect.Somewhere('"Privacy": "Unlisted",'))
 
     self._do('mkalbum -p {root}/private/album --privacy=private')
     self._do('ls -l {root}/private',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+             expect.Somewhere('"Privacy": "Private",'))
 
   def test_rmdir(self):
     # Create a test folder hierarchy.
@@ -520,8 +357,8 @@ class EndToEndTest(unittest.TestCase):
 
     # Can delete folder and all it's non-empty parents.
     self._do('rmdir -p {root}/foo/bar',
-             ['Deleting "{root}/foo/bar".\n'
-              'Deleting "{root}/foo".\n'
+             ['Deleting "{root}/foo/bar".',
+              'Deleting "{root}/foo".',
               'Cannot delete Folder: "{root}" is not empty.'])
 
     self._do('ls {root}/foo',
@@ -557,17 +394,17 @@ class EndToEndTest(unittest.TestCase):
     # Ask for confirmation by default.
     self._do('rm -r {root}/foo {root}/fuz',
              ['Remove Folder node "{root}/foo"? ',
-              Reply('n'),
+              expect.Reply('n'),
               'Remove Folder node "{root}/fuz"? ',
-              Reply('y'),
+              expect.Reply('y'),
               'Removing "{root}/fuz".'])
     self._do('rm -r {root}/foo {root}/fuz {root}',
              ['Remove Folder node "{root}/foo"? ',
-              Reply('yes'),
-              'Removing "{root}/foo".\n'
-              '"{root}/fuz" not found.\n'
+              expect.Reply('yes'),
+              'Removing "{root}/foo".',
+              '"{root}/fuz" not found.',
               'Remove Folder node "{root}"? ',
-              Reply('YES'),
+              expect.Reply('YES'),
               'Removing "{root}".'])
 
   def test_upload(self):
@@ -592,10 +429,10 @@ class EndToEndTest(unittest.TestCase):
 
     # Can upload multiple files
     self._do('upload testdata/Sm?gCLI_1.* testdata/SmugCLI_2.jpg {root}/folder/album',
-             ['Uploading "testdata/SmugCLI_1.gif" to "{root}/folder/album"...\n'
+             ['Uploading "testdata/SmugCLI_1.gif" to "{root}/folder/album"...',
               'Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
-              '"{root}/folder/album".\n'
-              'Uploading "testdata/SmugCLI_1.png" to "{root}/folder/album"...\n'
+              '"{root}/folder/album".',
+              'Uploading "testdata/SmugCLI_1.png" to "{root}/folder/album"...',
               'Uploading "testdata/SmugCLI_2.jpg" to "{root}/folder/album"...'])
 
   def test_sync(self):
@@ -605,32 +442,35 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files('{root}/dir/album', ['testdata/SmugCLI_4.jpg',
                                            'testdata/SmugCLI_5.jpg'])
     self._do('sync {root}',
-             [AnyOrder(
-               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-                'Creating Folder "{root}".\n',
-                'Creating Folder "{root}/dir".\n',
-                'Creating Album "{root}/dir/Images from folder dir".\n',
-                'Uploaded "{root}/dir/SmugCLI_1.jpg".\n',
-                'Uploaded "{root}/dir/SmugCLI_2.jpg".\n',
-                'Uploaded "{root}/dir/SmugCLI_3.jpg".\n',
-                'Creating Album "{root}/dir/album".\n',
-                'Uploaded "{root}/dir/album/SmugCLI_4.jpg".\n',
-                'Uploaded "{root}/dir/album/SmugCLI_5.jpg".\n'])])
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Creating Folder "{root}".',
+                'Creating Folder "{root}/dir".',
+                'Creating Album "{root}/dir/Images from folder dir".',
+                'Uploaded "{root}/dir/SmugCLI_1.jpg".',
+                'Uploaded "{root}/dir/SmugCLI_2.jpg".',
+                'Uploaded "{root}/dir/SmugCLI_3.jpg".',
+                'Creating Album "{root}/dir/album".',
+                'Uploaded "{root}/dir/album/SmugCLI_4.jpg".',
+                'Uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
     self._do(
       'sync {root}',
-      [AnyOrder(
-        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-         'Found matching remote album "{root}/dir/Images from folder dir".\n',
-         'Found matching remote album "{root}/dir/album".\n'])])
+      ['Syncing local folders "{root}" to SmugMug folder "/".',
+       expect.AnyOrder(
+         expect.Anything().repeatedly(),
+         'Found matching remote album "{root}/dir/Images from folder dir".',
+         'Found matching remote album "{root}/dir/album".')])
 
     with set_cwd(format_path('{root}')):
       self._do(
         'sync -t {root} dir',
-        [AnyOrder(
-          ['Syncing local folders "dir" to SmugMug folder "/{root}".\n',
-           'Found matching remote album "{root}/dir/Images from folder dir".\n',
-           'Found matching remote album "{root}/dir/album".\n'])])
+        ['Syncing local folders "dir" to SmugMug folder "/{root}".',
+         expect.AnyOrder(
+           expect.Anything().repeatedly(),
+           'Found matching remote album "{root}/dir/Images from folder dir".',
+           'Found matching remote album "{root}/dir/album".')])
 
     self._stage_files('{root}/dir',
                       [('testdata/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
@@ -638,86 +478,94 @@ class EndToEndTest(unittest.TestCase):
                       [('testdata/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
     self._do(
       'sync {root}',
-      [AnyOrder(
-        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-         'Found matching remote album "{root}/dir/Images from folder dir".\n',
-         'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.',
-         ' Deleting old version.\n',
-         'Re-uploaded "{root}/dir/SmugCLI_2.jpg".\n',
-         'Found matching remote album "{root}/dir/album".\n',
-         'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.',
-         ' Deleting old version.\n',
-         'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".\n'])])
+      ['Syncing local folders "{root}" to SmugMug folder "/".',
+       expect.AnyOrder(
+         expect.Anything().repeatedly(),
+         'Found matching remote album "{root}/dir/Images from folder dir".',
+         'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.'
+         ' Deleting old version.',
+         'Re-uploaded "{root}/dir/SmugCLI_2.jpg".',
+         'Found matching remote album "{root}/dir/album".',
+         'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
+         ' Deleting old version.',
+         'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
   def test_sync_privacy(self):
     self._stage_files('{root}/default/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root}')
     self._do('ls -l {root}/default',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._stage_files('{root}/public/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=public')
     self._do('ls -l {root}/public',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Public"')])
+             expect.Somewhere('"Privacy": "Public",'))
 
     self._stage_files('{root}/unlisted/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=unlisted')
     self._do('ls -l {root}/unlisted',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Unlisted"')])
+             expect.Somewhere('"Privacy": "Unlisted",'))
 
     self._stage_files('{root}/private/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=private')
     self._do('ls -l {root}/private',
-             [ExpectRegex(r'{\n  .*  "Privacy": "Private"')])
+             expect.Somewhere('"Privacy": "Private",'))
 
   def test_sync_folder_depth_limits(self):
     self._stage_files('{root}/1/2/3/4/album', ['testdata/SmugCLI_1.jpg'])
     self._do(
       'sync {root}',
-      [AnyOrder(
-        ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-         'Creating Folder "{root}".\n',
-         'Creating Folder "{root}/1".\n',
-         'Creating Folder "{root}/1/2".\n',
-         'Creating Folder "{root}/1/2/3".\n',
-         'Creating Folder "{root}/1/2/3/4".\n',
-         'Creating Album "{root}/1/2/3/4/album".\n',
-         'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".\n'])])
+      ['Syncing local folders "{root}" to SmugMug folder "/".',
+       expect.AnyOrder(
+         expect.Anything().repeatedly(),
+         'Creating Folder "{root}".',
+         'Creating Folder "{root}/1".',
+         'Creating Folder "{root}/1/2".',
+         'Creating Folder "{root}/1/2/3".',
+         'Creating Folder "{root}/1/2/3/4".',
+         'Creating Album "{root}/1/2/3/4/album".',
+         'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".')])
 
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 -t {root}/1',
-               [AnyOrder(
-                 ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n',
-                  'Found matching remote album "{root}/1/2/3/4/album".'])])
+               ['Syncing local folders "2" to SmugMug folder "/{root}/1".',
+                expect.AnyOrder(
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/1/2/3/4/album".')])
 
     self._stage_files('{root}/1/2/3/4/5/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root}',
-             [AnyOrder(
-               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
                 'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
-                ' support folder more than 5 level deep.'])])
+                ' support folder more than 5 level deep.')])
 
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 -t {root}/1',
-               [AnyOrder(
-                 ['Syncing local folders "2" to SmugMug folder "/{root}/1".\n',
-                  'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not',
-                  ' support folder more than 5 level deep.'])])
+               ['Syncing local folders "2" to SmugMug folder "/{root}/1".',
+                expect.AnyOrder(
+                  expect.Anything().repeatedly(),
+                  'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+                  ' support folder more than 5 level deep.')])
 
   def test_sync_whitespace(self):
     self._stage_files('{root}/ folder / album ',
                       [('testdata/SmugCLI_1.jpg', ' file . jpg ')])
     self._do('sync {root}',
-             [AnyOrder(
-               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-                'Creating Folder "{root}".\n',
-                'Creating Folder "{root}/folder".\n',
-                'Creating Album "{root}/folder/album".\n',
-                'Uploaded "{root}/ folder / album / file . jpg ".\n'])])
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Creating Folder "{root}".',
+                'Creating Folder "{root}/folder".',
+                'Creating Album "{root}/folder/album".',
+                'Uploaded "{root}/ folder / album / file . jpg ".')])
     self._do('sync {root}',
-             [AnyOrder(
-               ['Syncing local folders "{root}" to SmugMug folder "/".\n',
-                'Found matching remote album "{root}/folder/album".\n'])])
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Found matching remote album "{root}/folder/album".')])
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -178,6 +178,7 @@ def run(args, config=None, requests_sent=None):
     help='Synchronize all local albums with SmugMug.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target,
+                                                  a.force,
                                                   a.privacy.title(),
                                                   a.folder_threads,
                                                   a.file_threads,
@@ -196,6 +197,10 @@ def run(args, config=None, requests_sent=None):
                            help=('The destination folder in which to upload '
                                  'data. Uploads to the root folder by '
                                  'default.'))
+  sync_parser.add_argument('-f', '--force',
+                           action='store_true',
+                           help=('Do not ask for confirmation before staring '
+                                 'sync operation.'))
   sync_parser.add_argument('--privacy',
                            type=lambda s: unicode(s, 'utf8'),
                            default='public',

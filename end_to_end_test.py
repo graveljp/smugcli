@@ -620,6 +620,22 @@ class EndToEndTest(unittest.TestCase):
               'Proceed (yes/no)? ',
               expect.Reply('n')])
 
+  def test_sync_force(self):
+    self._stage_files('{root}/album', ['testdata/SmugCLI_1.jpg'])
+    self._do('sync -f {root}',
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Creating Folder "{root}".',
+                'Creating Album "{root}/album".',
+                'Uploaded "{root}/album/SmugCLI_1.jpg".')])
+
+    self._do('sync --force {root}',
+             ['Syncing local folders "{root}" to SmugMug folder "/".',
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Found matching remote album "{root}/album".')])
+
 
 if __name__ == '__main__':
   unittest.main()

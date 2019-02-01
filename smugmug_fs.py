@@ -243,6 +243,7 @@ class SmugMugFS(object):
            user,
            sources,
            target,
+           force,
            privacy,
            folder_threads,
            file_threads,
@@ -268,10 +269,14 @@ class SmugMugFS(object):
       print 'Target folder not found: "%s".' % target
       return
 
-    print 'Will sync local folders "%s" to SmugMug folder "%s".' % (
-      ', '.join(sources), target)
-    if not self._ask('Proceed (yes/no)? '):
-      return
+    if force:
+      print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
+        ', '.join(sources), target)
+    else:
+      print 'Will sync local folders "%s" to SmugMug folder "%s".' % (
+        ', '.join(sources), target)
+      if not self._ask('Proceed (yes/no)? '):
+        return
 
     with task_manager.TaskManager() as manager, \
          thread_safe_print.ThreadSafePrint(), \

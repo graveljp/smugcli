@@ -436,6 +436,23 @@ class IoExpectationTest(unittest.TestCase):
                    print('Second expected output'),
                    print('Third expected output')),
       error_message=None),
+
+    param(
+      'short_syntax_expect_repeatedly_contains',
+      expected_io=expect.Repeatedly('out'),
+      ios=lambda: (print('Expected output'),
+                   print('Expected output'),
+                   print('Expected output')),
+      error_message=None),
+
+    param(
+      'short_syntax_expect_repeatedly_contains_in_order',
+      expected_io=expect.Repeatedly(['a', 'b']),
+      ios=lambda: (print('a'),
+                   print('b'),
+                   print('a'),
+                   print('b')),
+      error_message=None),
   ])
   def test_expectation(self, test_name, expected_io, ios, error_message):
     self._io.set_expected_io(expected_io)

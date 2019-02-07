@@ -248,7 +248,7 @@ class Repeatedly(ExpectBase):
     super(Repeatedly, self).__init__()
     self._min_repetition = min_repetition
     self._max_repetition = max_repetition
-    self._sub_expectation = sub_expectation
+    self._sub_expectation = default_expectation(sub_expectation)
     self._current_repetition = 0
     self._current_expectation = copy.deepcopy(self._sub_expectation)
 

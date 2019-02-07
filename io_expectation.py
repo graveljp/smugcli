@@ -282,10 +282,13 @@ class Repeatedly(ExpectBase):
     self._sub_expectation.apply_transform(fn)
 
   def __repr__(self):
-    return '%s(%s, %d, %d)' % (
+    arg1 = max(self._min_repetition - self._current_repetition, 0)
+    arg2 = (self._max_repetition - self._current_repetition
+            if self._max_repetition is not None else None)
+    return '%s(%s%s%s)' % (
       type(self).__name__, repr(self._sub_expectation),
-      self._min_repetition - self._current_repetition,
-      self._max_repetition - self._current_repetition)
+      ', %d' % arg1 if arg1 > 0 or arg2 is not None else '',
+      ', %d' % arg2 if arg2 else '')
 
 
 class ExpectSequenceBase(ExpectBase):

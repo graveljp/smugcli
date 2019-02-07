@@ -246,6 +246,17 @@ class IoExpectationTest(unittest.TestCase):
                      "- Repeatedly(Equals('Expected output'), 0, 2)\n"
                      "+ 'Some other output\\n'")),
 
+    param(
+      'short_syntax_expect_indefinitely_repeating_error',
+      expected_io=expect.Repeatedly(['a', 'b']),
+      ios=lambda: (print('a'),
+                   print('b'),
+                   print('b'),
+                   print('a')),
+      error_message=("Unexpected output:\n"
+                     "- Repeatedly(InOrder(Contains('a'), Contains('b')))\n"
+                     "+ 'b\\n'")),
+
 
     # ==== InOrder ====
     param(

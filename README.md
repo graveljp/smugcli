@@ -55,26 +55,42 @@ $ ./smugcli.py upload local/folder/*.jpg 'Photography/2017/My new album'
 
 Finally, the nicest feature of all, you can synchronize a whole local folder hierarchy to your SmugMug account using the `sync` command:
 ```
-$ ./smugcli.py sync local/folder --target remote/folder
-Making folder remote/folder/2015
-Making album remote/folder/2015/2015-08-03, Mary's Wedding
-Uploading local/folder/2015/2015-08-03, Mary's Wedding/DSC_0001.JPG
-Uploading local/folder/2015/2015-08-03, Mary's Wedding/DSC_0002.JPG
-Uploading local/folder/2015/2015-08-03, Mary's Wedding/DSC_0003.JPG
+$ ./smugcli.py sync local/folder remote/folder
+Creating Folder "remote/folder/2015".
+Creating Album "remote/folder/2015/2015-08-03, Mary's Wedding".
+Uploading "local/folder/2015/2015-08-03, Mary's Wedding/DSC_0001.JPG"
+Uploading "local/folder/2015/2015-08-03, Mary's Wedding/DSC_0002.JPG"
+Uploading "local/folder/2015/2015-08-03, Mary's Wedding/DSC_0003.JPG"
 ...
-Making album remote/folder/2015/2015-09-10, Andy's Photoshoot
-Uploading local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0043.JPG
-Uploading local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0052.JPG
+Creating Album "remote/folder/2015/2015-09-10, Andy's Photoshoot"
+Uploading "local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0043.JPG"
+Uploading "local/folder/2015/2015-09-10, Andy's Photoshoot/DSC_0052.JPG"
 ...
 ```
 
 The sync command can be re-executed to update the remote Albums in the event that the local files might have been updated. Only the files that changed will be re-uploaded.
 
+Multiple sources can be synced in the same operation, the last argument being the destination folder and the others being the sources:
+```
+$ ./smugcli.py sync 2016 2017 2018 remote/folder
+Syncing:
+  2016
+  2017
+  2018
+to SmugMug folder "remote/folder"',
+...
+
+$ ./smugcli.py sync 201* remote/folder
+...
+```
+
+Source files are synced to the destination SmugMug album and source folders are recursively synced to the destination SmugMug folder. For source folders with a trailing path delimitor ('/' or '\\' depending on OS), only the content of the folder is synced, skipping the folder itself (equivalent of doing `folder/*`). This means that `smugcli.py sync src/album dst` is equivalent on to `smugcli.py sync src/album/ dst/album`.
+
 The sync command uses multiple threads to speed-up the file scanning and upload.
 You may want to tune the number of threads used by SmugCLI depending on your
 machine's performance. For instance:
 ```
-$ ./smugcli.py sync local/folder --target remote/folder --folder_threads=4 --file_threads=8 --upload_threads=2
+$ ./smugcli.py sync local/folder remote/folder --folder_threads=4 --file_threads=8 --upload_threads=2
 ```
 
 `folder_threads` control the number of album folders that are processed in

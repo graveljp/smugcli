@@ -84,7 +84,7 @@ $ ./smugcli.py sync 201* remote/folder
 ...
 ```
 
-Source files are synced to the destination SmugMug album and source folders are recursively synced to the destination SmugMug folder. For source folders with a trailing path delimitor ('/' or '\\' depending on OS), only the content of the folder is synced, skipping the folder itself (equivalent of doing `folder/*`). This means that `smugcli.py sync src/album dst` is equivalent on to `smugcli.py sync src/album/ dst/album`. If no sources or destinations are specified, smugcli defaults to syncing the current folder to the SmugMug user's root.
+Source files are synced to the destination SmugMug album and source folders are recursively synced to the destination SmugMug folder. For source folders with a trailing path delimitor ('/' or '\\' depending on OS), only the content of the folder is synced, skipping the folder itself (equivalent of doing `folder/*`). This means that `smugcli.py sync src/album dst` is equivalent to `smugcli.py sync src/album/ dst/album`. If no sources or destinations are specified, smugcli defaults to syncing the current folder to the SmugMug user's root.
 
 The sync command uses multiple threads to speed-up the file scanning and upload.
 You may want to tune the number of threads used by SmugCLI depending on your

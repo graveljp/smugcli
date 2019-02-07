@@ -178,6 +178,7 @@ def run(args, config=None, requests_sent=None):
     help='Synchronize all local albums with SmugMug.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target,
+                                                  a.deprecated_target,
                                                   a.force,
                                                   a.privacy.title(),
                                                   a.folder_threads,
@@ -187,16 +188,25 @@ def run(args, config=None, requests_sent=None):
   sync_parser.add_argument('source',
                            type=lambda s: unicode(s, 'utf8'),
                            nargs='*',
-                           default=u'*',
-                           help=('Folder to sync. Defaults to the local '
-                                 'folder. Uploads the current folder by '
-                                 'default.'))
+                           default=['.'],
+                           help=('Folders/files to recursively sync to the '
+                                 'target SmugMug location. For paths ending '
+                                 'with "%s", the content of the folder is '
+                                 'synced instead of the folder itself.' %
+                                 os.sep))
+  sync_parser.add_argument('target',
+                           type=lambda s: unicode(s, 'utf8'),
+                           nargs='?',
+                           default=['/'],
+                           help=('The destination folder in which to upload '
+                                 'data.'))
   sync_parser.add_argument('-t', '--target',
                            type=lambda s: unicode(s, 'utf8'),
-                           default=os.sep,
-                           help=('The destination folder in which to upload '
-                                 'data. Uploads to the root folder by '
-                                 'default.'))
+                           dest='deprecated_target',
+                           metavar='TARGET',
+                           help=('DEPRECATED. -t/--targer is no longer needed, '
+                                 'specify the target folder as the last '
+                                 'positinal argument.'))
   sync_parser.add_argument('-f', '--force',
                            action='store_true',
                            help=('Do not ask for confirmation before staring '

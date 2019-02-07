@@ -243,6 +243,7 @@ class SmugMugFS(object):
            user,
            sources,
            target,
+           deprecated_target,
            force,
            privacy,
            folder_threads,
@@ -256,41 +257,87 @@ class SmugMugFS(object):
       print 'Defaults updated.'
       return
 
+    if deprecated_target:
+      print '-t/--target argument no longer exists.'
+      print 'Specify the target folder as the last positinal argument.'
+      return
+
+    # The argparse library doesn't seem to support having two positional
+    # arguments, the first variable in length length and the second optional.
+    # The first positional argument always eagerly grabs all values specified.
+    # We therefore need to distribute that last value to the second argument
+    # when it's specified.
+    if len(sources) >= 2 and target == ['/']:
+      target = sources.pop()
+    else:
+      target = target[0]
+
     # Approximate worse case: each folder and file threads work on a different
     # folders, and all folders are 5 level deep.
     self._smugmug.garbage_collector.set_max_children_cache(
       folder_threads + file_threads + 5)
 
+    # Make sure that the source paths exist.
+    globbed = [(source, glob.glob(source)) for source in sources]
+    not_found = [g[0] for g in globbed if not g[1]]
+    if not_found:
+      print 'File%s not found:\n  %s' % (
+        's' if len(not_found) > 1 else '', '\n  '.join(not_found))
+      return
+    all_sources = list(itertools.chain.from_iterable([g[1] for g in globbed]))
+
+    file_sources = [s for s in all_sources if os.path.isfile(s)]
+    dir_sources = [s for s in all_sources if os.path.isdir(s)]
+
+    files_by_path = collections.defaultdict(list)
+    for file_source in file_sources:
+      path, filename = os.path.split(file_source)
+      files_by_path[path or '.'].append(filename)
+
+    # Make sure that the destination node exists.
     user = user or self._smugmug.get_auth_user()
     target = target if target.startswith(os.sep) else os.sep + target
-    sources = list(itertools.chain(*[glob.glob(source) for source in sources]))
     matched, unmatched_dirs = self.path_to_node(user, target)
     if unmatched_dirs:
       print 'Target folder not found: "%s".' % target
       return
+    target_type = matched[-1]['Type'].lower()
 
-    if force:
-      print 'Syncing local folders "%s" to SmugMug folder "%s".' % (
-        ', '.join(sources), target)
+    # Abort if invalid operations are requested.
+    if target_type == 'folder' and file_sources:
+      print 'Can\'t upload files to folder. Please sync to an album node.'
+      return
+    elif (target_type == 'album' and
+          any(not d.endswith(os.sep) for d in dir_sources)):
+      print 'Can\'t upload folders to an album. Please sync to a folder node.'
+      return
+
+    # Request confirmation before proceeding.
+    if len(all_sources) == 1:
+      print 'Syncing "%s" to SmugMug %s "%s".' % (
+        all_sources[0], target_type, target)
     else:
-      print 'Will sync local folders "%s" to SmugMug folder "%s".' % (
-        ', '.join(sources), target)
-      if not self._ask('Proceed (yes/no)? '):
-        return
+      print 'Syncing:\n%s\nto SmugMug %s "%s".' % (
+        '  ' + '\n  '.join(all_sources), target_type, target)
+    if not force and not self._ask('Proceed (yes/no)? '):
+      return
 
     with task_manager.TaskManager() as manager, \
          thread_safe_print.ThreadSafePrint(), \
          thread_pool.ThreadPool(upload_threads) as upload_pool, \
          thread_pool.ThreadPool(file_threads) as file_pool, \
          thread_pool.ThreadPool(folder_threads) as folder_pool:
-      for source in sources:
-        for walk_step in os.walk(source):
+      for source, walk_steps in (
+          [(d, os.walk(d)) for d in dir_sources] +
+          [(p + os.sep, [(p, [], f)]) for p, f in files_by_path.iteritems()]):
+        for walk_step in walk_steps:
           if self._aborting:
             return
           folder_pool.add(self._sync_folder,
                           manager,
                           file_pool,
                           upload_pool,
+                          source,
                           target,
                           privacy,
                           walk_step,
@@ -302,6 +349,7 @@ class SmugMugFS(object):
                    manager,
                    file_pool,
                    upload_pool,
+                   source,
                    target,
                    privacy,
                    walk_step,
@@ -312,18 +360,22 @@ class SmugMugFS(object):
     subdir, dirs, files = walk_step
     media_files = [f for f in files if self._is_media(f)]
     if media_files:
-      local_dirs = os.path.join(target, subdir).split(os.sep)
-      local_dirs = [d.strip() for d in local_dirs]
-      if dirs:
-        local_dirs.append('Images from folder ' + local_dirs[-1])
+      rel_subdir = os.path.relpath(subdir, os.path.split(source)[0])
+      target_dirs = os.path.normpath(
+        os.path.join(target, rel_subdir)).split(os.sep)
+      target_dirs = [d.strip() for d in target_dirs]
 
-      matched, unmatched = self._get_common_path(matched, local_dirs)
+      if dirs:
+        target_dirs.append('Images from folder ' + target_dirs[-1])
+
+      matched, unmatched = self._get_common_path(matched, target_dirs)
       matched, unmatched = self._match_nodes(matched, unmatched)
+
       if unmatched:
         matched = self._match_or_create_nodes(
           matched, unmatched, 'Album', privacy)
       else:
-        print 'Found matching remote album "%s".' % os.path.join(*local_dirs)
+        print 'Found matching remote album "%s".' % os.path.join(*target_dirs)
 
       for f in media_files:
         if self._aborting:

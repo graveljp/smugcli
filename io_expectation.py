@@ -5,8 +5,8 @@
 # inject mock responses in the standard input. This is useful in unit test, to
 # validate that a command line tool behaves as expected.
 #
-# The following example tests a program printing a few lines, asking a question and
-# acting according to the response:
+# The following example tests a program printing a few lines, asking a question
+# and acting according to the response:
 #
 #   import io_expectation as expect
 #

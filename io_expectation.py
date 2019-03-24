@@ -40,6 +40,16 @@
 # expectations are equivalent:
 #   io.set_expected_io(AnyOrder(Contains('foo'), Contains('bar')))
 #   io.set_expected_io(['foo', 'bar'])
+#
+# If no inputs are expected, expectation can be specified after the fact, which
+# is usually more readable in unit tests. For instance:
+#
+#   print('Some output text')
+#   mock_io.assert_output_was('Some output text')
+#
+#   print('More output')
+#   print('Some more output')
+#   mock_io.assert_output_was(['More output', 'Some more output'])
 
 
 import copy
@@ -463,15 +473,18 @@ class ExpectedInputOutput(object):
   def set_expected_io(self, expected_io):
     """Set an expectation for the next sequence of IOs.
 
+    The expected IO can be specified as an instance of an ExpectBase child
+    class, or as a python standard type (str, list, etc.) which are mapped to
+    an expectation object using default_expectation.
+
+    If expected_io is None, next IOs will be ignored.
+
     Args:
-      expected_io: instance of an ExpectBase subclass, the expectation to apply
-          all input and outputs against.
+      expected_io: instance of an ExpectBase subclass or any types accepted by
+          default_expectation, the expectation to apply all input and outputs
+          against.
     """
-    self._expected_io = default_expectation(expected_io)
-
-    if self._expected_io and self._transform_fn:
-      self._expected_io.apply_transform(self._transform_fn)
-
+    self._expected_io = self._patch_expected_io(expected_io)
     self._cmd_output = StringIO.StringIO()
 
   def write(self, string):
@@ -525,6 +538,36 @@ class ExpectedInputOutput(object):
                              repr(self._expected_io))
 
     self.set_expected_io(None)
+
+  def assert_output_was(self, expected_output):
+    """Asserts that the previous outputs matche the specified expectation.
+
+    Args:
+      expected_output: instance of an ExpectBase subclass, the expectation to
+          apply all previous outputs against.
+
+    Raises:
+      AssertionError: raised when previous outputs do not match expectations.
+    """
+    self._expected_io = self._patch_expected_io(expected_output)
+    self.assert_expectations_fulfilled()
+
+  def _patch_expected_io(self, expected_io):
+    """Patch the specified expectation, applying defaults and transforms.
+
+    Args:
+      expected_io: instance of an ExpectBase subclass or any types accepted by
+          default_expectation.
+
+    Returns:
+      Instance of an ExpectBase subclass.
+    """
+    patched_expected_io = default_expectation(expected_io)
+
+    if patched_expected_io and self._transform_fn:
+      patched_expected_io.apply_transform(self._transform_fn)
+
+    return patched_expected_io
 
   def _match_pending_outputs(self):
     """Match any pending IO against the expectations.

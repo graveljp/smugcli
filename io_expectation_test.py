@@ -496,5 +496,18 @@ class IoExpectationTest(unittest.TestCase):
 
     self._io.assert_expectations_fulfilled()
 
+  def test_output_was(self):
+    print('Some output')
+    self._io.assert_output_was('Some output')
+    print('Some more output')
+    self._io.assert_output_was('Some more output')
+
+  def test_set_expected_io_ignore_previous_outputs(self):
+    print('Some ignored output')
+    self._io.set_expected_io('Some expected output')
+    print('Some expected output')
+    self._io.assert_expectations_fulfilled()
+
+
 if __name__ == '__main__':
   unittest.main()

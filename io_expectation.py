@@ -35,6 +35,12 @@
 #
 #   # Validate that the program matched all expectations.
 #   mock_io.assert_expectations_fulfilled()
+#
+# Some expectation can be abbreviated, for insatnce, the following two
+# expectations are equivalent:
+#   io.set_expected_io(AnyOrder(Contains('foo'), Contains('bar')))
+#   io.set_expected_io(['foo', 'bar'])
+
 
 import copy
 import difflib

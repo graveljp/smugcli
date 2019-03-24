@@ -455,7 +455,7 @@ class ExpectedInputOutput(object):
     self._transform_fn = transform_fn
 
   def set_expected_io(self, expected_io):
-    """Set an expectation for the ext sequence of IOs.
+    """Set an expectation for the next sequence of IOs.
 
     Args:
       expected_io: instance of an ExpectBase subclass, the expectation to apply

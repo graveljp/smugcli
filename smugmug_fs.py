@@ -221,9 +221,10 @@ class SmugMugFS(object):
         continue
 
       print 'Uploading "%s" to "%s"...' % (filename, album)
-      response = node.upload('Album',
-                             file_basename,
-                             open(filename, 'rb').read())
+      with open(filename, 'rb') as f:
+        response = node.upload('Album',
+                               file_basename,
+                               f.read())
       if response.status_code != requests.codes.ok:
         print 'Error uploading "%s" to "%s".' % (filename, album)
         print 'Server responded with %s.' % str(response)
@@ -391,7 +392,8 @@ class SmugMugFS(object):
       return
     with manager.start_task(1, '* Syncing file "%s"...' % file_path):
       file_name = file_path.split(os.sep)[-1].strip()
-      file_content = open(file_path, 'rb').read()
+      with open(file_path, 'rb') as f:
+        file_content = f.read()
       remote_file = node.get_child(file_name)
 
       if remote_file:

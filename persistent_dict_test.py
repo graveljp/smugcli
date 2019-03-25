@@ -52,7 +52,8 @@ class TestPersistentDict(unittest.TestCase):
     filename = path.join(self._test_dir, 'new_file')
     pdict = persistent_dict.PersistentDict(filename)
     pdict['a'] = value
-    self.assertEqual(json.load(open(filename)), {'a': result})
+    with open(filename) as f:
+      self.assertEqual(json.load(f), {'a': result})
 
   def test_automatically_save_modified_sub_fields(self):
     filename = path.join(self._test_dir, 'new_file')
@@ -60,7 +61,8 @@ class TestPersistentDict(unittest.TestCase):
     pdict['a'] = {'foo': 1, 'bar': [2, 3]}
     pdict['a']['bar'][1] = 4
     del pdict['a']['foo']
-    self.assertEqual(json.load(open(filename)), {'a': {'bar': [2, 4]}})
+    with open(filename) as f:
+      self.assertEqual(json.load(f), {'a': {'bar': [2, 4]}})
 
   def test_automatically_save_deleted_fields(self):
     filename = path.join(self._test_dir, 'my_file')
@@ -68,7 +70,8 @@ class TestPersistentDict(unittest.TestCase):
       handle.write('{"a": 10, "b": 20}')
     pdict = persistent_dict.PersistentDict(filename)
     del pdict['a']
-    self.assertEqual(json.load(open(filename)), {'b': 20})
+    with open(filename) as f:
+      self.assertEqual(json.load(f), {'b': 20})
 
 
 if __name__ == '__main__':

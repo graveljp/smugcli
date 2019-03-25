@@ -113,8 +113,9 @@ class TestSmugMugFS(unittest.TestCase):
   @responses.activate
   def test_get(self):
     self._fs.get('/api/v2/node/zx4Fx')
-    self.assertEqual(json.loads(self._cmd_output.getvalue()),
-                     json.load(open('testdata/root_node.json')))
+    with open('testdata/root_node.json') as f:
+      self.assertEqual(json.loads(self._cmd_output.getvalue()),
+                       json.load(f))
 
   @parameterized.expand([
     ('/Photography/',

@@ -48,7 +48,8 @@ class EndToEndTest(unittest.TestCase):
 
     # The response library cannot replay requests in a multi-threaded
     # environment. We have to disable threading for testing...
-    self._config = json.load(open(CONFIG_FILE))
+    with open(CONFIG_FILE) as f:
+      self._config = json.load(f)
     self._config.update({
       'folder_threads': 1,
       'file_threads': 1,
@@ -152,7 +153,8 @@ class EndToEndTest(unittest.TestCase):
         self._pending.remove(name)
         self.assertEqual(self._encode_body(req.body), expected_req['body'])
         return resp['status'], {}, json.dumps(resp['json'])
-      req_resp = json.load(open(file))
+      with open(file) as f:
+        req_resp = json.load(f)
       req = req_resp['request']
       resp = req_resp['response']
       rsps.add_callback(

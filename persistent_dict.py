@@ -63,7 +63,8 @@ class PersistentDict(object):
 
   def _read_from_disk(self):
     try:
-      return json.load(open(self._path))
+      with open(self._path) as f:
+        return json.load(f)
     except IOError:
       # Coun't read file. Default to empty dict.
       return {}

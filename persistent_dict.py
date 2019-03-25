@@ -1,6 +1,7 @@
 # dict implementation that automatically saves it's state to a file on disk.
 
 import json
+import os
 
 class Error(Exception):
   """Base class for all exception of this module."""
@@ -73,6 +74,10 @@ class PersistentDict(object):
 
   def _save_to_disk(self):
     if not self._dict:
+      try:
+        os.remove(self._path)
+      except OSError:
+        pass
       return
     with open(self._path, 'w') as handle:
       json.dump(self._dict, handle, sort_keys=True, indent=2,

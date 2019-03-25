@@ -20,7 +20,7 @@ class Worker(threading.Thread):
           if func:
             func(*args, **kwargs)
         except Exception as e:
-          print unicode(e.message).encode("utf-8")
+          print(unicode(e.message).encode("utf-8"))
           # traceback.print_exc()
         finally:
           self._task_queue.task_done()

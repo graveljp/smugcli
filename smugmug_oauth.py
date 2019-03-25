@@ -51,9 +51,9 @@ class SmugMugOAuth(object):
       thread.start()
 
       login_url = 'http://localhost:%d/' % port
-      print 'Started local server.'
-      print 'Visit %s to grant SmugCli access to your SmugMug account.' % login_url
-      print 'Opening page in default browser...'
+      print('Started local server.')
+      print('Visit %s to grant SmugCli access to your SmugMug account.' % login_url)
+      print('Opening page in default browser...')
       if self._is_cygwin():
         try:
           return_code = subprocess.call(['cygstart', login_url],
@@ -66,8 +66,8 @@ class SmugMugOAuth(object):
         success = webbrowser.open(login_url)
 
       if not success:
-        print 'Could not start default browser automatically.'
-        print 'Please visit %s to complete login process.' % login_url
+        print('Could not start default browser automatically.')
+        print('Please visit %s to complete login process.' % login_url)
 
       while thread.isAlive():
         thread.join(1)

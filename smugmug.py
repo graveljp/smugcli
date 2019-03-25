@@ -241,8 +241,8 @@ class Node(object):
     }
     node_params.update(params or {})
 
-    print 'Creating %s "%s".' % (params['Type'], os.path.join(self.path,
-                                                              remote_name))
+    print('Creating %s "%s".' % (params['Type'], os.path.join(self.path,
+                                                              remote_name)))
     response = self.post('ChildNodes', data=node_params)
     if response.status_code != 201:
       raise UnexpectedResponseError(
@@ -262,9 +262,9 @@ class Node(object):
     if node['Type'] == 'Album':
       response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
       if response.status_code != 200:
-        print 'Failed setting SortMethod on Album "%s".' % name
-        print 'Server responded with status code %d: %s.' % (
-          response.status_code, response.json()['Message'])
+        print('Failed setting SortMethod on Album "%s".' % name)
+        print('Server responded with status code %d: %s.' % (
+          response.status_code, response.json()['Message']))
     return node
 
   def get_child(self, name):
@@ -357,9 +357,9 @@ class SmugMug(object):
       if 'api_key' in self.config:
         self._smugmug_oauth = smugmug_oauth.SmugMugOAuth(self.config['api_key'])
       else:
-        print 'No API key provided.'
-        print 'Please request an API key at %s' % API_REQUEST
-        print 'and run "smugcli.py login"'
+        print('No API key provided.')
+        print('Please request an API key at %s' % API_REQUEST)
+        print('and run "smugcli.py login"')
         raise NotLoggedInError
     return self._smugmug_oauth
 
@@ -369,7 +369,7 @@ class SmugMug(object):
       if self.service and 'access_token' in self.config:
         self._oauth = self.service.get_oauth(self.config['access_token'])
       else:
-        print 'User not logged in. Please run the "login" command'
+        print('User not logged in. Please run the "login" command')
         raise NotLoggedInError
     return self._oauth
 

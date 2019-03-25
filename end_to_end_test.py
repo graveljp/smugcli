@@ -43,8 +43,8 @@ def format_path(path):
 class EndToEndTest(unittest.TestCase):
 
   def setUp(self):
-    print '\n-------------------------'
-    print 'Running: %s\n' % self.id()
+    print('\n-------------------------')
+    print('Running: %s\n' % self.id())
 
     # The response library cannot replay requests in a multi-threaded
     # environment. We have to disable threading for testing...
@@ -165,7 +165,7 @@ class EndToEndTest(unittest.TestCase):
 
   def _do(self, command, expected_io=None):
     command = format_path(command)
-    print '$ %s' % command
+    print('$ %s' % command)
     self._io.set_expected_io(expected_io)
 
     args = command.split(' ')

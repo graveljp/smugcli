@@ -384,6 +384,8 @@ class SmugMug(object):
       del self.config['access_token']
     if 'authuser' in self.config:
       del self.config['authuser']
+    if 'authuser_uri' in self.config:
+      del self.config['authuser_uri']
     self._service = None
     self._session = None
 

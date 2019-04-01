@@ -3,6 +3,7 @@ from __future__ import print_function
 import io_expectation as expect
 
 from parameterized import parameterized, param
+from six.moves import input
 import sys
 import unittest
 import re
@@ -425,7 +426,7 @@ class IoExpectationTest(unittest.TestCase):
     param(
       'expect_reply',
       expected_io=expect.Reply('yes'),
-      ios=lambda: AssertEquals(raw_input(), 'yes'),
+      ios=lambda: AssertEquals(input(), 'yes'),
       error_message=None),
 
     param(
@@ -434,7 +435,7 @@ class IoExpectationTest(unittest.TestCase):
         expect.InOrder(
           expect.Equals('Will it work? '),
           expect.Reply('yes'))),
-      ios=lambda: AssertEquals(raw_input('Will it work? '), 'yes'),
+      ios=lambda: AssertEquals(input('Will it work? '), 'yes'),
       error_message=None),
 
     # ==== Syntactic sugars ====
@@ -489,7 +490,7 @@ class IoExpectationTest(unittest.TestCase):
     print('Loading resources...')
     print('Initialization complete.')
     print('Proceed? ')
-    if raw_input() == 'yes':
+    if input() == 'yes':
       print('Success')
     else:
       print('Aborting')

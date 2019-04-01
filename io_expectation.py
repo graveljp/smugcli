@@ -55,7 +55,7 @@
 import copy
 import difflib
 import re
-import StringIO
+import six
 import sys
 
 
@@ -80,7 +80,7 @@ def default_expectation(expected_io):
     return InOrder(*expected_io)
   elif isinstance(expected_io, set):
     return AnyOrder(*expected_io)
-  elif isinstance(expected_io, basestring):
+  elif isinstance(expected_io, six.string_types):
     return Contains(expected_io)
   else:
     return expected_io
@@ -485,7 +485,7 @@ class ExpectedInputOutput(object):
           against.
     """
     self._expected_io = self._patch_expected_io(expected_io)
-    self._cmd_output = StringIO.StringIO()
+    self._cmd_output = six.StringIO()
 
   def write(self, string):
     """File object 'write' method, matched against the next expected output.
@@ -576,7 +576,7 @@ class ExpectedInputOutput(object):
       AssertionError: raised when IOs do not match expectations.
     """
     output_lines = self._cmd_output.getvalue().splitlines(True)
-    self._cmd_output = StringIO.StringIO()
+    self._cmd_output = six.StringIO()
 
     if self._expected_io:
       for line in output_lines:

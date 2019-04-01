@@ -31,12 +31,20 @@ class TestPersistentDict(unittest.TestCase):
     pdict['key'] = 123
     self.assertTrue(path.isfile(filename))
 
-  def test_load_from_existing_file(self):
+  @parameterized.expand([
+    ('int', 10),
+    ('str', 'foo'),
+    ('Unicode', u'\xef'),
+    ('list', [1, 2]),
+    ('dict', {'foo': 1, 'bar': 'baz'}),
+    ('complex_list', [1, {'foo': [3, 4]}]),
+    ('complex_dict', {'foo': 1, 'bar': [2, 3]})])
+  def test_load_from_existing_file(self, test_name, value):
     filename = path.join(self._test_dir, 'my_file')
     with open(filename, 'w') as handle:
-      handle.write('{"a": 10}')
+      json.dump({'a': value}, handle)
     pdict = persistent_dict.PersistentDict(filename)
-    self.assertEqual(pdict, {'a': 10})
+    self.assertEqual(pdict, {'a': value})
 
   @parameterized.expand([
     ('int', 10, 10),
@@ -54,6 +62,13 @@ class TestPersistentDict(unittest.TestCase):
     pdict['a'] = value
     with open(filename) as f:
       self.assertEqual(json.load(f), {'a': result})
+
+  def test_getattr(self):
+    filename = path.join(self._test_dir, 'new_file')
+    with open(filename, 'w') as handle:
+      json.dump({'a': 'foo'}, handle)
+    pdict = persistent_dict.PersistentDict(filename)
+    self.assertEqual(pdict['a'], 'foo')
 
   def test_automatically_save_modified_sub_fields(self):
     filename = path.join(self._test_dir, 'new_file')

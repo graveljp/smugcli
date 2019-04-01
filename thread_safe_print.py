@@ -3,7 +3,7 @@
 # each other.
 
 import os
-import StringIO
+import six
 import sys
 import threading
 
@@ -24,10 +24,11 @@ class ThreadSafePrint(object):
 
   def write(self, string):
     if not hasattr(thread_local, 'stdout'):
-      thread_local.stdout = StringIO.StringIO()
+      thread_local.stdout = six.StringIO()
     stdout = thread_local.stdout
 
-    stdout.write(string.decode('utf-8') if isinstance(string, str) else string)
+    stdout.write(string.decode('utf-8')
+                 if isinstance(string, six.binary_type) else string)
     stdout.seek(0)
     lines = stdout.readlines()
     stdout.seek(0)

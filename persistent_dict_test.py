@@ -49,7 +49,6 @@ class TestPersistentDict(unittest.TestCase):
   @parameterized.expand([
     ('int', 10, 10),
     ('str', 'foo', 'foo'),
-    ('str-utf-8', '\xc3\xaf', u'\xef'),
     ('Unicode', u'\xef', u'\xef'),
     ('list', [1, 2], [1, 2]),
     ('tuple', (1, 2), [1, 2]),

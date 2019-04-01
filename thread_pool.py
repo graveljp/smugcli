@@ -1,4 +1,5 @@
-import Queue
+import six
+from six.moves import queue
 import threading
 import time
 #import traceback
@@ -20,11 +21,11 @@ class Worker(threading.Thread):
           if func:
             func(*args, **kwargs)
         except Exception as e:
-          print(unicode(e.message).encode("utf-8"))
+          print(six.text_type(e).encode('utf-8'))
           # traceback.print_exc()
         finally:
           self._task_queue.task_done()
-      except Queue.Empty as e:
+      except queue.Empty as e:
         pass
 
       if self._thread_pool.aborting:
@@ -34,7 +35,7 @@ class Worker(threading.Thread):
 class ThreadPool:
   """Pool of threads consuming tasks from a queue"""
   def __init__(self, num_threads):
-    self._tasks = Queue.Queue(num_threads)
+    self._tasks = queue.Queue(num_threads)
     self._threads = []
     self._aborting = False
     for _ in range(num_threads):
@@ -78,7 +79,7 @@ class ThreadPool:
     for t in self._threads:
       try:
         self._tasks.put((None, None, None), block=False)
-      except Queue.Full as e:
+      except queue.Full as e:
         pass
 
   def __enter__(self):

@@ -40,11 +40,11 @@ class TaskManager(object):
   def __exit__(self, type, value, traceback):
     with self._mutex:
       sys.stdout = self._original_stdout
-      self._original_stdout.write(b'\033[J')
+      self._original_stdout.write('\033[J')
 
   def write(self, string):
     with self._mutex:
-      self._original_stdout.write(b'\033[J' + string + self.get_status_string())
+      self._original_stdout.write('\033[J' + string + self.get_status_string())
       self._original_stdout.flush()
       self._last_update_time = time.time()
 
@@ -74,7 +74,7 @@ class TaskManager(object):
                           for t, s in sorted(tasks.items()))
           for _, tasks in sorted(self._tasks_in_progress.items())) +
         os.linesep)
-      return text + b'\033[%dA\r' % (len(text.split(os.linesep))-1)
+      return text + '\033[%dA\r' % (len(text.split(os.linesep))-1)
 
   def print_status(self):
     self.write('')
@@ -82,7 +82,7 @@ class TaskManager(object):
   def _clip_long_line(self, string, max_length):
     if len(string) > max_length:
       clipped = '...'
-      prefix = max_length * 5 / 8
+      prefix = int(max_length * 5 / 8)
       suffix = len(string) - (max_length - prefix - len(clipped))
       return string[:prefix] + clipped + string[suffix:]
     else:

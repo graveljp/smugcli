@@ -16,7 +16,6 @@ def main():
                             'If False, HTTP request responses will be replayed '
                             'from the last test run.'))
   parser.add_argument('tests',
-                      type=lambda s: unicode(s, 'utf8'),
                       nargs='*',
                       default=['discover', '-p', '*_test.py'],
                       help='Unit tests to run. Run all tests if not specified.')

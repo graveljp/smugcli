@@ -84,16 +84,15 @@ class ChildCacheGarbageCollector(object):
     """
     with self._mutex:
       if node in self._nodes:
-        entry = self._nodes.pop(node)
-        entry[1] = self._DELETED
+        self._nodes[node][0] = time.time()
+        heapq.heapify(self._oldest)
+      else:
+        new_entry = [time.time(), node]
+        self._nodes[node] = new_entry
+        heapq.heappush(self._oldest, new_entry)
 
-      new_entry = [time.time(), node]
-      self._nodes[node] = new_entry
-      heapq.heappush(self._oldest, new_entry)
-
-      while len(self._nodes) > self._max_nodes:
-        priority, node_to_clear = heapq.heappop(self._oldest)
-        if node_to_clear is not self._DELETED:
+        while len(self._nodes) > self._max_nodes:
+          priority, node_to_clear = heapq.heappop(self._oldest)
           node_to_clear.reset_cache()
           del self._nodes[node_to_clear]
 

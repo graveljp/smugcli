@@ -51,3 +51,15 @@ class TestChildCacheGarbageCollector(unittest.TestCase):
 
     self.assertEqual(nodes[0]._reset_times, 0)
     self.assertEqual(nodes[1]._reset_times, 0)
+
+  def test_heap_does_not_grow_out_of_control(self):
+    gc = smugmug.ChildCacheGarbageCollector(1)
+
+    node = MockNode()
+    gc.visited(node)
+    gc.visited(node)
+    gc.visited(node)
+    gc.visited(node)
+
+    self.assertEqual(len(gc._nodes), 1)
+    self.assertEqual(len(gc._oldest), 1)

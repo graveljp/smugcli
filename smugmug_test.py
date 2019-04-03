@@ -1,4 +1,5 @@
 import smugmug
+import test_utils
 import unittest
 
 class MockNode(object):
@@ -38,3 +39,15 @@ class TestChildCacheGarbageCollector(unittest.TestCase):
     self.assertEqual(nodes[0]._reset_times, 1)
     self.assertEqual(nodes[1]._reset_times, 0)
     self.assertEqual(nodes[2]._reset_times, 0)
+
+  def test_optimally_resets_alternating_nodes(self):
+    gc = smugmug.ChildCacheGarbageCollector(2)
+
+    nodes = [MockNode(), MockNode()]
+    gc.visited(nodes[1])
+    gc.visited(nodes[0])
+    gc.visited(nodes[1])
+    gc.visited(nodes[0])
+
+    self.assertEqual(nodes[0]._reset_times, 0)
+    self.assertEqual(nodes[1]._reset_times, 0)

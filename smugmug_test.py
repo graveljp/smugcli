@@ -1,0 +1,40 @@
+import smugmug
+import unittest
+
+class MockNode(object):
+  def __init__(self):
+    self._reset_times = 0
+
+  def reset_cache(self):
+    self._reset_times += 1
+
+
+class TestChildCacheGarbageCollector(unittest.TestCase):
+
+  def test_clears_child_cache(self):
+    gc = smugmug.ChildCacheGarbageCollector(3)
+    nodes = [MockNode(), MockNode(), MockNode(), MockNode(), MockNode()]
+    gc.visited(nodes[0])
+    gc.visited(nodes[1])
+    gc.visited(nodes[2])
+    gc.visited(nodes[3])
+    gc.visited(nodes[4])
+
+    self.assertEqual(nodes[0]._reset_times, 1)
+    self.assertEqual(nodes[1]._reset_times, 1)
+    self.assertEqual(nodes[2]._reset_times, 0)
+    self.assertEqual(nodes[3]._reset_times, 0)
+    self.assertEqual(nodes[4]._reset_times, 0)
+
+  def test_repeated_visit_are_ignored(self):
+    gc = smugmug.ChildCacheGarbageCollector(2)
+    nodes = [MockNode(), MockNode(), MockNode()]
+    gc.visited(nodes[0])
+    gc.visited(nodes[1])
+    gc.visited(nodes[2])
+    gc.visited(nodes[2])
+    gc.visited(nodes[2])
+
+    self.assertEqual(nodes[0]._reset_times, 1)
+    self.assertEqual(nodes[1]._reset_times, 0)
+    self.assertEqual(nodes[2]._reset_times, 0)

@@ -2,11 +2,11 @@
 
 import base64
 import collections
+import hashlib
 import heapq
 import io
 import json
 import math
-import md5
 import os
 import re
 import requests
@@ -132,7 +132,7 @@ class NodeList(object):
     if item < 0 or item >= self._total_size:
       raise IndexError
 
-    page_index = item / self._page_size
+    page_index = int(item / self._page_size)
     if self._pages[page_index] is None:
       new_page_uri = self._uri % (page_index * self._page_size + 1)
       json = self._smugmug.get_json(new_page_uri)
@@ -204,6 +204,9 @@ class Node(object):
 
   def __ne__(self, other):
     return self._json != other
+
+  def __hash__(self):
+    return id(self)
 
   def get_children(self, params=None):
     if 'Type' not in self._json:
@@ -473,7 +476,7 @@ class SmugMug(object):
   def upload(self, uri, filename, data, progress_fn=None,
              additional_headers=None):
     headers = {'Content-Length': str(len(data)),
-               'Content-MD5': base64.b64encode(md5.new(data).digest()),
+               'Content-MD5': base64.b64encode(hashlib.md5(data).digest()),
                'X-Smug-AlbumUri': uri,
                'X-Smug-FileName': filename,
                'X-Smug-ResponseType': 'JSON',

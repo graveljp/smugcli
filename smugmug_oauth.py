@@ -7,8 +7,7 @@ import requests_oauthlib
 import socket
 import subprocess
 import threading
-import urllib
-import urlparse
+from six.moves import urllib
 import webbrowser
 from wsgiref.simple_server import make_server
 
@@ -115,12 +114,12 @@ class SmugMugOAuth(object):
     return 'Login succesful. You may close this window.'
 
   def _add_auth_params(self, auth_url, access, permissions):
-    parts = urlparse.urlsplit(auth_url)
-    query = urlparse.parse_qsl(parts.query, True)
+    parts = urllib.parse.urlsplit(auth_url)
+    query = urllib.parse.parse_qsl(parts.query, True)
     query.append(('Access', access))
     query.append(('Permissions', permissions))
-    new_query = urllib.urlencode(query, True)
-    return urlparse.urlunsplit(
+    new_query = urllib.parse.urlencode(query, True)
+    return urllib.parse.urlunsplit(
       (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
 
   def _is_cygwin(self):

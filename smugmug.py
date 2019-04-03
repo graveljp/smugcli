@@ -77,7 +77,7 @@ class ChildCacheGarbageCollector(object):
     self._max_nodes = max_nodes
 
   def visited(self, node):
-    """Record a node a just visited and clear the cache of the oldest visit.
+    """Record a node as just visited and clear the cache of the oldest visit.
 
     Args:
       node: Node object, the node object to mark as visited.

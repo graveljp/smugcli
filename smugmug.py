@@ -82,7 +82,6 @@ class ChildCacheGarbageCollector(object):
     Args:
       node: Node object, the node object to mark as visited.
     """
-    to_clear = []
     with self._mutex:
       if node in self._nodes:
         entry = self._nodes.pop(node)
@@ -95,11 +94,8 @@ class ChildCacheGarbageCollector(object):
       while len(self._nodes) > self._max_nodes:
         priority, node_to_clear = heapq.heappop(self._oldest)
         if node_to_clear is not self._DELETED:
-          to_clear.append(node_to_clear)
+          node_to_clear.reset_cache()
           del self._nodes[node_to_clear]
-
-    for n in to_clear:
-      n.reset_cache()
 
 
 class NodeList(object):

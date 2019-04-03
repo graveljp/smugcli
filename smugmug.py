@@ -83,16 +83,27 @@ class ChildCacheGarbageCollector(object):
       node: Node object, the node object to mark as visited.
     """
     with self._mutex:
+      # Use a custom object instead of a list or tuple when insting in the heap.
+      # This is to avoid the 'node' part of the timestamp/node pair to get
+      # compared if the timestamp is equals, nodes are not comparable.
+      class HeapEntry(object):
+        def __init__(self, time, node):
+          self.time = time
+          self.node = node
+
+        def __lt__(self, other):
+          return self.time < other.time
+
       if node in self._nodes:
-        self._nodes[node][0] = time.time()
+        self._nodes[node].time = time.time()
         heapq.heapify(self._oldest)
       else:
-        new_entry = [time.time(), node]
+        new_entry = HeapEntry(time.time(), node)
         self._nodes[node] = new_entry
         heapq.heappush(self._oldest, new_entry)
 
         while len(self._nodes) > self._max_nodes:
-          priority, node_to_clear = heapq.heappop(self._oldest)
+          node_to_clear = heapq.heappop(self._oldest).node
           node_to_clear.reset_cache()
           del self._nodes[node_to_clear]
 

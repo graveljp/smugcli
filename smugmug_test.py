@@ -1,3 +1,4 @@
+import freezegun
 import smugmug
 import test_utils
 import unittest
@@ -63,3 +64,18 @@ class TestChildCacheGarbageCollector(unittest.TestCase):
 
     self.assertEqual(len(gc._nodes), 1)
     self.assertEqual(len(gc._oldest), 1)
+
+  def test_time_keyed_heap_works_with_nodes_created_on_same_timestamp(self):
+    with freezegun.freeze_time('2019-01-01') as frozen_time:
+      gc = smugmug.ChildCacheGarbageCollector(1)
+      nodes = [MockNode(), MockNode(), MockNode()]
+
+      gc.visited(nodes[0])
+      gc.visited(nodes[1])
+
+      frozen_time.tick()
+      gc.visited(nodes[2])
+
+    self.assertEqual(nodes[0]._reset_times, 1)
+    self.assertEqual(nodes[1]._reset_times, 1)
+    self.assertEqual(nodes[2]._reset_times, 0)

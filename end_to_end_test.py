@@ -34,7 +34,7 @@ def format_path(path):
   except ValueError:  # Ignore unmatched '{'.
     pass
 
-  # On windows, replace '/' for '\\', but keep '\\/' and '/'.
+  # On windows, replace '/' for '\\', keeping '\\/' as '/'.
   fix_slash_re = re.compile(r'([^\\])/')
   path = fix_slash_re.sub(r'\1\%s' % os.sep, path)
   path = path.replace('\\/', '/')
@@ -447,7 +447,7 @@ class EndToEndTest(unittest.TestCase):
                                            'testdata/SmugCLI_5.jpg'])
     self._do('sync {root} /',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -464,7 +464,7 @@ class EndToEndTest(unittest.TestCase):
     self._do(
       'sync {root} /',
       ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes/no)?',
+       'Proceed (yes\\/no)?',
        expect.Reply('yes'),
        expect.AnyOrder(
          expect.Anything().repeatedly(),
@@ -475,7 +475,7 @@ class EndToEndTest(unittest.TestCase):
       self._do(
         'sync dir {root}',
         ['Syncing "dir" to SmugMug folder "/{root}".',
-         'Proceed (yes/no)?',
+         'Proceed (yes\\/no)?',
          expect.Reply('yes'),
          expect.AnyOrder(
            expect.Anything().repeatedly(),
@@ -489,7 +489,7 @@ class EndToEndTest(unittest.TestCase):
     self._do(
       'sync {root} /',
       ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes/no)?',
+       'Proceed (yes\\/no)?',
        expect.Reply('yes'),
        expect.AnyOrder(
          expect.Anything().repeatedly(),
@@ -532,7 +532,7 @@ class EndToEndTest(unittest.TestCase):
     self._do(
       'sync {root}',
       ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes/no)?',
+       'Proceed (yes\\/no)?',
        expect.Reply('yes'),
        expect.AnyOrder(
          expect.Anything().repeatedly(),
@@ -547,7 +547,7 @@ class EndToEndTest(unittest.TestCase):
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 {root}/1',
                ['Syncing "2" to SmugMug folder "/{root}/1".',
-                'Proceed (yes/no)?',
+                'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
                   expect.Anything().repeatedly(),
@@ -556,7 +556,7 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files('{root}/1/2/3/4/5/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -566,7 +566,7 @@ class EndToEndTest(unittest.TestCase):
     with set_cwd(format_path('{root}/1')):
       self._do('sync 2 {root}/1',
                ['Syncing "2" to SmugMug folder "/{root}/1".',
-                'Proceed (yes/no)?',
+                'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
                   expect.Anything().repeatedly(),
@@ -584,7 +584,7 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files(folder, [('testdata/SmugCLI_1.jpg', filename)])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -594,7 +594,7 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "%s/%s".' % (folder, filename))])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -604,7 +604,7 @@ class EndToEndTest(unittest.TestCase):
     self._stage_files('{root}/album', ['testdata/SmugCLI_1.jpg'])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -614,7 +614,7 @@ class EndToEndTest(unittest.TestCase):
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -622,12 +622,12 @@ class EndToEndTest(unittest.TestCase):
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('no')])
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('n')])
 
   def test_sync_force(self):
@@ -651,7 +651,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('mkdir -p {root}/Pics')
     self._do('sync {root}/local/album {root}/Pics',
              ['Syncing "{root}/local/album" to SmugMug folder "/{root}/Pics".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -661,7 +661,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('sync {root}/local/album/ {root}/Pics/album',
              ['Syncing "{root}/local/album/" to SmugMug album '
               '"/{root}/Pics/album".',
-              'Proceed (yes/no)? ',
+              'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -689,7 +689,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('sync {root}/album/* {root}',
              ['Syncing "{root}/album/SmugCLI_1.jpg" to SmugMug album '
               '"/{root}".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('no')])
 
   def test_sync_folder(self):
@@ -700,7 +700,7 @@ class EndToEndTest(unittest.TestCase):
 
     self._do('sync {root}/src/ {root}/dst',
              ['Syncing "{root}/src/" to SmugMug folder "/{root}/dst"',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -726,7 +726,7 @@ class EndToEndTest(unittest.TestCase):
               '  {root}/dir2/SmugCLI_3.jpg',
               '  {root}/dir3/',
               'to SmugMug album "/{root}/album"',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -750,7 +750,7 @@ class EndToEndTest(unittest.TestCase):
               '  {root}/dir2/album2',
               '  {root}/dir3/',
               'to SmugMug folder "/{root}/folder"',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -772,7 +772,7 @@ class EndToEndTest(unittest.TestCase):
               '  {root}/dir1/SmugCLI_1.jpg',
               '  {root}/dir1/SmugCLI_2.jpg',
               'to SmugMug album "/{root}/album".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
                 expect.Anything().repeatedly(),
@@ -790,7 +790,7 @@ class EndToEndTest(unittest.TestCase):
                 '  SmugCLI_1.jpg',
                 '  SmugCLI_2.jpg',
                 'to SmugMug album "/{root}/album".',
-                'Proceed (yes/no)?',
+                'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
                   expect.Anything().repeatedly(),
@@ -819,17 +819,17 @@ class EndToEndTest(unittest.TestCase):
     self._do('mkalbum -p {root}')
     self._do('sync',
              ['Syncing "." to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('no')])
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('no')])
 
     self._do('sync {root}/ {root}',
              ['Syncing "{root}/" to SmugMug album "/{root}".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('no')])
 
     self._do('sync {root}/SmugCLI_1.jpg {root}/SmugCLI_2.jpg {root}',
@@ -837,32 +837,32 @@ class EndToEndTest(unittest.TestCase):
               '  {root}/SmugCLI_1.jpg',
               '  {root}/SmugCLI_2.jpg',
               'to SmugMug album "/{root}".',
-              'Proceed (yes/no)?',
+              'Proceed (yes\\/no)?',
               expect.Reply('no')])
 
   def test_sync_deprecated_target_argument(self):
     self._do('sync -t dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
     self._do('sync --target=dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
     self._do('sync a -t dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
     self._do('sync a --target=dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
     self._do('sync a b -t dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
     self._do('sync a b --target=dst',
-             ['-t/--target argument no longer exists.',
+             ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
 

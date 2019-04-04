@@ -69,7 +69,7 @@ class ThreadPool:
 
     # Wait for all threads to quit.
     for t in self._threads:
-      while t.isAlive():
+      while t.is_alive():
         t.join(1)
 
   def _stop_workers(self, signum=None, frame=None):

@@ -424,7 +424,8 @@ class SmugMugFS(object):
             print('Failed extracting metadata for file "%s".' % file_path)
             file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
 
-          same_file = (remote_time == file_time)
+          time_delta = abs(remote_time - file_time)
+          same_file = (time_delta <= datetime.timedelta(seconds=1))
         else:
           remote_md5 = remote_file['ArchivedMD5']
           file_md5 = hashlib.md5(file_content).hexdigest()

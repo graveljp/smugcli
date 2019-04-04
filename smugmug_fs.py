@@ -3,19 +3,28 @@ import task_manager  # Must be included before hachoir so stdout override works.
 import thread_pool
 import thread_safe_print
 
-from datetime import datetime
+import six
 import collections
+import datetime
 import glob
-from hachoir_metadata import extractMetadata
-from hachoir_parser import guessParser
-from hachoir_core.stream import StringInputStream
-from hachoir_core import config as hachoir_config
+if six.PY2:
+  from hachoir_metadata import extractMetadata
+  from hachoir_parser import guessParser
+  from hachoir_core.stream import StringInputStream
+  from hachoir_core import config as hachoir_config
+else:
+  from hachoir.metadata import extractMetadata
+  from hachoir.parser import guessParser
+  from hachoir.stream import StringInputStream
+  from hachoir.core import config as hachoir_config
+
+from six.moves import input
 import itertools
 import json
-import md5
+import hashlib
 import os
 import requests
-import urlparse
+from six.moves import urllib
 
 hachoir_config.quiet = True
 
@@ -61,7 +70,7 @@ class SmugMugFS(object):
 
   def path_to_node(self, user, path):
     current_node = self.get_root_node(user)
-    parts = filter(bool, path.split(os.sep))
+    parts = list(filter(bool, path.split(os.sep)))
     nodes = [current_node]
     return self._match_nodes(nodes, parts)
 
@@ -94,8 +103,8 @@ class SmugMugFS(object):
     return all_nodes
 
   def get(self, url):
-    scheme, netloc, path, query, fragment = urlparse.urlsplit(url)
-    params = urlparse.parse_qs(query)
+    scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
+    params = urllib.parse.parse_qs(query)
     result = self._smugmug.get_json(path, params=params)
     print(json.dumps(result, sort_keys=True, indent=2, separators=(',', ': ')))
 
@@ -104,7 +113,7 @@ class SmugMugFS(object):
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
 
-    for folder, files in files_by_folder.iteritems():
+    for folder, files in six.iteritems(files_by_folder):
       if not os.path.isdir(folder or '.'):
         print('Can\'t find folder "%s".' % folder)
         return
@@ -182,7 +191,7 @@ class SmugMugFS(object):
           break
 
   def _ask(self, question):
-    answer = raw_input(question)
+    answer = input(question)
     return answer.lower() in ['y', 'yes']
 
   def rm(self, user, force, recursive, paths):
@@ -330,7 +339,8 @@ class SmugMugFS(object):
          thread_pool.ThreadPool(folder_threads) as folder_pool:
       for source, walk_steps in (
           [(d, os.walk(d)) for d in dir_sources] +
-          [(p + os.sep, [(p, [], f)]) for p, f in files_by_path.iteritems()]):
+          [(p + os.sep, [(p, [], f)])
+           for p, f in six.iteritems(files_by_path)]):
         for walk_step in walk_steps:
           if self._aborting:
             return
@@ -401,7 +411,7 @@ class SmugMugFS(object):
           # Video files are modified by SmugMug server side, so we cannot use
           # the MD5 to check if the file needs a re-sync. Use the last
           # modification time instead.
-          remote_time = datetime.strptime(
+          remote_time = datetime.datetime.strptime(
             remote_file.get('ImageMetadata')['DateTimeModified'],
             '%Y-%m-%dT%H:%M:%S')
 
@@ -412,12 +422,12 @@ class SmugMugFS(object):
                             metadata.getValues('creation_date'))
           except Exception as err:
             print('Failed extracting metadata for file "%s".' % file_path)
-            file_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+            file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
 
           same_file = (remote_time == file_time)
         else:
           remote_md5 = remote_file['ArchivedMD5']
-          file_md5 = md5.new(file_content).hexdigest()
+          file_md5 = hashlib.md5(file_content).hexdigest()
           same_file = (remote_md5 == file_md5)
 
         if same_file:

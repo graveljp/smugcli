@@ -63,6 +63,7 @@ class ChildCacheGarbageCollector(object):
     self._nodes = {}
     self._mutex = threading.Lock()
     self._DELETED = '__DELETED__'
+    self._age_index = 0
 
   def set_max_children_cache(self, max_nodes):
     """Set the maximum number of children cache to keep in memory.
@@ -76,6 +77,11 @@ class ChildCacheGarbageCollector(object):
     """
     self._max_nodes = max_nodes
 
+  def _get_next_age_index(self):
+    age_index = self._age_index
+    self._age_index += 1
+    return age_index
+
   def visited(self, node):
     """Record a node as just visited and clear the cache of the oldest visit.
 
@@ -83,27 +89,16 @@ class ChildCacheGarbageCollector(object):
       node: Node object, the node object to mark as visited.
     """
     with self._mutex:
-      # Use a custom object instead of a list or tuple when insting in the heap.
-      # This is to avoid the 'node' part of the timestamp/node pair to get
-      # compared if the timestamp is equals, nodes are not comparable.
-      class HeapEntry(object):
-        def __init__(self, time, node):
-          self.time = time
-          self.node = node
-
-        def __lt__(self, other):
-          return self.time < other.time
-
       if node in self._nodes:
-        self._nodes[node].time = time.time()
+        self._nodes[node][0] = self._get_next_age_index()
         heapq.heapify(self._oldest)
       else:
-        new_entry = HeapEntry(time.time(), node)
+        new_entry = [self._get_next_age_index(), node]
         self._nodes[node] = new_entry
         heapq.heappush(self._oldest, new_entry)
 
         while len(self._nodes) > self._max_nodes:
-          node_to_clear = heapq.heappop(self._oldest).node
+          node_to_clear = heapq.heappop(self._oldest)[1]
           node_to_clear.reset_cache()
           del self._nodes[node_to_clear]
 

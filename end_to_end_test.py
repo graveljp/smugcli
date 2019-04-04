@@ -1,5 +1,6 @@
 import smugcli
 
+import base64
 import contextlib
 import io_expectation as expect
 import glob
@@ -8,9 +9,9 @@ import os
 import re
 import responses
 import shutil
+import six
 import sys
 import unittest
-
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
@@ -119,11 +120,12 @@ class EndToEndTest(unittest.TestCase):
       else:
         data = body
 
-      # Base-64 encode any data that is not UTF-8.
-      try:
-        data.encode('UTF-8')
-      except:
-        return data.encode('base64')
+      if isinstance(data, six.binary_type):
+        try:
+          return data.decode('UTF-8')
+        except:
+          return base64.b64encode(data).decode('utf-8')
+      return data
 
     return body
 
@@ -198,7 +200,7 @@ class EndToEndTest(unittest.TestCase):
     except OSError:
       pass
     for f in files:
-      if isinstance(f, basestring):
+      if isinstance(f, six.string_types):
         shutil.copy(format_path(f), dest_path)
       else:
         shutil.copyfile(format_path(f[0]), os.path.join(dest_path, f[1]))

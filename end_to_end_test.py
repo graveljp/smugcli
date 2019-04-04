@@ -574,8 +574,14 @@ class EndToEndTest(unittest.TestCase):
                   ' support folder more than 5 level deep.')])
 
   def test_sync_whitespace(self):
-    self._stage_files('{root}/ folder / album ',
-                      [('testdata/SmugCLI_1.jpg', ' file . jpg ')])
+    if os.name == 'nt':
+      folder = '{root}/ folder/ album'
+      filename = ' file . jpg'
+    else:
+      folder = '{root}/ folder / album '
+      filename = ' file . jpg '
+
+    self._stage_files(folder, [('testdata/SmugCLI_1.jpg', filename)])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes/no)?',
@@ -585,7 +591,7 @@ class EndToEndTest(unittest.TestCase):
                 'Creating Folder "{root}".',
                 'Creating Folder "{root}/folder".',
                 'Creating Album "{root}/folder/album".',
-                'Uploaded "{root}/ folder / album / file . jpg ".')])
+                'Uploaded "%s/%s".' % (folder, filename))])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes/no)?',

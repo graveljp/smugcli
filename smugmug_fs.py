@@ -277,7 +277,7 @@ class SmugMugFS(object):
     # The first positional argument always eagerly grabs all values specified.
     # We therefore need to distribute that last value to the second argument
     # when it's specified.
-    if len(sources) >= 2 and target == ['/']:
+    if len(sources) >= 2 and target == [os.sep]:
       target = sources.pop()
     else:
       target = target[0]

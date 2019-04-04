@@ -205,7 +205,7 @@ def run(args, config=None, requests_sent=None):
   sync_parser.add_argument('target',
                            type=arg_str_type,
                            nargs='?',
-                           default=['/'],
+                           default=[os.sep],
                            help=('The destination folder in which to upload '
                                  'data.'))
   sync_parser.add_argument('-t', '--target',

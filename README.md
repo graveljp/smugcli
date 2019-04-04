@@ -1,7 +1,7 @@
 # smugcli
 Command line tool for SmugMug, useful for automatically synchronizing a local folder hierarchy with a SmugMug account.
 
-Implemented using the V2 API and tested with Python 2.7.10.
+Implemented using the V2 API. Tested with Python 2.7, 3.5, 3.6 and 3.7.
 
 # Installation
 

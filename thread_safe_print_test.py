@@ -46,6 +46,6 @@ class TestThreadSafePrint(unittest.TestCase):
         pool.add(self._thread2, thread1_turn, thread2_turn)
 
     mock_io.assert_output_was([
-        'Thread 1 starts, thread 1 finishes.\n',
-        'Thread 2 starts, thread 2 finishes.\n'
+        'Thread 1 starts, thread 1 finishes.',
+        'Thread 2 starts, thread 2 finishes.'
     ])

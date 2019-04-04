@@ -21,7 +21,7 @@ class Worker(threading.Thread):
           if func:
             func(*args, **kwargs)
         except Exception as e:
-          print(six.text_type(e).encode('utf-8'))
+          print(six.text_type(e))
           # traceback.print_exc()
         finally:
           self._task_queue.task_done()

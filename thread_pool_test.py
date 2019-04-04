@@ -1,6 +1,8 @@
+import io_expectation as expect
 import thread_pool
 import unittest
 from six.moves import queue
+import sys
 
 class TestThreadPool(unittest.TestCase):
 
@@ -24,3 +26,15 @@ class TestThreadPool(unittest.TestCase):
     pool.add(self._producer_thread, results)
     pool.add(self._consumer_thread, results)
     pool.join()
+
+  def testException(self):
+    mock_io = expect.ExpectedInputOutput()
+    sys.stdout = mock_io
+
+    def will_raise():
+      raise Exception(u'Unicode: \xe2')
+
+    with thread_pool.ThreadPool(2) as pool:
+      pool.add(will_raise)
+
+    mock_io.assert_output_was(u'Unicode: \xe2')

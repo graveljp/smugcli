@@ -1,8 +1,9 @@
-import smugcli
+from smugcli import smugcli
+
+import io_expectation as expect
 
 import base64
 import contextlib
-import io_expectation as expect
 import glob
 import json
 import os
@@ -14,7 +15,7 @@ import sys
 import unittest
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
-
+TEST_DIR = os.path.dirname(os.path.realpath(__file__))
 
 @contextlib.contextmanager
 def set_cwd(new_dir):
@@ -30,7 +31,8 @@ ROOT_DIR = '__smugcli_tests__'
 
 def format_path(path):
   try:
-    path = path.format(root=ROOT_DIR)
+    path = path.format(root=ROOT_DIR,
+                       testdata=os.path.join(TEST_DIR, 'testdata'))
   except ValueError:  # Ignore unmatched '{'.
     pass
 
@@ -103,8 +105,7 @@ class EndToEndTest(unittest.TestCase):
   def _get_cache_base_folder(self):
     test_file, test_name = self.id().split('.', 1)
     return os.path.join(
-      os.path.dirname(os.path.realpath(__file__)),
-      'testdata', 'request_cache', test_file, test_name)
+      TEST_DIR, 'testdata', 'request_cache', test_file, test_name)
 
   def _get_cache_folder(self, args):
     return os.path.join(
@@ -413,38 +414,42 @@ class EndToEndTest(unittest.TestCase):
 
   def test_upload(self):
     # Can't upload to non-existing album.
-    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
+    self._do('upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
              ['Album not found: "{root}/folder/album".'])
 
     # Can't upload to folders.
     self._do('mkdir -p {root}/folder')
-    self._do('upload testdata/SmugCLI_1.jpg {root}/folder',
+    self._do('upload {testdata}/SmugCLI_1.jpg {root}/folder',
              ['Cannot upload images in node of type "Folder".'])
 
     # Can upload to album.
     self._do('mkalbum -p {root}/folder/album')
-    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
-             ['Uploading "testdata/SmugCLI_1.jpg" to "{root}/folder/album"...'])
+    self._do(
+      'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
+      ['Uploading "{testdata}/SmugCLI_1.jpg" to "{root}/folder/album"...'])
 
     # Can't upload duplicate.
-    self._do('upload testdata/SmugCLI_1.jpg {root}/folder/album',
-             ['Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
-              '"{root}/folder/album".'])
+    self._do(
+      'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
+      ['Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
+       '"{root}/folder/album".'])
 
     # Can upload multiple files
-    self._do('upload testdata/Sm?gCLI_1.* testdata/SmugCLI_2.jpg {root}/folder/album',
-             ['Uploading "testdata/SmugCLI_1.gif" to "{root}/folder/album"...',
-              'Skipping "testdata/SmugCLI_1.jpg", file already exists in Album '
-              '"{root}/folder/album".',
-              'Uploading "testdata/SmugCLI_1.png" to "{root}/folder/album"...',
-              'Uploading "testdata/SmugCLI_2.jpg" to "{root}/folder/album"...'])
+    self._do(
+      'upload {testdata}/Sm?gCLI_1.* {testdata}/SmugCLI_2.jpg '
+      '{root}/folder/album',
+      ['Uploading "{testdata}/SmugCLI_1.gif" to "{root}/folder/album"...',
+       'Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
+       '"{root}/folder/album".',
+       'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
+       'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
 
   def test_sync(self):
-    self._stage_files('{root}/dir', ['testdata/SmugCLI_1.jpg',
-                                     'testdata/SmugCLI_2.jpg',
-                                     'testdata/SmugCLI_3.jpg'])
-    self._stage_files('{root}/dir/album', ['testdata/SmugCLI_4.jpg',
-                                           'testdata/SmugCLI_5.jpg'])
+    self._stage_files('{root}/dir', ['{testdata}/SmugCLI_1.jpg',
+                                     '{testdata}/SmugCLI_2.jpg',
+                                     '{testdata}/SmugCLI_3.jpg'])
+    self._stage_files('{root}/dir/album', ['{testdata}/SmugCLI_4.jpg',
+                                           '{testdata}/SmugCLI_5.jpg'])
     self._do('sync {root} /',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
@@ -454,10 +459,10 @@ class EndToEndTest(unittest.TestCase):
                 'Creating Folder "{root}".',
                 'Creating Folder "{root}/dir".',
                 'Creating Album "{root}/dir/Images from folder dir".',
+                'Creating Album "{root}/dir/album".',
                 'Uploaded "{root}/dir/SmugCLI_1.jpg".',
                 'Uploaded "{root}/dir/SmugCLI_2.jpg".',
                 'Uploaded "{root}/dir/SmugCLI_3.jpg".',
-                'Creating Album "{root}/dir/album".',
                 'Uploaded "{root}/dir/album/SmugCLI_4.jpg".',
                 'Uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
@@ -483,9 +488,9 @@ class EndToEndTest(unittest.TestCase):
            'Found matching remote album "{root}/dir/album".')])
 
     self._stage_files('{root}/dir',
-                      [('testdata/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
+                      [('{testdata}/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
     self._stage_files('{root}/dir/album',
-                      [('testdata/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
+                      [('{testdata}/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
     self._do(
       'sync {root} /',
       ['Syncing "{root}" to SmugMug folder "/".',
@@ -503,32 +508,32 @@ class EndToEndTest(unittest.TestCase):
          'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
   def test_sync_privacy(self):
-    self._stage_files('{root}/default/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/default/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
              expect.Somewhere(expect.Reply('yes')))
     self._do('ls -l {root}/default',
              expect.Somewhere('"Privacy": "Public",'))
 
-    self._stage_files('{root}/public/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/public/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=public',
              expect.Somewhere(expect.Reply('yes')))
     self._do('ls -l {root}/public',
              expect.Somewhere('"Privacy": "Public",'))
 
-    self._stage_files('{root}/unlisted/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/unlisted/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=unlisted',
              expect.Somewhere(expect.Reply('yes')))
     self._do('ls -l {root}/unlisted',
              expect.Somewhere('"Privacy": "Unlisted",'))
 
-    self._stage_files('{root}/private/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/private/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root} --privacy=private',
              expect.Somewhere(expect.Reply('yes')))
     self._do('ls -l {root}/private',
              expect.Somewhere('"Privacy": "Private",'))
 
   def test_sync_folder_depth_limits(self):
-    self._stage_files('{root}/1/2/3/4/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/1/2/3/4/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do(
       'sync {root}',
       ['Syncing "{root}" to SmugMug folder "/".',
@@ -553,7 +558,7 @@ class EndToEndTest(unittest.TestCase):
                   expect.Anything().repeatedly(),
                   'Found matching remote album "{root}/1/2/3/4/album".')])
 
-    self._stage_files('{root}/1/2/3/4/5/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/1/2/3/4/5/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
@@ -581,7 +586,7 @@ class EndToEndTest(unittest.TestCase):
       folder = '{root}/ folder / album '
       filename = ' file . jpg '
 
-    self._stage_files(folder, [('testdata/SmugCLI_1.jpg', filename)])
+    self._stage_files(folder, [('{testdata}/SmugCLI_1.jpg', filename)])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
@@ -601,7 +606,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/folder/album".')])
 
   def test_sync_confirmation(self):
-    self._stage_files('{root}/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)? ',
@@ -631,7 +636,7 @@ class EndToEndTest(unittest.TestCase):
               expect.Reply('n')])
 
   def test_sync_force(self):
-    self._stage_files('{root}/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync -f {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               expect.AnyOrder(
@@ -647,7 +652,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/album".')])
 
   def test_sync_sub_folders(self):
-    self._stage_files('{root}/local/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/local/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('mkdir -p {root}/Pics')
     self._do('sync {root}/local/album {root}/Pics',
              ['Syncing "{root}/local/album" to SmugMug folder "/{root}/Pics".',
@@ -668,7 +673,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/Pics/album".')])
 
   def test_sync_invalid_src(self):
-    self._stage_files('{root}/album', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('mkalbum -p {root}')
 
     self._do('sync {root}/file {root}/folder/ {root}/dir/* {root}',
@@ -693,9 +698,9 @@ class EndToEndTest(unittest.TestCase):
               expect.Reply('no')])
 
   def test_sync_folder(self):
-    self._stage_files('{root}/src/album1', ['testdata/SmugCLI_1.jpg',
-                                            'testdata/SmugCLI_2.jpg'])
-    self._stage_files('{root}/src/album2', ['testdata/SmugCLI_3.jpg'])
+    self._stage_files('{root}/src/album1', ['{testdata}/SmugCLI_1.jpg',
+                                            '{testdata}/SmugCLI_2.jpg'])
+    self._stage_files('{root}/src/album2', ['{testdata}/SmugCLI_3.jpg'])
     self._do('mkdir -p {root}/dst')
 
     self._do('sync {root}/src/ {root}/dst',
@@ -711,11 +716,11 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "{root}/src/album2/SmugCLI_3.jpg".')])
 
   def test_sync_multiple_files(self):
-    self._stage_files('{root}/dir1', ['testdata/SmugCLI_1.jpg'])
-    self._stage_files('{root}/dir2', ['testdata/SmugCLI_1.jpg',
-                                      'testdata/SmugCLI_2.jpg',
-                                      'testdata/SmugCLI_3.jpg'])
-    self._stage_files('{root}/dir3', ['testdata/SmugCLI_1.jpg'])
+    self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg'])
+    self._stage_files('{root}/dir2', ['{testdata}/SmugCLI_1.jpg',
+                                      '{testdata}/SmugCLI_2.jpg',
+                                      '{testdata}/SmugCLI_3.jpg'])
+    self._stage_files('{root}/dir3', ['{testdata}/SmugCLI_1.jpg'])
     self._do('mkalbum -p {root}/album')
 
     self._do('sync {root}/dir1/*.jpg {root}/dir2/* {root}/dir3/ {root}/album',
@@ -739,9 +744,10 @@ class EndToEndTest(unittest.TestCase):
                 'Sync complete.')])
 
   def test_sync_multiple_folders(self):
-    self._stage_files('{root}/album1', ['testdata/SmugCLI_1.jpg'])
-    self._stage_files('{root}/dir2/album2', ['testdata/SmugCLI_2.jpg'])
-    self._stage_files('{root}/dir3/subdir3/album3', ['testdata/SmugCLI_3.jpg'])
+    self._stage_files('{root}/album1', ['{testdata}/SmugCLI_1.jpg'])
+    self._stage_files('{root}/dir2/album2', ['{testdata}/SmugCLI_2.jpg'])
+    self._stage_files('{root}/dir3/subdir3/album3',
+                      ['{testdata}/SmugCLI_3.jpg'])
     self._do('mkdir -p {root}/folder')
 
     self._do('sync {root}/album1 {root}/dir2/* {root}/dir3/ {root}/folder',
@@ -764,8 +770,8 @@ class EndToEndTest(unittest.TestCase):
                 'Sync complete.')])
 
   def test_sync_paths_to_album(self):
-    self._stage_files('{root}/dir1', ['testdata/SmugCLI_1.jpg',
-                                      'testdata/SmugCLI_2.jpg'])
+    self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg',
+                                      '{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
     self._do('sync {root}/dir1/* {root}/album',
              ['Syncing:',
@@ -781,8 +787,8 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "{root}/dir1/SmugCLI_2.jpg".')])
 
   def test_sync_files_to_album(self):
-    self._stage_files('{root}/dir1', ['testdata/SmugCLI_1.jpg',
-                                      'testdata/SmugCLI_2.jpg'])
+    self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg',
+                                      '{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
     with set_cwd(format_path('{root}/dir1')):
       self._do('sync * {root}/album',
@@ -799,23 +805,23 @@ class EndToEndTest(unittest.TestCase):
                   'Uploaded "./SmugCLI_2.jpg".')])
 
   def test_sync_files_to_folder(self):
-    self._stage_files('{root}', ['testdata/SmugCLI_1.jpg',
-                                 'testdata/SmugCLI_2.jpg'])
+    self._stage_files('{root}', ['{testdata}/SmugCLI_1.jpg',
+                                 '{testdata}/SmugCLI_2.jpg'])
     self._do('mkdir -p {root}/folder')
     self._do('sync {root}/* {root}/folder',
              'Can\'t upload files to folder. Please sync to an album node.')
 
   def test_sync_folders_to_album(self):
-    self._stage_files('{root}/dir1', ['testdata/SmugCLI_1.jpg'])
-    self._stage_files('{root}/dir2', ['testdata/SmugCLI_2.jpg'])
+    self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg'])
+    self._stage_files('{root}/dir2', ['{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
     self._do('sync {root}/* {root}/album',
              'Can\'t upload folders to an album. Please sync to a folder node.')
 
   def test_sync_default_arguments(self):
-    self._stage_files('{root}', ['testdata/SmugCLI_1.jpg',
-                                 'testdata/SmugCLI_2.jpg',
-                                 'testdata/SmugCLI_3.jpg'])
+    self._stage_files('{root}', ['{testdata}/SmugCLI_1.jpg',
+                                 '{testdata}/SmugCLI_2.jpg',
+                                 '{testdata}/SmugCLI_3.jpg'])
     self._do('mkalbum -p {root}')
     self._do('sync',
              ['Syncing "." to SmugMug folder "/".',

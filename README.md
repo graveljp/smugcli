@@ -1,7 +1,9 @@
 # smugcli
 Command line tool for SmugMug, useful for automatically synchronizing a local folder hierarchy with a SmugMug account.
 
-Implemented using the V2 API. Tested with Python 2.7, 3.5, 3.6 and 3.7.
+Implemented using the Smugmug V2 API.
+
+Tested with Python 2.7, 3.4, 3.5, 3.6, 3.7 and 3.8.
 
 # Installation
 
@@ -122,23 +124,32 @@ $ ./smugcli.py include local/folder/export-tmp
 # Running the tests
 PLEASE READ, RUN UNIT TESTS AT YOUR OWN RISKS: smugcli's unit-tests use the logged-in user account to do run actual commands on SmugMug. All operations *should* be performed in a `__smugcli_unit_tests__` subfolder in the SmugMug account's root. This folder *should* be deleted automatically when/if the test completes. If in doubt, do `smugcli.py logout && smugcli.py login` and use a test account.
 
-Run all unit tests by running:
+SmugCLI uses `tox` to run tests using all supported Python interpreter versions. Run all tests with all Python versions by running:
 ```
-$ ./run_tests.py
+$ tox
+```
+
+To run with only one specific Python version, for instance Python 3.7, do:
+```
+$ tox -e py37
 ```
 
 Individual tests can be ran by doing:
 ```
-$ ./run_tests.py module[.class_name[.test_name]]
+$ tox -- tests/module[.class_name[.test_name]]
 ```
 for instance:
 ```
-$ ./run_tests.py end_to_end_test  # Runs all tests in module end_to_end_test.
-$ ./run_tests.py end_to_end_test.EndToEndTest  # Runs all tests in class EndToEndTest.
-$ ./run_tests.py end_to_end_test.EndToEndTest.test_mkdir  # Runs a single test.
+$ tox -e p37 -- tests/end_to_end_test.py  # Runs all tests in tests/end_to_end_test.py.
+$ tox -e p37 -- tests/end_to_end_test.py::EndToEndTest  # Runs all tests in class EndToEndTest.
+$ tox -e p37 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a single test.
 ```
 
-SmugMug is slow, so to speed up iterations while changing code, all HTTP requests are cached on disk and replayed on subsequent runs. The first test run will take a while, but the second one should take about a second. When updating tests however, the cached HTTP request may no longer match the new test code. Reset the cache by using `--reset_cache`:
+Since the unit tests do actual operations on SmugMug, they are fairly slow. To speed things up, all HTTP requests are cached on disk and replayed on subsequent runs. The first test run will take a while, but the next ones should run much faster. When changing the code however, the cached HTTP request may no longer match the new implementation. Reset the cache for the next test to run by setting the RESET_CACHE environment variable to True. To reset the cache for the next run only, do:
 ```
-$ ./run_tests.py end_to_end_test.EndToEndTest.test_mkdir --reset_cache
+$ RESET_CACHE=True tox -e py37
+```
+Windows users can do the equivalent by doing:
+```
+C:\smugcli> cmd /C "set RESET_CACHE=True && tox -e py37"
 ```

@@ -1,6 +1,8 @@
-import freezegun
-import smugmug
+from smugcli import smugmug
+
 import test_utils
+
+import freezegun
 import unittest
 
 class MockNode(object):

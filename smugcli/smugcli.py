@@ -1,16 +1,16 @@
 #!/usr/bin/python
 # Command line tool for SmugMug. Uses SmugMug API V2.
 
-import smugmug as smugmug_lib
-import smugmug_fs
-import smugmug_shell
+from . import persistent_dict
+from . import smugmug as smugmug_lib
+from . import smugmug_fs
+from . import smugmug_shell
 
 import argparse
 import atexit
 import collections
 import inspect
 import json
-import persistent_dict
 import os
 import signal
 import six
@@ -295,5 +295,9 @@ def run(args, config=None, requests_sent=None):
     return
 
 
-if __name__ == '__main__':
+def main():
   run(sys.argv[1:])
+
+
+if __name__ == '__main__':
+  main()

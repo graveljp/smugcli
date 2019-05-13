@@ -1,8 +1,8 @@
-import thread_safe_print
+from smugcli import thread_pool, thread_safe_print
+
+import io_expectation as expect
 
 from six.moves import queue
-import thread_pool
-import io_expectation as expect
 import sys
 import unittest
 

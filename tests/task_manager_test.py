@@ -1,8 +1,9 @@
-import task_manager
+from smugcli import task_manager
+
+import io_expectation as expect
 
 import datetime
 import freezegun
-import io_expectation as expect
 import itertools
 from parameterized import parameterized
 import sys
@@ -11,10 +12,10 @@ import unittest
 class TaskManagerTests(unittest.TestCase):
 
   def except_status(self, status_string):
-    expect_escape = expect.Regex('\\033\[J|'
-                                 '\\033\[\d+A|'
-                                 '\n|'
-                                 '\r').repeatedly()
+    expect_escape = expect.Regex(r'\033\[J|'
+                                 r'\033\[\d+A|'
+                                 r'\n|'
+                                 r'\r').repeatedly()
     return expect.InOrder([expect_escape] +
                           list(itertools.chain.from_iterable(
                             [s, expect_escape] for s in status_string)))

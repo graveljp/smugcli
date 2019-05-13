@@ -1,7 +1,7 @@
-import persistent_dict
-import task_manager  # Must be included before hachoir so stdout override works.
-import thread_pool
-import thread_safe_print
+from . import persistent_dict
+from . import task_manager  # Must be included before hachoir so stdout override works.
+from . import thread_pool
+from . import thread_safe_print
 
 import six
 import collections
@@ -337,10 +337,10 @@ class SmugMugFS(object):
          thread_pool.ThreadPool(upload_threads) as upload_pool, \
          thread_pool.ThreadPool(file_threads) as file_pool, \
          thread_pool.ThreadPool(folder_threads) as folder_pool:
-      for source, walk_steps in (
+      for source, walk_steps in sorted(
           [(d, os.walk(d)) for d in dir_sources] +
           [(p + os.sep, [(p, [], f)])
-           for p, f in six.iteritems(files_by_path)]):
+           for p, f in files_by_path.items()]):
         for walk_step in walk_steps:
           if self._aborting:
             return

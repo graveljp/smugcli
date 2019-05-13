@@ -1,4 +1,4 @@
-import terminal_size
+from . import terminal_size
 
 import collections
 import os

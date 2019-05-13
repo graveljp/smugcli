@@ -1,5 +1,7 @@
 # Main interface to the SmugMug web service.
 
+from . import smugmug_oauth
+
 import base64
 import collections
 import hashlib
@@ -10,7 +12,6 @@ import math
 import os
 import re
 import requests
-import smugmug_oauth
 import threading
 import time
 
@@ -247,7 +248,7 @@ class Node(object):
 
     print('Creating %s "%s".' % (params['Type'], os.path.join(self.path,
                                                               remote_name)))
-    response = self.post('ChildNodes', data=node_params)
+    response = self.post('ChildNodes', data=sorted(node_params.items()))
     if response.status_code != 201:
       raise UnexpectedResponseError(
         'Error creating node "%s".\n'

@@ -1,5 +1,7 @@
+from smugcli import thread_pool
+
 import io_expectation as expect
-import thread_pool
+
 import unittest
 from six.moves import queue
 import sys

@@ -1,7 +1,8 @@
+from smugcli import persistent_dict
+
 from os import path
 import json
 from parameterized import parameterized
-import persistent_dict
 import shutil
 import tempfile
 import unittest

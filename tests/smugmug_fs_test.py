@@ -1,5 +1,6 @@
-import smugmug
-import smugmug_fs
+from smugcli import smugmug
+from smugcli import smugmug_fs
+
 import test_utils
 
 import json
@@ -113,7 +114,8 @@ class TestSmugMugFS(unittest.TestCase):
   @responses.activate
   def test_get(self):
     self._fs.get('/api/v2/node/zx4Fx')
-    with open('testdata/root_node.json') as f:
+    testdir = os.path.dirname(os.path.realpath(__file__))
+    with open(os.path.join(testdir, 'testdata', 'root_node.json')) as f:
       self.assertEqual(json.loads(self._cmd_output.getvalue()),
                        json.load(f))
 

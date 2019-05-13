@@ -7,8 +7,9 @@ Tested with Python 2.7, 3.4, 3.5, 3.6, 3.7 and 3.8.
 
 # Installation
 
-* `git clone` the repository from github.
-* `pip install -r requirements.txt`
+```
+pip install smugcli
+```
 
 # Sample usage
 

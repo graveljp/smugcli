@@ -23,7 +23,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="smugcli",
-  version="1.0.0",
+  version="1.0.1",
   author="Jean-Philippe Gravel",
   author_email="jpgravel@gmail.com",
   description="Command line tool for SmugMug",

@@ -141,9 +141,9 @@ $ tox -- tests/module[.class_name[.test_name]]
 ```
 for instance:
 ```
-$ tox -e p37 -- tests/end_to_end_test.py  # Runs all tests in tests/end_to_end_test.py.
-$ tox -e p37 -- tests/end_to_end_test.py::EndToEndTest  # Runs all tests in class EndToEndTest.
-$ tox -e p37 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a single test.
+$ tox -e py37 -- tests/end_to_end_test.py  # Runs all tests in tests/end_to_end_test.py.
+$ tox -e py37 -- tests/end_to_end_test.py::EndToEndTest  # Runs all tests in class EndToEndTest.
+$ tox -e py37 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a single test.
 ```
 
 Since the unit tests do actual operations on SmugMug, they are fairly slow. To speed things up, all HTTP requests are cached on disk and replayed on subsequent runs. The first test run will take a while, but the next ones should run much faster. When changing the code however, the cached HTTP request may no longer match the new implementation. Reset the cache for the next test to run by setting the RESET_CACHE environment variable to True. To reset the cache for the next run only, do:

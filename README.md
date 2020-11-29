@@ -3,7 +3,7 @@ Command line tool for SmugMug, useful for automatically synchronizing a local fo
 
 Implemented using the Smugmug V2 API.
 
-Tested with Python 2.7, 3.4, 3.5, 3.6, 3.7 and 3.8.
+Tested with Python 3.5, 3.6, 3.7 and 3.8.
 
 # Installation
 

@@ -108,7 +108,7 @@ class SmugMugFS(object):
     result = self._smugmug.get_json(path, params=params)
     print(json.dumps(result, sort_keys=True, indent=2, separators=(',', ': ')))
 
-  def ignore_or_include(paths, ignore):
+  def ignore_or_include(self, paths, ignore):
     files_by_folder = collections.defaultdict(list)
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
@@ -344,6 +344,12 @@ class SmugMugFS(object):
         for walk_step in walk_steps:
           if self._aborting:
             return
+          subdir, dirs, files = walk_step
+          configs = persistent_dict.PersistentDict(os.path.join(subdir,
+                                                                '.smugcli'))
+          ignored = set(configs.get('ignore', []))
+          dirs[:] = set(dirs) - ignored  # Prune dirs from os.walk traversal.
+          files[:] = set(files) - ignored
           folder_pool.add(self._sync_folder,
                           manager,
                           file_pool,

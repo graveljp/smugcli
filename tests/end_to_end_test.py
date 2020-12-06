@@ -871,6 +871,42 @@ class EndToEndTest(unittest.TestCase):
              ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positinal argument.'])
 
+  def test_ignore_include(self):
+    self._stage_files('{root}/album1', ['{testdata}/SmugCLI_1.jpg',
+                                        '{testdata}/SmugCLI_2.jpg',
+                                        '{testdata}/SmugCLI_3.jpg'])
+    self._stage_files('{root}/album2', ['{testdata}/SmugCLI_4.jpg',
+                                        '{testdata}/SmugCLI_5.jpg'])
+    self._do('ignore {root}/album1/SmugCLI_2.jpg {root}/album2', [])
+    self._do('sync {root} /',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                expect.Not(expect.Or(
+                  'Creating Album "{root}/album2".',
+                  'Uploaded "{root}/album1/SmugCLI_2.jpg".',
+                  'Uploaded "{root}/album2/SmugCLI_4.jpg".',
+                  'Uploaded "{root}/album2/SmugCLI_5.jpg".')).repeatedly(),
+                'Creating Folder "{root}".',
+                'Creating Album "{root}/album1".',
+                'Uploaded "{root}/album1/SmugCLI_1.jpg".',
+                'Uploaded "{root}/album1/SmugCLI_3.jpg".',
+                'Sync complete.')])
+
+    self._do('include {root}/album1/SmugCLI_2.jpg {root}/album2', [])
+    self._do('sync {root} /',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Found matching remote album "{root}/album1".',
+                'Creating Album "{root}/album2".',
+                'Uploaded "{root}/album1/SmugCLI_2.jpg".',
+                'Uploaded "{root}/album2/SmugCLI_4.jpg".',
+                'Uploaded "{root}/album2/SmugCLI_5.jpg".',
+                'Sync complete.')])
 
 if __name__ == '__main__':
   unittest.main()

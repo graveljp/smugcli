@@ -474,7 +474,7 @@ class IoExpectationTest(unittest.TestCase):
     else:
       with self.assertRaises(AssertionError) as error:
         self._io.assert_expectations_fulfilled()
-      if error_message:
+      if error_message is not None:
         self.assertEqual(error_message, str(error.exception))
 
   def test_documentation_example(self):

@@ -188,6 +188,179 @@ class IoExpectationTest(unittest.TestCase):
                    print('Some more output')),
       error_message="No more output expected, but got: 'Some more output\n'"),
 
+    # ==== expect.And ====
+    param(
+      'expect_and',
+      expected_io=expect.And('Some', 'out'),
+      ios=lambda: print('Some output'),
+      error_message=None),
+
+    param(
+      'expect_and_no_output',
+      expected_io=expect.And('Some', 'out'),
+      ios=lambda: None,
+      error_message=("Pending IO expectation never fulfilled:\n"
+                     "Contains('Some') and Contains('out')")),
+
+    param(
+      'expect_and_lhs_fails',
+      expected_io=expect.And('Some', 'out'),
+      ios=lambda: print('Other output'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') and Contains('out')\n"
+                     "+ 'Other output\\n'")),
+
+    param(
+      'expect_and_rhs_fails',
+      expected_io=expect.And('Some', 'out'),
+      ios=lambda: print('Some string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('out')\n"
+                     "+ 'Some string\\n'")),
+
+    param(
+      'expect_and_both_fails',
+      expected_io=expect.And('Some', 'out'),
+      ios=lambda: print('Other string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') and Contains('out')\n"
+                     "+ 'Other string\\n'")),
+
+    param(
+      'expect_and_many_arguments',
+      expected_io=expect.And('foo', 'bar', 'baz', 'buz'),
+      ios=lambda: print('String: buz foo baz bar.'),
+      error_message=None),
+
+    param(
+      'expect_and_many_arguments_error',
+      expected_io=expect.And('foo', 'bar', 'baz', 'buz'),
+      ios=lambda: print('String: buz foo bar.'),
+      error_message=(
+        "Unexpected output:\n"
+        "- Contains('baz') and Contains('buz')\n"
+        "+ 'String: buz foo bar.\\n'")),
+
+    param(
+      'expect_and_short_syntax',
+      expected_io=expect.Contains('Some') & expect.Contains('out'),
+      ios=lambda: print('Some output'),
+      error_message=None),
+
+    param(
+      'expect_and_short_syntax_no_output',
+      expected_io=expect.Contains('Some') & expect.Contains('out'),
+      ios=lambda: None,
+      error_message=("Pending IO expectation never fulfilled:\n"
+                     "Contains('Some') and Contains('out')")),
+
+    param(
+      'expect_and_short_syntax_lhs_fails',
+      expected_io=expect.Contains('Some') & expect.Contains('out'),
+      ios=lambda: print('Other output'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') and Contains('out')\n"
+                     "+ 'Other output\\n'")),
+
+    param(
+      'expect_and_short_syntax_rhs_fails',
+      expected_io=expect.Contains('Some') & expect.Contains('out'),
+      ios=lambda: print('Some string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('out')\n"
+                     "+ 'Some string\\n'")),
+
+    param(
+      'expect_and_short_syntax_both_fails',
+      expected_io=expect.Contains('Some') & expect.Contains('out'),
+      ios=lambda: print('Other string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') and Contains('out')\n"
+                     "+ 'Other string\\n'")),
+
+    # ==== expect.Or ====
+    param(
+      'expect_or',
+      expected_io=expect.Or('Some', 'out'),
+      ios=lambda: print('Some output'),
+      error_message=None),
+
+    param(
+      'expect_or_no_output',
+      expected_io=expect.Or('Some', 'out'),
+      ios=lambda: None,
+      error_message=("Pending IO expectation never fulfilled:\n"
+                     "Contains('Some') or Contains('out')")),
+
+    param(
+      'expect_or_lhs_fails',
+      expected_io=expect.Or('Some', 'out'),
+      ios=lambda: print('Other output'),
+      error_message=None),
+
+    param(
+      'expect_or_rhs_fails',
+      expected_io=expect.Or('Some', 'out'),
+      ios=lambda: print('Some string'),
+      error_message=None),
+
+    param(
+      'expect_or_both_fails',
+      expected_io=expect.Or('Some', 'out'),
+      ios=lambda: print('Other string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') or Contains('out')\n"
+                     "+ 'Other string\\n'")),
+
+    param(
+      'expect_or_many_arguments',
+      expected_io=expect.Or('foo', 'bar', 'baz', 'buz'),
+      ios=lambda: print('String: buz.'),
+      error_message=None),
+
+    param(
+      'expect_or_many_arguments_error',
+      expected_io=expect.Or('foo', 'bar', 'baz', 'buz'),
+      ios=lambda: print('Unexpected'),
+      error_message=(
+        "Unexpected output:\n"
+        "- Contains('foo') or Contains('bar')"
+        " or Contains('baz') or Contains('buz')\n"
+        "+ 'Unexpected\\n'")),
+
+    param(
+      'expect_or_short_syntax',
+      expected_io=expect.Contains('Some') | expect.Contains('out'),
+      ios=lambda: print('Some output'),
+      error_message=None),
+
+    param(
+      'expect_or_short_syntax_no_output',
+      expected_io=expect.Contains('Some') | expect.Contains('out'),
+      ios=lambda: None,
+      error_message=("Pending IO expectation never fulfilled:\n"
+                     "Contains('Some') or Contains('out')")),
+
+    param(
+      'expect_or_short_syntax_lhs_fails',
+      expected_io=expect.Contains('Some') | expect.Contains('out'),
+      ios=lambda: print('Other output'),
+      error_message=None),
+
+    param(
+      'expect_or_short_syntax_rhs_fails',
+      expected_io=expect.Contains('Some') | expect.Contains('out'),
+      ios=lambda: print('Some string'),
+      error_message=None),
+
+    param(
+      'expect_or_short_syntax_both_fails',
+      expected_io=expect.Contains('Some') | expect.Contains('out'),
+      ios=lambda: print('Other string'),
+      error_message=("Unexpected output:\n"
+                     "- Contains('Some') or Contains('out')\n"
+                     "+ 'Other string\\n'")),
+
     # ==== Repeatedly ====
     param(
       'expect_repeatedly',

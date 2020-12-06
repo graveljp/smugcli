@@ -189,6 +189,14 @@ class ExpectBase(object):
     """
     pass
 
+  def __and__(self, other):
+    ret = And(self, other)
+    return ret
+
+  def __or__(self, other):
+    ret = Or(self, other)
+    return ret
+
 
 class ExpectStringBase(ExpectBase):
 
@@ -255,6 +263,74 @@ class Anything(ExpectBase):
 
   def __repr__(self):
     return '%s()' % type(self).__name__
+
+
+class And(ExpectBase):
+
+  def __init__(self, *args):
+    super(And, self).__init__()
+    self._expected_list = [default_expectation(expected) for expected in args]
+
+  @property
+  def fulfilled(self):
+    return all(e.fulfilled for e in self._expected_list)
+
+  @property
+  def saturated(self):
+    return any(e.saturated for e in self._expected_list)
+
+  def consume(self, string):
+    self._consumed = True
+    return all(e.consume(string) for e in self._expected_list)
+
+  def test_consume(self, string):
+    return all(e.test_consume(string) for e in self._expected_list)
+
+  def apply_transform(self, fn):
+    for expected in self._expected_list:
+      expected.apply_transform(fn)
+
+  def description(self, saturated):
+    parts = [a.description(saturated) for a in self._expected_list
+             if not a._consumed or a.saturated == saturated]
+    if len(parts) == 1:
+      return parts[0]
+    else:
+      return ' and '.join(parts)
+
+
+class Or(ExpectBase):
+
+  def __init__(self, *args):
+    super(Or, self).__init__()
+    self._expected_list = [default_expectation(expected) for expected in args]
+
+  @property
+  def fulfilled(self):
+    return any(e.fulfilled for e in self._expected_list)
+
+  @property
+  def saturated(self):
+    return all(e.saturated for e in self._expected_list)
+
+  def consume(self, string):
+    self._consumed = True
+    return any(e.consume(string) for e in self._expected_list)
+
+  def test_consume(self, string):
+    return any(e.test_consume(string) for e in self._expected_list)
+
+  def apply_transform(self, fn):
+    for expected in self._expected_list:
+      expected.apply_transform(fn)
+
+  def description(self, saturated):
+    parts = [a.description(saturated) for a in self._expected_list
+             if not a._consumed or a.saturated == saturated]
+    if len(parts) == 1:
+      return parts[0]
+    else:
+      return ' or '.join(parts)
 
 
 class Repeatedly(ExpectBase):

@@ -149,14 +149,14 @@ class ExpectBase(object):
     """
     return None
 
-  def repeatedly(self):
+  def repeatedly(self, min_repetition=0, max_repetition=None):
     """Shorthand for making this expectation repeat indefinitely.
 
     Returns:
       Repeatedly instance: wrapped version of self, which repeats 0 or more
           times.
     """
-    return Repeatedly(self)
+    return Repeatedly(self, min_repetition, max_repetition)
 
   def times(self, min_repetition, max_repetition=None):
     """Shorthand for making this expectation repeat a given number of times.

@@ -190,6 +190,24 @@ class IoExpectationTest(unittest.TestCase):
 
     # ==== Repeatedly ====
     param(
+      'expect_repeatedly',
+      expected_io=expect.Repeatedly(expect.Equals('Expected output')),
+      ios=lambda: (print('Expected output'),
+                   print('Expected output'),
+                   print('Expected output')),
+      error_message=None),
+
+    param(
+      'expect_repeatedly_error',
+      expected_io=expect.Repeatedly(expect.Equals('Expected output')),
+      ios=lambda: (print('Expected output'),
+                   print('Expected output'),
+                   print('Unexpected output')),
+      error_message=("Unexpected output:\n"
+                     "- Repeatedly(Equals('Expected output'))\n"
+                     "+ 'Unexpected output\\n'")),
+
+    param(
       'expect_repeatedly_equals_at_min',
       expected_io=expect.Repeatedly(expect.Equals('Expected output'), 2, 4),
       ios=lambda: (print('Expected output'),
@@ -248,7 +266,16 @@ class IoExpectationTest(unittest.TestCase):
                      "+ 'Some other output\\n'")),
 
     param(
-      'short_syntax_expect_indefinitely_repeating_error',
+      'expect_indefinitely_repeating_short_syntax_1',
+      expected_io=expect.Repeatedly(['a', 'b']),
+      ios=lambda: (print('a'),
+                   print('b'),
+                   print('a'),
+                   print('b')),
+      error_message=None),
+
+    param(
+      'expect_indefinitely_repeating_short_syntax_1_error',
       expected_io=expect.Repeatedly(['a', 'b']),
       ios=lambda: (print('a'),
                    print('b'),
@@ -257,6 +284,43 @@ class IoExpectationTest(unittest.TestCase):
       error_message=("Unexpected output:\n"
                      "- Repeatedly(InOrder(Contains('a'), Contains('b')))\n"
                      "+ 'b\\n'")),
+
+    param(
+      'expect_indefinitely_repeating_short_syntax_2',
+      expected_io=expect.InOrder('a', 'b').repeatedly(),
+      ios=lambda: (print('a'),
+                   print('b'),
+                   print('a'),
+                   print('b')),
+      error_message=None),
+
+    param(
+      'expect_indefinitely_repeating_short_syntax_2_error',
+      expected_io=expect.InOrder('a', 'b').repeatedly(),
+      ios=lambda: (print('a'),
+                   print('b'),
+                   print('b'),
+                   print('a')),
+      error_message=("Unexpected output:\n"
+                     "- Repeatedly(InOrder(Contains('a'), Contains('b')))\n"
+                     "+ 'b\\n'")),
+
+    param(
+      'expect_repeatedly_equals_short_syntax_below_min',
+      expected_io=expect.Equals('Expected output').repeatedly(2, 4),
+      ios=lambda: print('Expected output'),
+      error_message=("Pending IO expectation never fulfilled:\n"
+                     "Repeatedly(Equals('Expected output'), 1, 3)")),
+
+    param(
+      'expect_repeatedly_equals_short_syntax_above_max',
+      expected_io=expect.Equals('Expected output').repeatedly(2, 4),
+      ios=lambda: (print('Expected output'),
+                   print('Expected output'),
+                   print('Expected output'),
+                   print('Expected output'),
+                   print('Expected output')),
+      error_message="No more output expected, but got: 'Expected output\n'"),
 
 
     # ==== InOrder ====

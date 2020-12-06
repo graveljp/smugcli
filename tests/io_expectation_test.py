@@ -54,7 +54,7 @@ class IoExpectationTest(unittest.TestCase):
       'expect_equals_no_output',
       expected_io=expect.Equals('Expected output'),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Equals('Expected output')")),
 
     param(
@@ -84,7 +84,7 @@ class IoExpectationTest(unittest.TestCase):
       'expect_contains_no_output',
       expected_io=expect.Contains('out'),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Contains('out')")),
 
     param(
@@ -120,7 +120,7 @@ class IoExpectationTest(unittest.TestCase):
       'expect_prefix_no_output',
       expected_io=expect.Prefix('Expected'),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Prefix('Expected')")),
 
     param(
@@ -149,7 +149,7 @@ class IoExpectationTest(unittest.TestCase):
       'expect_regex_no_output',
       expected_io=expect.Regex('.xpec.*d.*'),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Regex('.xpec.*d.*')")),
 
     param(
@@ -178,7 +178,7 @@ class IoExpectationTest(unittest.TestCase):
       'expect_anyting_no_output',
       expected_io=expect.Anything(),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Anything()")),
 
     param(
@@ -217,14 +217,14 @@ class IoExpectationTest(unittest.TestCase):
       'expect_repeatedly_equals_no_input',
       expected_io=expect.Repeatedly(expect.Equals('Expected output'), 2, 4),
       ios=lambda: None,
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Repeatedly(Equals('Expected output'), 2, 4)")),
 
     param(
       'expect_repeatedly_equals_below_min',
       expected_io=expect.Repeatedly(expect.Equals('Expected output'), 2, 4),
       ios=lambda: print('Expected output'),
-      error_message=("Pending IO expectation never fulfulled:\n"
+      error_message=("Pending IO expectation never fulfilled:\n"
                      "Repeatedly(Equals('Expected output'), 1, 3)")),
 
     param(

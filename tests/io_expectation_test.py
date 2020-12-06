@@ -361,6 +361,189 @@ class IoExpectationTest(unittest.TestCase):
                      "- Contains('Some') or Contains('out')\n"
                      "+ 'Other string\\n'")),
 
+    # ==== expect.Not ====
+    param(
+      'expect_not_equals',
+      expected_io=expect.Not(expect.Equals('Unexpected string')),
+      ios=lambda: (print('Expected string')),
+      error_message=None),
+
+    param(
+      'expect_not_equals_error',
+      expected_io=expect.Not(expect.Equals('Unexpected string')),
+      ios=lambda: (print('Unexpected string')),
+      error_message=("Unexpected output:\n"
+                     "- Not(Equals('Unexpected string'))\n"
+                     "+ 'Unexpected string\\n'")),
+
+    param(
+      'expect_not_equals_or_equals',
+      expected_io=expect.Not(expect.Equals('Unexpected 1') |
+                             expect.Equals('Unexpected 2')),
+      ios=lambda: (print('Expected string')),
+      error_message=None),
+
+    param(
+      'expect_not_equals_or_equals_error',
+      expected_io=expect.Not(expect.Equals('Unexpected 1') |
+                             expect.Equals('Unexpected 2')),
+      ios=lambda: (print('Unexpected 2')),
+      error_message=("Unexpected output:\n"
+                     "- Not(Equals('Unexpected 2'))\n"
+                     "+ 'Unexpected 2\\n'")),
+
+    param(
+      'expect_not_equals_repeatedly',
+      expected_io=expect.Not(expect.Equals('Unexpected')).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Expected 2')),
+      error_message=None),
+
+    param(
+      'expect_not_equals_repeatedly_error',
+      expected_io=expect.Not(expect.Equals('Unexpected')).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Unexpected')),
+      error_message=("Unexpected output:\n"
+                     "- Repeatedly(Not(Equals('Unexpected')))\n"
+                     "+ 'Unexpected\\n'")),
+
+    param(
+      'expect_not_equals_and_not_equals_repeatedly',
+      expected_io=(expect.Not(expect.Equals('Unexpected 1')) &
+                   expect.Not(expect.Equals('Unexpected 2'))).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Expected 2'),
+                   print('Expected 3')),
+      error_message=None),
+
+    param(
+      'expect_not_equals_and_not_equals_repeatedly_error',
+      expected_io=(expect.Not(expect.Equals('Unexp 1')) &
+                   expect.Not(expect.Equals('Unexp 2'))).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Expected 2'),
+                   print('Unexp 1')),
+      error_message=(
+        "Unexpected output:\n"
+        "- Repeatedly(Not(Equals('Unexp 1')) and Not(Equals('Unexp 2')))\n"
+        "+ 'Unexp 1\\n'")),
+
+    param(
+      'expect_not_equals_or_equals_repeatedly',
+      expected_io=expect.Not(expect.Equals('Unexpected 1') |
+                             expect.Equals('Unexpected 2')).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Expected 2'),
+                   print('Expected 3')),
+      error_message=None),
+
+    param(
+      'expect_not_equals_or_equals_repeatedly_error_1',
+      expected_io=expect.Not(expect.Equals('Unexpected 1') |
+                             expect.Equals('Unexpected 2')).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Expected 2'),
+                   print('Unexpected 2')),
+      error_message=("Unexpected output:\n"
+                     "- Repeatedly(Not(Equals('Unexpected 2')))\n"
+                     "+ 'Unexpected 2\\n'")),
+
+    param(
+      'expect_not_equals_or_equals_repeatedly_error_2',
+      expected_io=expect.Not(expect.Equals('Unexpected 1') |
+                             expect.Equals('Unexpected 2')).repeatedly(),
+      ios=lambda: (print('Expected 1'),
+                   print('Unexpected 1'),
+                   print('Expected 2'),
+                   print('Unexpected 2')),
+      error_message=(
+        "Unexpected output:\n"
+        "- Repeatedly(Not(Equals('Unexpected 1') or Equals('Unexpected 2')))\n"
+        "+ 'Unexpected 1\\n'")),
+
+    param(
+      'expect_in_order_not',
+      expected_io=expect.InOrder(
+        expect.Equals('Expected 1'),
+        expect.Not(expect.Equals('Unexpected 1')),
+        expect.Equals('Expected 2'),
+        expect.Not(expect.Equals('Unexpected 2'))),
+      ios=lambda: (print('Expected 1'),
+                   print('Something else 1'),
+                   print('Expected 2'),
+                   print('Something else 2')),
+      error_message=None),
+
+    param(
+      'expect_in_order_not_error',
+      expected_io=expect.InOrder(
+        expect.Equals('Expected 1'),
+        expect.Not(expect.Equals('Unexpected')),
+        expect.Equals('Expected 2')),
+      ios=lambda: (print('Expected 1'),
+                   print('Unexpected'),
+                   print('Expected 2')),
+      error_message=(
+        "Unexpected output:\n"
+        "- InOrder(Not(Equals('Unexpected')), Equals('Expected 2'))\n"
+        "+ 'Unexpected\\n'")),
+
+    param(
+      'expect_any_order_not',
+      expected_io=expect.AnyOrder(
+        expect.Equals('Expected 1'),
+        expect.Not(expect.Equals('Unexpected 1')),
+        expect.Equals('Expected 2'),
+        expect.Not(expect.Equals('Unexpected 2')),
+        expect.Equals('Expected 3')),
+      ios=lambda: (print('Expected 3'),
+                   print('Something else 2'),
+                   print('Expected 2'),
+                   print('Something else 1'),
+                   print('Expected 1')),
+      error_message=None),
+
+    param(
+      'expect_any_order_not_error',
+      expected_io=expect.AnyOrder(
+        expect.Equals('Expected 1'),
+        expect.Not(expect.Equals('Unexpected')),
+        expect.Equals('Expected 2')),
+      ios=lambda: (print('Expected 2'),
+                   print('Unexpected'),
+                   print('Expected 1')),
+      error_message=(
+        "Unexpected output:\n"
+        "- AnyOrder(Equals('Expected 1'), Not(Equals('Unexpected')))\n"
+        "+ 'Unexpected\\n'")),
+
+    param(
+      'expect_any_order_anything_but',
+      expected_io=expect.AnyOrder(
+        expect.Not(expect.Equals('Unexpected 1') |
+                   expect.Equals('Unexpected 2')).repeatedly(),
+        expect.Equals('Expected 1'),
+        expect.Equals('Expected 2')),
+      ios=lambda: (print('Expected 2'),
+                   print('Something else 1'),
+                   print('Something else 2'),
+                   print('Expected 1')),
+      error_message=None),
+
+    param(
+      'expect_any_order_anything_but_error',
+      expected_io=expect.AnyOrder(
+        expect.Not(expect.Equals('Unexpected 1') |
+                   expect.Equals('Unexpected 2')).repeatedly(),
+        expect.Equals('Expected')),
+      ios=lambda: (print('Expected'),
+                   print('Unexpected 2')),
+      error_message=(
+        "Unexpected output:\n"
+        "- Repeatedly(Not(Equals('Unexpected 1') or Equals('Unexpected 2')))\n"
+        "+ 'Unexpected 2\\n'")),
+
     # ==== Repeatedly ====
     param(
       'expect_repeatedly',

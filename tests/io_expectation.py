@@ -90,9 +90,11 @@ class ExpectBase(object):
   """Base class for all expected response string matchers."""
 
   def __init__(self):
+    self._consumed = False
     self._fulfilled = False
     self._saturated = False
     self._greedy = False
+    self._thrifty = False
 
   @property
   def fulfilled(self):
@@ -112,6 +114,12 @@ class ExpectBase(object):
     starving the following expectations."""
     return self._greedy
 
+  @property
+  def thrifty(self):
+    """If True, the expectation will only match if no other alternative
+    expectations match."""
+    return self._thrifty
+
   def consume(self, string):
     """Matches a string against this expectation.
 
@@ -125,6 +133,7 @@ class ExpectBase(object):
 
     Returns:
       bool: True if the string matched successfully."""
+    self._consumed = True
     return False
 
   def test_consume(self, string):
@@ -205,6 +214,7 @@ class ExpectStringBase(ExpectBase):
     self._expected = expected
 
   def consume(self, string):
+    self._consumed = True
     self._fulfilled = self._saturated = self.test_consume(string)
     return self._fulfilled
 
@@ -217,7 +227,7 @@ class ExpectStringBase(ExpectBase):
   def _match(self, string):
     raise NotImplementedError()
 
-  def __repr__(self):
+  def description(self, saturated):
     return '%s(%s)' % (type(self).__name__, repr(self._expected))
 
 class Equals(ExpectStringBase):
@@ -255,13 +265,14 @@ class Anything(ExpectBase):
   """Matches anything once."""
 
   def consume(self, string):
+    self._consumed = True
     self._fulfilled = self._saturated = self.test_consume(string)
     return True
 
   def test_consume(self, string):
     return True
 
-  def __repr__(self):
+  def description(self, saturated):
     return '%s()' % type(self).__name__
 
 
@@ -333,6 +344,29 @@ class Or(ExpectBase):
       return ' or '.join(parts)
 
 
+class Not(ExpectBase):
+
+  def __init__(self, expected):
+    super(Not, self).__init__()
+    self._expected = expected
+    self._thrifty = True
+
+  def consume(self, string):
+    self._consumed = True
+    self._fulfilled = not self._expected.consume(string)
+    self._saturated = not self._expected.saturated
+    return self._fulfilled
+
+  def test_consume(self, string):
+    return not self._expected.test_consume(string)
+
+  def apply_transform(self, fn):
+    self._expected.apply_transform(fn)
+
+  def description(self, saturated):
+    return 'Not(%s)' % (self._expected.description(not saturated))
+
+
 class Repeatedly(ExpectBase):
   """Wraps an expectation to make it repeat a given number of times."""
 
@@ -343,6 +377,7 @@ class Repeatedly(ExpectBase):
     self._sub_expectation = default_expectation(sub_expectation)
     self._current_repetition = 0
     self._current_expectation = copy.deepcopy(self._sub_expectation)
+    self._thrifty = self._sub_expectation.thrifty
 
   @property
   def fulfilled(self):
@@ -354,8 +389,9 @@ class Repeatedly(ExpectBase):
             self._current_repetition >= self._max_repetition)
 
   def consume(self, string):
+    self._consumed = True
     result = self._current_expectation.consume(string)
-    if self._current_expectation.saturated:
+    if self._current_expectation.fulfilled:
       self._current_repetition += 1
       self._current_expectation = copy.deepcopy(self._sub_expectation)
     return result
@@ -373,12 +409,12 @@ class Repeatedly(ExpectBase):
   def apply_transform(self, fn):
     self._sub_expectation.apply_transform(fn)
 
-  def __repr__(self):
+  def description(self, saturated):
     arg1 = max(self._min_repetition - self._current_repetition, 0)
     arg2 = (self._max_repetition - self._current_repetition
             if self._max_repetition is not None else None)
     return '%s(%s%s%s)' % (
-      type(self).__name__, repr(self._sub_expectation),
+      type(self).__name__, self._current_expectation.description(saturated),
       ', %d' % arg1 if arg1 > 0 or arg2 is not None else '',
       ', %d' % arg2 if arg2 else '')
 
@@ -402,18 +438,20 @@ class ExpectSequenceBase(ExpectBase):
     for expected in self._expected_list:
       expected.apply_transform(fn)
 
-  def __repr__(self):
-    unfulfilled = [repr(a) for a in self._expected_list if not a.fulfilled]
-    if len(unfulfilled) == 1:
-      return unfulfilled[0]
+  def description(self, saturated):
+    parts = [a.description(saturated) for a in self._expected_list
+             if not a._consumed or a.saturated == saturated]
+    if len(parts) == 1:
+      return parts[0]
     else:
-      return '%s(%s)' % (type(self).__name__, ', '.join(unfulfilled))
+      return '%s(%s)' % (type(self).__name__, ', '.join(parts))
 
 
 class InOrder(ExpectSequenceBase):
   """Sequence of expectations that must match in right order."""
 
   def consume(self, string):
+    self._consumed = True
     to_consume = None
     for i, expected in enumerate(self._expected_list):
       matches = expected.test_consume(string)
@@ -468,11 +506,12 @@ class AnyOrder(ExpectSequenceBase):
   """Sequence of expectation that can match in any order."""
 
   def consume(self, string):
+    self._consumed = True
     to_consume = None
     for expected in self._expected_list:
       if expected.test_consume(string):
         to_consume = expected
-        if expected.greedy or not expected.fulfilled:
+        if not expected.thrifty and (expected.greedy or not expected.fulfilled):
           break
 
     if to_consume is not None:
@@ -519,7 +558,7 @@ class Reply(ExpectBase):
   def _consume(self, line):
     raise AssertionError('Expecting user input but got output line: %s' % line)
 
-  def __repr__(self):
+  def description(self, saturated):
     return '%s(%s)' % (type(self).__name__, self._reply_string)
 
 
@@ -593,8 +632,9 @@ class ExpectedInputOutput(object):
       raise AssertionError('No more user input prompt expected')
     reply = self._expected_io.produce()
     if not reply:
-      raise AssertionError('Unexpected user input prompt request. Expected:\n'
-                           '%s' % repr(self._expected_io))
+      raise AssertionError(
+        'Unexpected user input prompt request. Expected:\n'
+        '%s' % self._expected_io.description(fulfilled=False))
     reply += '\n'
     self._original_stdout.write(reply)
     return reply
@@ -610,8 +650,8 @@ class ExpectedInputOutput(object):
     self._match_pending_outputs()
     if self._expected_io:
       if not self._expected_io.fulfilled:
-        raise AssertionError('Pending IO expectation never fulfulled:\n%s' %
-                             repr(self._expected_io))
+        raise AssertionError('Pending IO expectation never fulfilled:\n%s' %
+                             self._expected_io.description(saturated=False))
 
     self.set_expected_io(None)
 
@@ -660,7 +700,8 @@ class ExpectedInputOutput(object):
           raise AssertionError('No more output expected, but got: \'%s\'' %
                                line)
         if not self._expected_io.consume(line):
-          raise AssertionError('Unexpected output:\n'
-                               '%s' % '\n'.join(difflib.ndiff(
-                                 repr(self._expected_io).splitlines(True),
-                                 repr(line).splitlines(True))))
+          raise AssertionError(
+            'Unexpected output:\n'
+            '%s' % '\n'.join(difflib.ndiff(
+              self._expected_io.description(saturated=False).splitlines(True),
+              repr(line).splitlines(True))))

@@ -15,7 +15,8 @@ install_requires = [
   'hachoir-core>=1.3.3; python_version<"3.0"',
   'hachoir-metadata>=1.3.3; python_version<"3.0"',
   'hachoir-parser>=1.3.4; python_version<"3.0"',
-  'hachoir>=3.0a4; python_version>="3.0"'
+  'hachoir>=3.0; python_version>="3.0"',
+  'six>=1.15.0'
 ]
 
 with open("README.md", "r") as fh:

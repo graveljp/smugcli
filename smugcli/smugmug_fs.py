@@ -28,7 +28,7 @@ from six.moves import urllib
 
 hachoir_config.quiet = True
 
-DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png']
+DEFAULT_MEDIA_EXT = ['gif', 'jpeg', 'jpg', 'mov', 'mp4', 'png', 'heic']
 VIDEO_EXT = ['mov', 'mp4']
 
 
@@ -410,7 +410,12 @@ class SmugMugFS(object):
       file_name = file_path.split(os.sep)[-1].strip()
       with open(file_path, 'rb') as f:
         file_content = f.read()
-      remote_file = node.get_child(file_name)
+      if file_name.lower().endswith("heic"):
+        # SmugMug converts HEIC files to JPEG and renames them in the process
+        renamed_file = file_name.replace(".HEIC", "_HEIC.JPG")
+        remote_file = node.get_child(renamed_file)
+      else:
+        remote_file = node.get_child(file_name)
 
       if remote_file:
         if remote_file['Format'].lower() in VIDEO_EXT:
@@ -429,6 +434,19 @@ class SmugMugFS(object):
           except Exception as err:
             print('Failed extracting metadata for file "%s".' % file_path)
             file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+
+          time_delta = abs(remote_time - file_time)
+          same_file = (time_delta <= datetime.timedelta(seconds=1))
+        elif file_name.lower().endswith("heic"):
+          # HEIC files are recoded to JPEG's server side by SmugMug so we cannot
+          # use MD5 to check if file needs a re-sync. Use the last
+          # modification time instead.
+          remote_time = datetime.datetime.strptime(
+            remote_file.get('ImageMetadata')['DateTimeModified'],
+            '%Y-%m-%dT%H:%M:%S')
+
+          # hachoir doesn't support heic files
+          file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
 
           time_delta = abs(remote_time - file_time)
           same_file = (time_delta <= datetime.timedelta(seconds=1))
@@ -468,6 +486,7 @@ class SmugMugFS(object):
       return progress_fn
 
     with manager.start_task(0, task):
+      #print("No-op!")
       node.upload('Album', file_name, file_content,
                   progress_fn=get_progress_fn(task))
 

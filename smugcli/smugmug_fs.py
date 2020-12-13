@@ -486,7 +486,6 @@ class SmugMugFS(object):
       return progress_fn
 
     with manager.start_task(0, task):
-      #print("No-op!")
       node.upload('Album', file_name, file_content,
                   progress_fn=get_progress_fn(task))
 

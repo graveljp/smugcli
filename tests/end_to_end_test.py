@@ -439,6 +439,7 @@ class EndToEndTest(unittest.TestCase):
       'upload {testdata}/Sm?gCLI_1.* {testdata}/SmugCLI_2.jpg '
       '{root}/folder/album',
       ['Uploading "{testdata}/SmugCLI_1.gif" to "{root}/folder/album"...',
+       'Uploading "{testdata}/SmugCLI_1.heic" to "{root}/folder/album"...',
        'Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
        '"{root}/folder/album".',
        'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
@@ -506,6 +507,23 @@ class EndToEndTest(unittest.TestCase):
          'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
          ' Deleting old version.',
          'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
+
+  def test_sync_heic(self):
+    self._stage_files('{root}/album',
+                      [('{testdata}/SmugCLI_1.heic', 'SmugCLI_1.heic'),
+                       ('{testdata}/SmugCLI_1.heic', 'SmugCLI_2.HEIC'),
+                       ('{testdata}/SmugCLI_1.heic', 'SmugCLI_3.hEiC')])
+    self._do('sync {root} /',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                expect.Anything().repeatedly(),
+                'Creating Folder "{root}".',
+                'Creating Album "{root}/album".',
+                'Uploaded "{root}/album/SmugCLI_1.heic".',
+                'Uploaded "{root}/album/SmugCLI_2.HEIC".',
+                'Uploaded "{root}/album/SmugCLI_3.hEiC".')])
 
   def test_sync_privacy(self):
     self._stage_files('{root}/default/album', ['{testdata}/SmugCLI_1.jpg'])

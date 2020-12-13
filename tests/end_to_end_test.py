@@ -511,8 +511,7 @@ class EndToEndTest(unittest.TestCase):
   def test_sync_heic(self):
     self._stage_files('{root}/album',
                       [('{testdata}/SmugCLI_1.heic', 'SmugCLI_1.heic'),
-                       ('{testdata}/SmugCLI_1.heic', 'SmugCLI_2.HEIC'),
-                       ('{testdata}/SmugCLI_1.heic', 'SmugCLI_3.hEiC')])
+                       ('{testdata}/SmugCLI_1.heic', 'SmugCLI_2.HEIC')])
     self._do('sync {root} /',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
@@ -522,8 +521,27 @@ class EndToEndTest(unittest.TestCase):
                 'Creating Folder "{root}".',
                 'Creating Album "{root}/album".',
                 'Uploaded "{root}/album/SmugCLI_1.heic".',
-                'Uploaded "{root}/album/SmugCLI_2.HEIC".',
-                'Uploaded "{root}/album/SmugCLI_3.hEiC".')])
+                'Uploaded "{root}/album/SmugCLI_2.HEIC".')])
+
+    self._stage_files('{root}/album', [
+      # Modify SmugCLI_1.heic
+      ('{testdata}/SmugCLI_2.heic', 'SmugCLI_1.heic'),
+      # Add a new HEIC file.
+      ('{testdata}/SmugCLI_1.heic', 'SmugCLI_3.hEiC')])
+
+    self._do('sync {root} /',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                'Found matching remote album "{root}/album".',
+                'Uploaded "{root}/album/SmugCLI_3.hEiC".',
+                # Even though SmugCLI_1.heic changed, there is no way to detect
+                # this because SmugMug doesn't keep HEIC image metadata.  Hence,
+                # HEIC files are considered immutable and are never re-uploaded.
+                expect.Not(expect.Or(
+                  'Uploaded "{root}/album/SmugCLI_1.heic".',
+                  'Uploaded "{root}/album/SmugCLI_2.HEIC".')).repeatedly())])
 
   def test_sync_privacy(self):
     self._stage_files('{root}/default/album', ['{testdata}/SmugCLI_1.jpg'])

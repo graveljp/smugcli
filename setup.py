@@ -24,7 +24,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="smugcli",
-  version="1.0.2",
+  version="1.0.3",
   author="Jean-Philippe Gravel",
   author_email="jpgravel@gmail.com",
   description="Command line tool for SmugMug",

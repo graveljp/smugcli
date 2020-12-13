@@ -438,19 +438,13 @@ class SmugMugFS(object):
 
           time_delta = abs(remote_time - file_time)
           same_file = (time_delta <= datetime.timedelta(seconds=1))
-        elif file_name.lower().endswith("heic"):
+        elif file_extension.lower() == '.heic':
           # HEIC files are recoded to JPEG's server side by SmugMug so we cannot
-          # use MD5 to check if file needs a re-sync. Use the last
-          # modification time instead.
-          remote_time = datetime.datetime.strptime(
-            remote_file.get('ImageMetadata')['DateTimeModified'],
-            '%Y-%m-%dT%H:%M:%S')
-
-          # hachoir doesn't support heic files
-          file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
-
-          time_delta = abs(remote_time - file_time)
-          same_file = (time_delta <= datetime.timedelta(seconds=1))
+          # use MD5 to check if file needs a re-sync. Moreover, no image
+          # metadata (e.g. time taken timestamp) is kept in SmugMug that would
+          # allow us to tell if the file is the same. Hence, for now we just
+          # assume HEIC files never change and we never re-upload them.
+          same_file = True
         else:
           remote_md5 = remote_file['ArchivedMD5']
           file_md5 = hashlib.md5(file_content).hexdigest()

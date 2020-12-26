@@ -68,7 +68,7 @@ class SmugMugOAuth(object):
         print('Could not start default browser automatically.')
         print('Please visit %s to complete login process.' % login_url)
 
-      while thread.isAlive():
+      while thread.is_alive():
         thread.join(1)
     finally:
       httpd.server_close()

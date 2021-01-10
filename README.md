@@ -4,7 +4,7 @@ folder hierarchy with a SmugMug account.
 
 Implemented using the Smugmug V2 API.
 
-Tested with Python 3.5, 3.6, 3.7 and 3.8.
+Tested with Python 3.5, 3.6, 3.7, 3.8 and 3.9.
 
 # Installation
 
@@ -154,7 +154,7 @@ $ tox
 
 To run with only one specific Python version, for instance Python 3.7, do:
 ```
-$ tox -e py37
+$ tox -e py39
 ```
 
 Individual tests can be ran by doing:
@@ -164,9 +164,9 @@ $ tox -- tests/module[.class_name[.test_name]]
 
 for instance:
 ```
-$ tox -e py37 -- tests/end_to_end_test.py  # Runs all tests in tests/end_to_end_test.py.
-$ tox -e py37 -- tests/end_to_end_test.py::EndToEndTest  # Runs all tests in class EndToEndTest.
-$ tox -e py37 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a single test.
+$ tox -e py39 -- tests/end_to_end_test.py  # Runs all tests in tests/end_to_end_test.py.
+$ tox -e py39 -- tests/end_to_end_test.py::EndToEndTest  # Runs all tests in class EndToEndTest.
+$ tox -e py39 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a single test.
 ```
 
 Since the unit tests do actual operations on SmugMug, they are fairly slow. To
@@ -175,12 +175,12 @@ responses from the previous run are replayed instead of re-doing the actual HTTP
 requests to SmugMug. To enable this cache, set the `REUSE_RESPONSES` environment
 variable to `True`:
 ```
-$ REUSE_RESPONSES=True tox -e py37
+$ REUSE_RESPONSES=True tox -e py39
 ```
 
 Windows users can do the equivalent by doing:
 ```
-C:\smugcli> cmd /C "set REUSE_RESPONSES=True && tox -e py37"
+C:\smugcli> cmd /C "set REUSE_RESPONSES=True && tox -e py39"
 ```
 
 Note that if you change the code such that different HTTP requests are done, you

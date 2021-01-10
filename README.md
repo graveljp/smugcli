@@ -170,17 +170,19 @@ $ tox -e py37 -- tests/end_to_end_test.py::EndToEndTest::test_sync  # Runs a sin
 ```
 
 Since the unit tests do actual operations on SmugMug, they are fairly slow. To
-speed things up, all HTTP requests are cached on disk and replayed on subsequent
-runs. The first test run will take a while, but the next ones should run much
-faster. When changing the code however, the cached HTTP request may no longer
-match the new implementation. Reset the cache for the next test to run by
-setting the RESET_CACHE environment variable to True. To reset the cache for the
-next run only, do:
+speed things up during development, an HTTP request cache can be enabled so that
+responses from the previous run are replayed instead of re-doing the actual HTTP
+requests to SmugMug. To enable this cache, set the `REUSE_RESPONSES` environment
+variable to `True`:
 ```
-$ RESET_CACHE=True tox -e py37
+$ REUSE_RESPONSES=True tox -e py37
 ```
 
 Windows users can do the equivalent by doing:
 ```
-C:\smugcli> cmd /C "set RESET_CACHE=True && tox -e py37"
+C:\smugcli> cmd /C "set REUSE_RESPONSES=True && tox -e py37"
 ```
+
+Note that if you change the code such that different HTTP requests are done, you
+will have to set `REUSE_RESPONSES` to `False` on the next run to update the
+cache.

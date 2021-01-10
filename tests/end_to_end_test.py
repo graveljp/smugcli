@@ -60,7 +60,9 @@ class EndToEndTest(unittest.TestCase):
     })
 
     cache_folder = self._get_cache_base_folder()
-    if bool(os.environ.get('RESET_CACHE')):
+    reuse_responses = os.environ.get('REUSE_RESPONSES')
+    if (reuse_responses is None or
+        reuse_responses.lower() not in ('true', 't', 'yes', 'y', 1)):
       shutil.rmtree(cache_folder, ignore_errors=True)
 
     self._io = expect.ExpectedInputOutput()

@@ -341,6 +341,8 @@ class SmugMugFS(object):
           [(d, os.walk(d)) for d in dir_sources] +
           [(p + os.sep, [(p, [], f)])
            for p, f in files_by_path.items()]):
+        # Filter-out files and folders that must be ignored.
+        steps = []
         for walk_step in walk_steps:
           if self._aborting:
             return
@@ -350,6 +352,16 @@ class SmugMugFS(object):
           ignored = set(configs.get('ignore', []))
           dirs[:] = set(dirs) - ignored  # Prune dirs from os.walk traversal.
           files[:] = set(files) - ignored
+          steps.append((subdir, dirs, files))
+
+        # Process files in sorted order to make unit tests deterministic. We
+        # can't merge this loop with the previous one because calling `sorted`
+        # directly on the result of os.walk in `walk_step` would prevent us from
+        # pruning directories from the walk (os.walk returns a generator which
+        # can't be iterated on multiple times).
+        for walk_step in sorted(steps):
+          if self._aborting:
+            return
           folder_pool.add(self._sync_folder,
                           manager,
                           file_pool,
@@ -394,7 +406,8 @@ class SmugMugFS(object):
       else:
         print('Found matching remote album "%s".' % os.path.join(*target_dirs))
 
-      for f in media_files:
+      # Iterate in sorted order to make unit tests deterministic.
+      for f in sorted(media_files):
         if self._aborting:
           return
         file_pool.add(self._sync_file,

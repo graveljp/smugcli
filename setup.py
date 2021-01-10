@@ -12,10 +12,7 @@ install_requires = [
   'colorama>=0.3.9; platform_system=="Windows"',
 
   # For parsing metadata from local files:
-  'hachoir-core>=1.3.3; python_version<"3.0"',
-  'hachoir-metadata>=1.3.3; python_version<"3.0"',
-  'hachoir-parser>=1.3.4; python_version<"3.0"',
-  'hachoir>=3.0; python_version>="3.0"',
+  'hachoir>=3.0',
   'six>=1.15.0'
 ]
 
@@ -36,10 +33,7 @@ setuptools.setup(
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2',
-    'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',

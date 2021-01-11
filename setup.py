@@ -16,24 +16,25 @@ install_requires = [
   'six>=1.15.0'
 ]
 
-with open("README.md", "r") as fh:
+with open('README.md', 'r') as fh:
   long_description = fh.read()
 
-exec(open('smugcli/version.py').read())
+with open('smugcli/version.py') as fh:
+  exec(fh.read())
 
 setuptools.setup(
-  name="smugcli",
+  name='smugcli',
   version=__version__,
-  author="Jean-Philippe Gravel",
-  author_email="jpgravel@gmail.com",
-  description="Command line tool for SmugMug",
+  author='Jean-Philippe Gravel',
+  author_email='jpgravel@gmail.com',
+  description='Command line tool for SmugMug',
   long_description=long_description,
-  long_description_content_type="text/markdown",
-  url="https://github.com/graveljp/smugcli",
+  long_description_content_type='text/markdown',
+  url='https://github.com/graveljp/smugcli',
   packages=setuptools.find_packages(),
   classifiers=[
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    'License :: OSI Approved :: MIT License',
+    'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.5',

@@ -36,7 +36,6 @@ $ ./smugcli.py ls Photography
  2015
  2016
 
-
 $ ./smugcli.py ls Photography/2015
  Photoshoot with Dave
 ```

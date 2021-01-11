@@ -5,6 +5,7 @@ from . import persistent_dict
 from . import smugmug as smugmug_lib
 from . import smugmug_fs
 from . import smugmug_shell
+from . import version
 
 import argparse
 import atexit
@@ -52,6 +53,11 @@ def run(args, config=None, requests_sent=None):
   main_parser = argparse.ArgumentParser(
     description='SmugMug commandline interface.')
   subparsers = main_parser.add_subparsers(title='sub commands')
+
+  # ---------------
+  main_parser.add_argument('-V', '--version',
+                           action='store_true',
+                           help='Show version and exit.')
 
   # ---------------
   login_parser = subparsers.add_parser(
@@ -283,6 +289,11 @@ def run(args, config=None, requests_sent=None):
   # ---------------
 
   parsed = main_parser.parse_args(args)
+
+  if parsed.version:
+    print('Version: ' + version.__version__)
+    return
+
   if not hasattr(parsed, 'func'):
     main_parser.print_help()
     return

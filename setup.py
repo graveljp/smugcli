@@ -19,9 +19,11 @@ install_requires = [
 with open("README.md", "r") as fh:
   long_description = fh.read()
 
+exec(open('smugcli/version.py').read())
+
 setuptools.setup(
   name="smugcli",
-  version="1.0.3",
+  version=__version__,
   author="Jean-Philippe Gravel",
   author_email="jpgravel@gmail.com",
   description="Command line tool for SmugMug",

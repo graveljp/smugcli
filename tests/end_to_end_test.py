@@ -1,4 +1,5 @@
 from smugcli import smugcli
+from smugcli import version
 
 import io_expectation as expect
 
@@ -207,6 +208,9 @@ class EndToEndTest(unittest.TestCase):
         shutil.copy(format_path(f), dest_path)
       else:
         shutil.copyfile(format_path(f[0]), os.path.join(dest_path, f[1]))
+
+  def test_version(self):
+    self._do('--version', 'Version: ' + version.__version__)
 
   def test_get(self):
     self._do('get \\/api\\/v2\\/user',

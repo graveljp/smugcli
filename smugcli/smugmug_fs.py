@@ -436,21 +436,25 @@ class SmugMugFS(object):
           # Video files are modified by SmugMug server side, so we cannot use
           # the MD5 to check if the file needs a re-sync. Use the last
           # modification time instead.
-          remote_time = datetime.datetime.strptime(
-            remote_file.get('ImageMetadata')['DateTimeModified'],
-            '%Y-%m-%dT%H:%M:%S')
-
           try:
-            parser = guessParser(StringInputStream(file_content))
-            metadata = extractMetadata(parser)
-            file_time = max(metadata.getValues('last_modification') +
-                            metadata.getValues('creation_date'))
-          except Exception as err:
-            print('Failed extracting metadata for file "%s".' % file_path)
-            file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+            remote_time = datetime.datetime.strptime(
+              remote_file.get('ImageMetadata')['DateTimeModified'],
+              '%Y-%m-%dT%H:%M:%S')
+          except ValueError:
+            same_file = True
+            remote_time = None
+          if remote_time is not None:
+            try:
+              parser = guessParser(StringInputStream(file_content))
+              metadata = extractMetadata(parser)
+              file_time = max(metadata.getValues('last_modification') +
+                              metadata.getValues('creation_date'))
+            except Exception as err:
+              print('Failed extracting metadata for file "%s".' % file_path)
+              file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
 
-          time_delta = abs(remote_time - file_time)
-          same_file = (time_delta <= datetime.timedelta(seconds=1))
+            time_delta = abs(remote_time - file_time)
+            same_file = (time_delta <= datetime.timedelta(seconds=1))
         elif file_extension.lower() == '.heic':
           # HEIC files are recoded to JPEG's server side by SmugMug so we cannot
           # use MD5 to check if file needs a re-sync. Moreover, no image

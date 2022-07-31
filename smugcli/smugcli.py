@@ -198,7 +198,8 @@ def run(args, config=None, requests_sent=None):
                                                   a.folder_threads,
                                                   a.file_threads,
                                                   a.upload_threads,
-                                                  a.set_defaults))
+                                                  a.set_defaults,
+                                                  a.in_place))
   sync_parser.add_argument('source',
                            type=arg_str_type,
                            nargs='*',
@@ -257,6 +258,10 @@ def run(args, config=None, requests_sent=None):
                            action='store_true',
                            help=('Save the current settings (thread count) as '
                                  'defaults to be used next time.'))
+  sync_parser.add_argument('--in_place',
+                           action='store_true',
+                           help=('Upload replacments in-place instead of '
+                                 'deleting and re-uploading.'))
 
   # ---------------
   ignore_parser = subparsers.add_parser(

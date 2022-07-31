@@ -259,7 +259,8 @@ class SmugMugFS(object):
            folder_threads,
            file_threads,
            upload_threads,
-           set_defaults):
+           set_defaults,
+           in_place):
     if set_defaults:
       self.smugmug.config['folder_threads'] = folder_threads
       self.smugmug.config['file_threads'] = file_threads
@@ -369,6 +370,7 @@ class SmugMugFS(object):
                           source,
                           target,
                           privacy,
+                          in_place,
                           walk_step,
                           matched,
                           unmatched_dirs)
@@ -381,6 +383,7 @@ class SmugMugFS(object):
                    source,
                    target,
                    privacy,
+                   in_place,
                    walk_step,
                    matched,
                    unmatched_dirs):
@@ -414,9 +417,10 @@ class SmugMugFS(object):
                       manager,
                       os.path.join(subdir, f),
                       matched[-1],
-                      upload_pool)
+                      upload_pool,
+                      in_place)
 
-  def _sync_file(self, manager, file_path, node, upload_pool):
+  def _sync_file(self, manager, file_path, node, upload_pool, in_place=False):
     if self._aborting:
       return
     with manager.start_task(1, '* Syncing file "%s"...' % file_path):
@@ -474,15 +478,21 @@ class SmugMugFS(object):
                       remote_file,
                       file_path,
                       file_name,
-                      file_content)
+                      file_content,
+                      in_place
+                      )
 
-  def _upload_media(self, manager, node, remote_file, file_path, file_name, file_content):
+  def _upload_media(self, manager, node, remote_file, file_path, file_name, file_content, in_place=False):
     if self._aborting:
       return
     if remote_file:
-      print('File "%s" exists, but has changed. '
-            'Deleting old version.' % file_path)
-      remote_file.delete()
+      if in_place:
+        print('File "%s" exists, but has changed. '
+              'Upload in place.' % file_path)
+      else:
+        print('File "%s" exists, but has changed. '
+              'Deleting old version.' % file_path)
+        remote_file.delete()
       task = '+ Re-uploading "%s"' % file_path
     else:
       task = '+ Uploading "%s"' % file_path
@@ -494,8 +504,14 @@ class SmugMugFS(object):
       return progress_fn
 
     with manager.start_task(0, task):
+      additional_headers = None
+      if in_place:
+        additional_headers = {
+          'X-Smug-ImageUri': remote_file.uri('Image'),
+        }
       node.upload('Album', file_name, file_content,
-                  progress_fn=get_progress_fn(task))
+                  progress_fn=get_progress_fn(task),
+                  headers=additional_headers)
 
     if remote_file:
       print('Re-uploaded "%s".' % file_path)

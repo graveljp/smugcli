@@ -571,7 +571,7 @@ class SmugMugFS():
         return progress_fn
 
       additional_headers = None
-      if in_place:
+      if in_place and remote_file:
         additional_headers = {
           'X-Smug-ImageUri': remote_file.uri('Image'),
         }

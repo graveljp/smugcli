@@ -505,7 +505,7 @@ class SmugMugFS(object):
 
     with manager.start_task(0, task):
       additional_headers = None
-      if in_place:
+      if in_place and remote_file:
         additional_headers = {
           'X-Smug-ImageUri': remote_file.uri('Image'),
         }

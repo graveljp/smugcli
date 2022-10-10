@@ -16,7 +16,7 @@ pip install smugcli
 
 To use this command line tool, you will need to request your own API key by
 visiting https://api.smugmug.com/api/developer/apply. Using your key and secret,
-loging to smugcli using the following command:
+log into smugcli using the following command:
 ```
 $ ./smugcli.py login --key=<key> --secret=<secret>
 ```
@@ -51,7 +51,7 @@ Folders can be created by using the `mkdir` command:
 $ ./smugcli.py mkdir Photography/2017
 ```
 
-Similarily, albums can be created by doing:
+Similarly, albums can be created by doing:
 ```
 $ ./smugcli.py mkalbum 'Photography/2017/My new album'
 ```
@@ -98,7 +98,7 @@ $ ./smugcli.py sync 201* remote/folder
 
 Source files are synced to the destination SmugMug album and source folders are
 recursively synced to the destination SmugMug folder. For source folders with a
-trailing path delimitor ('/' or '\\' depending on OS), only the content of the
+trailing path delimiter ('/' or '\\' depending on OS), only the content of the
 folder is synced, skipping the folder itself (equivalent of doing `folder/*`)
 . This means that `smugcli.py sync src/album dst` is equivalent to `smugcli.py
 sync src/album/ dst/album`. If no sources or destinations are specified, smugcli
@@ -112,7 +112,7 @@ $ ./smugcli.py sync local/folder remote/folder --folder_threads=4 --file_threads
 ```
 
 `folder_threads` control the number of album folders that are processed in
-parallel.  `file_threads` specifies the number fo files that are read from disk
+parallel.  `file_threads` specifies the number of files that are read from disk
 and compared with the server side version in parallel. `upload_threads` controls
 the number of parallel upload operations allowed when sending content to
 SmugMug. Keep in mind that too many or too few threads can be harmful to
@@ -139,7 +139,7 @@ $ ./smugcli.py include local/folder/export-tmp
 
 # Running the tests
 PLEASE READ, RUN UNIT TESTS AT YOUR OWN RISKS: smugcli's unit-tests use the
-logged-in user account to do run actual commands on SmugMug. All operations
+logged-in user account to run actual commands on SmugMug. All operations
 *should* be performed in a `__smugcli_unit_tests__` subfolder in the SmugMug
 account's root. This folder *should* be deleted automatically when/if the test
 completes. If in doubt, do `smugcli.py logout && smugcli.py login` and use a

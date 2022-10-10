@@ -8,6 +8,7 @@ Tested with Python 3.5, 3.6, 3.7, 3.8 and 3.9.
 
 # Installation
 
+Smugcli is written in [Python](https://www.python.org/) and is distributed via the [Pip](https://pypi.org/project/pip/) package manager. To install Smugcli, first [install a Python](https://www.python.org/downloads/) distribution on your system. Pip is usually installed automatically, [install it manually](https://pip.pypa.io/en/stable/installation/) if it isn't. Then, install Smugcli by running:
 ```
 pip install smugcli
 ```

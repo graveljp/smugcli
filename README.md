@@ -8,9 +8,13 @@ Tested with Python 3.5, 3.6, 3.7, 3.8 and 3.9.
 
 # Installation
 
-Smugcli is written in [Python](https://www.python.org/) and is distributed via the [Pip](https://pypi.org/project/pip/) package manager. To install Smugcli, first [install a Python](https://www.python.org/downloads/) distribution on your system. Pip is usually installed automatically, [install it manually](https://pip.pypa.io/en/stable/installation/) if it isn't. Then, install Smugcli by running:
+Smugcli is written in [Python](https://www.python.org/) and is distributed via the [Pip](https://pypi.org/project/pip/) package manager. To install smugcli, first [install a Python](https://www.python.org/downloads/) distribution on your system. Pip is usually installed automatically, [install it manually](https://pip.pypa.io/en/stable/installation/) if it isn't. Then, install smugcli by running:
 ```
 pip install smugcli
+```
+or, if `pip` can't be found, try:
+```
+python -m pip install smugcli
 ```
 
 # Sample usage
@@ -138,7 +142,37 @@ To undo this operation, you can run:
 $ ./smugcli.py include local/folder/export-tmp
 ```
 
-# Running the tests
+# Contributions
+
+## Running from source
+To run Smugcli from the source code:
+```shell
+# Get the source code:
+git clone https://github.com/graveljp/smugcli.git
+
+cd smugcli
+
+# Install dependencies:
+pip install -r requirements.txt
+
+# Run smugcli module
+python -m smugcli
+```
+
+## Unit tests
+Unit tests are a requirement for any pull requests. All new features and bug
+fixes must have test coverage. Unit testing is critical in making sure that
+all features remain functional as the code evolves.
+
+Unit tests are particularly important in pull requests since the features or
+issues being fixed might not be easily reproducible by maintainers. For
+instance, If smugcli fails on a particular type of media, a unit test must be
+included with a sample file so that we can make sure that support for that
+file format remains functional in the future. Likewise, any feature relying on
+interaction with the SmugMug service must absolutely be tested since we must
+have a way to detect if SmugMug ever does breaking changes on their end.
+
+## Running unit tests
 PLEASE READ, RUN UNIT TESTS AT YOUR OWN RISKS: smugcli's unit-tests use the
 logged-in user account to run actual commands on SmugMug. All operations
 *should* be performed in a `__smugcli_unit_tests__` subfolder in the SmugMug

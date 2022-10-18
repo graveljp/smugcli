@@ -1,20 +1,9 @@
 import setuptools
 import sys
 
-install_requires = [
-  # For authentification and communication with SmugMug.
-  'bottle>=0.12.13',
-  'rauth>=0.7.3',
-  'requests>=2.13.0',
-  'requests-oauthlib>=0.7.0',
-
-  # To make ANSI escape character sequences work on Windows.
-  'colorama>=0.3.9; platform_system=="Windows"',
-
-  # For parsing metadata from local files:
-  'hachoir>=3.0',
-  'six>=1.15.0'
-]
+with open('requirements.txt') as fh:
+  install_requires = [l for l in fh.read().splitlines()
+                      if l.strip() and not l.strip().startswith('#')]
 
 with open('README.md', 'r') as fh:
   long_description = fh.read()

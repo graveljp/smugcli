@@ -426,7 +426,7 @@ class SmugMugFS(object):
       file_root, file_extension = os.path.splitext(file_name)
       if file_extension.lower() == '.heic':
         # SmugMug converts HEIC files to JPEG and renames them in the process
-        renamed_file = file_root + '_' + file_extension[1:] + '.JPG'
+        renamed_file = file_root + '.JPG'
         remote_file = node.get_child(renamed_file)
       else:
         remote_file = node.get_child(file_name)

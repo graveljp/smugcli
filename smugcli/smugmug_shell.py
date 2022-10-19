@@ -16,6 +16,10 @@ class SmugMugShell(cmd.Cmd):
     cmd.Cmd.__init__(self)
     self._fs = fs
 
+  def do_exit(self, arg):
+    """Exit the shell."""
+    return True
+
   @classmethod
   def set_parser(cls, parser):
     usage = parser.format_usage()

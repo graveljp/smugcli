@@ -1,3 +1,4 @@
+from urllib.parse import urlsplit
 from smugcli import smugcli
 from smugcli import version
 
@@ -164,7 +165,8 @@ class EndToEndTest(unittest.TestCase):
       req = req_resp['request']
       resp = req_resp['response']
       rsps.add_callback(
-        match_querystring=True,
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(req['url']).query)],
         method=req['method'],
         url=req['url'],
         callback=lambda x, req=req, resp=resp, name=name: callback(x, req, resp, name))

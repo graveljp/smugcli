@@ -1,5 +1,6 @@
 import json
 import os
+from urllib.parse import urlsplit
 
 API_ROOT = 'https://api.smugmug.com'
 
@@ -7,52 +8,72 @@ def add_mock_requests(responses):
   testdir = os.path.dirname(os.path.realpath(__file__))
 
   with open(os.path.join(testdir, 'testdata', 'authuser.json')) as f:
+    url = API_ROOT + '/api/v2!authuser'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2!authuser',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'user.json')) as f:
+    url = API_ROOT + '/api/v2/user/cmac'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/user/cmac',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_node.json')) as f:
+    url = API_ROOT + '/api/v2/node/zx4Fx'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/node/zx4Fx',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_children.json')) as f:
+    url = API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=1'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=1',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_children_page2.json')) as f:
+    url = API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=11'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=11',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'folder_children.json')) as f:
+    url = API_ROOT + '/api/v2/node/n83bK!children?count=10&start=1'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/node/n83bK!children?count=10&start=1',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'folder_children_page2.json')) as f:
+    url = API_ROOT + '/api/v2/node/n83bK!children?count=10&start=11'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/node/n83bK!children?count=10&start=11',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album.json')) as f:
+    url = API_ROOT + '/api/v2/album/DDnhRD'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/album/DDnhRD',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album_images.json')) as f:
+    url = API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=1'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=1',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album_images_page2.json')) as f:
+    url = API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=11'
     responses.add(
-        responses.GET, API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=11',
+        responses.GET, url,
         json=json.load(f),
-        match_querystring=True)
+        match=[responses.matchers.query_string_matcher(
+          urlsplit(url).query)])

@@ -42,7 +42,7 @@ def run(args, config=None, requests_sent=None):
   signal.signal(signal.SIGTERM, signal_handler)
 
   main_parser = argparse.ArgumentParser(
-    description='SmugMug commandline interface.')
+    description='SmugMug command line interface.')
   subparsers = main_parser.add_subparsers(title='sub commands')
 
   # ---------------
@@ -52,7 +52,8 @@ def run(args, config=None, requests_sent=None):
 
   # ---------------
   login_parser = subparsers.add_parser(
-    'login', help='Login onto the SmugMug service',
+    'login',
+    help='Log into the SmugMug service',
     description=('Before using smugcli, you must run this `login` command '
                  'with a valid API key. Visit '
                  'https://api.smugmug.com/api/developer/apply to generate '
@@ -213,9 +214,9 @@ def run(args, config=None, requests_sent=None):
                            type=str,
                            dest='deprecated_target',
                            metavar='TARGET',
-                           help=('DEPRECATED. -t/--targer is no longer needed, '
+                           help=('DEPRECATED. -t/--target is no longer needed, '
                                  'specify the target folder as the last '
-                                 'positinal argument.'))
+                                 'positional argument.'))
   sync_parser.add_argument('-f', '--force',
                            action='store_true',
                            help=('Do not ask for confirmation before staring '

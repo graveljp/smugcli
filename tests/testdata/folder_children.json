@@ -409,13 +409,13 @@
             "text": "I wrote up some details about the making of in Don's blog."
           },
           "Name": {
-            "html": "Paris and San Franciso videos by night"
+            "html": "Paris and San Francisco videos by night"
           }
         },
         "HasChildren": false,
         "IsRoot": false,
         "Keywords": [],
-        "Name": "Paris and San Franciso videos by night",
+        "Name": "Paris and San Francisco videos by night",
         "NodeID": "Hd2GM",
         "PasswordHint": "",
         "ResponseLevel": "Public",
@@ -478,9 +478,9 @@
             "UriDescription": "User By Nickname"
           }
         },
-        "UrlName": "Paris-and-San-Franciso-videos",
-        "UrlPath": "/Photography/Paris-and-San-Franciso-videos",
-        "WebUri": "https://cmac.smugmug.com/Photography/Paris-and-San-Franciso-videos"
+        "UrlName": "Paris-and-San-Francisco-videos",
+        "UrlPath": "/Photography/Paris-and-San-Francisco-videos",
+        "WebUri": "https://cmac.smugmug.com/Photography/Paris-and-San-Francisco-videos"
       },
       {
         "DateAdded": "2011-08-16T22:20:35+00:00",

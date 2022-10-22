@@ -51,7 +51,7 @@ class ThreadPool:
     """Add a task thread pool.
 
     Args:
-      func: function to be executed in the thead pool.
+      func: function to be executed in the thread pool.
       args: argument list for `func`.
       kwargs: keyword arguments for `func`.
     """
@@ -60,7 +60,7 @@ class ThreadPool:
   def join(self):
     """Wait for all the tasks to be executed in the thread pool."""
 
-    # Buzy-loop instead of using 'join' to allow for ctrl-C interrupts.
+    # Busy-loop instead of using 'join' to allow for ctrl-C interrupts.
     while not self._tasks.empty():
       time.sleep(1)
 

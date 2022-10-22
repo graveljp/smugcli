@@ -111,7 +111,7 @@ class SmugMugOAuth(object):
        params={'oauth_verifier': bottle.request.query['oauth_verifier']})
 
     state['running'] = False
-    return 'Login succesful. You may close this window.'
+    return 'Login successful. You may close this window.'
 
   def _add_auth_params(self, auth_url, access, permissions):
     parts = parse.urlsplit(auth_url)

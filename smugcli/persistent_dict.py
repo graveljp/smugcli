@@ -66,7 +66,7 @@ class PersistentDict(object):
       with open(self._path) as f:
         return json.load(f)
     except IOError:
-      # Coun't read file. Default to empty dict.
+      # Couldn't read file. Default to empty dict.
       return {}
     except ValueError:
       raise InvalidFileError

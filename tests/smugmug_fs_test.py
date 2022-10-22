@@ -68,20 +68,20 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(unmatched_dirs, [])
 
-    matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac',
+    matched_nodes, unmatched_dirs = self._fs.path_to_node('cmac',
                                                           os.path.normpath('/'))
     self.assertEqual(len(matched_nodes), 1)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(unmatched_dirs, [])
 
-    matched_nodes, ummatched_dirs = self._fs.path_to_node('cmac', 'Photography')
+    matched_nodes, unmatched_dirs = self._fs.path_to_node('cmac', 'Photography')
     self.assertEqual(len(matched_nodes), 2)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(matched_nodes[1].name, 'Photography')
     self.assertEqual(matched_nodes[1]['Name'],'Photography')
     self.assertEqual(unmatched_dirs, [])
 
-    matched_nodes, ummatched_dirs = self._fs.path_to_node(
+    matched_nodes, unmatched_dirs = self._fs.path_to_node(
       'cmac', os.path.normpath('/Photography'))
     self.assertEqual(matched_nodes[-1].name, 'Photography')
     self.assertEqual(matched_nodes[-1]['Name'], 'Photography')
@@ -125,7 +125,7 @@ class TestSmugMugFS(unittest.TestCase):
      u'SmugMug homepage slide show\n'
      u'New Journal style: Big photos!\n'
      u'Samples from my new 200-400\n'
-     u'Paris and San Franciso videos by night\n'
+     u'Paris and San Francisco videos by night\n'
      u'Jackson Hole\n'
      u'San Francisco skyline\n'
      u'Giant prints for SmugMug\'s walls\n'

@@ -17,12 +17,12 @@ class TestPersistentDict(unittest.TestCase):
     shutil.rmtree(self._test_dir)
 
   def test_non_existing_file(self):
-    filename = path.join(self._test_dir, 'not_existant_file')
+    filename = path.join(self._test_dir, 'not_existent_file')
     pdict = persistent_dict.PersistentDict(filename)
     self.assertEqual(pdict, {})
 
   def test_file_not_created_unless_needed(self):
-    filename = path.join(self._test_dir, 'not_existant_file')
+    filename = path.join(self._test_dir, 'not_existent_file')
     pdict = persistent_dict.PersistentDict(filename)
     self.assertFalse(path.isfile(filename))
 

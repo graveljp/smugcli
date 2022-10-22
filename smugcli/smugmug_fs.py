@@ -262,7 +262,7 @@ class SmugMugFS(object):
 
     if deprecated_target:
       print('-t/--target argument no longer exists.')
-      print('Specify the target folder as the last positinal argument.')
+      print('Specify the target folder as the last positional argument.')
       return
 
     # The argparse library doesn't seem to support having two positional
@@ -281,13 +281,13 @@ class SmugMugFS(object):
       folder_threads + file_threads + 5)
 
     # Make sure that the source paths exist.
-    globbed = [(source, glob.glob(source)) for source in sources]
-    not_found = [g[0] for g in globbed if not g[1]]
+    globed = [(source, glob.glob(source)) for source in sources]
+    not_found = [g[0] for g in globed if not g[1]]
     if not_found:
       print('File%s not found:\n  %s' % (
         's' if len(not_found) > 1 else '', '\n  '.join(not_found)))
       return
-    all_sources = list(itertools.chain.from_iterable([g[1] for g in globbed]))
+    all_sources = list(itertools.chain.from_iterable([g[1] for g in globed]))
 
     file_sources = [s for s in all_sources if os.path.isfile(s)]
     dir_sources = [s for s in all_sources if os.path.isdir(s)]

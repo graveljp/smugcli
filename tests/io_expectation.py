@@ -36,7 +36,7 @@
 #   # Validate that the program matched all expectations.
 #   mock_io.assert_expectations_fulfilled()
 #
-# Some expectation can be abbreviated, for insatnce, the following two
+# Some expectation can be abbreviated, for instance, the following two
 # expectations are equivalent:
 #   io.set_expected_io(AnyOrder(Contains('foo'), Contains('bar')))
 #   io.set_expected_io(['foo', 'bar'])
@@ -656,7 +656,7 @@ class ExpectedInputOutput(object):
     self.set_expected_io(None)
 
   def assert_output_was(self, expected_output):
-    """Asserts that the previous outputs matche the specified expectation.
+    """Asserts that the previous outputs matched the specified expectation.
 
     Args:
       expected_output: instance of an ExpectBase subclass, the expectation to

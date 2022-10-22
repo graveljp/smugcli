@@ -183,12 +183,12 @@ class EndToEndTest(unittest.TestCase):
         try:
           smugcli.run(args, self._config)
         finally:
-          # assert_all_requests_are_fired has to be True duing code execution
-          # so that RequestMock could advance in the pending HTTP reques list
+          # assert_all_requests_are_fired has to be True during code execution
+          # so that RequestMock could advance in the pending HTTP request list
           # if many requests have the same URI.
           # assert_all_requests_are_fired has to be False when exiting the
           # context manager because RequestMock.__exit__ otherwise hides all
-          # exception emited by the tested code.
+          # exception emitted by the tested code.
           rsps.assert_all_requests_are_fired = False
     else:
       requests_sent = []
@@ -892,27 +892,27 @@ class EndToEndTest(unittest.TestCase):
   def test_sync_deprecated_target_argument(self):
     self._do('sync -t dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
     self._do('sync --target=dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
     self._do('sync a -t dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
     self._do('sync a --target=dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
     self._do('sync a b -t dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
     self._do('sync a b --target=dst',
              ['-t\\/--target argument no longer exists.',
-              'Specify the target folder as the last positinal argument.'])
+              'Specify the target folder as the last positional argument.'])
 
   def test_ignore_include(self):
     self._stage_files('{root}/album1', ['{testdata}/SmugCLI_1.jpg',

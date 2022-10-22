@@ -37,8 +37,8 @@ class ThreadSafePrint(object):
       for line in lines:
         if '\n' in line:
           # There is a strange bug where if multiple threads print at the same
-          # time, some of the printed lines get's prefixed with a whitepace. I
-          # could not find where that space is comming from, so I'm stripping it
+          # time, some of the printed lines get's prefixed with a whitespace. I
+          # could not find where that space is coming from, so I'm stripping it
           # away for now.
           self._original_stdout.write(line.strip() + os.linesep)
         elif '\r' in line:

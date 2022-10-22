@@ -52,7 +52,11 @@ def run(args, config=None, requests_sent=None):
 
   # ---------------
   login_parser = subparsers.add_parser(
-    'login', help='Login onto the SmugMug service')
+    'login', help='Login onto the SmugMug service',
+    description=('Before using smugcli, you must run this `login` command '
+                 'with a valid API key. Visit '
+                 'https://api.smugmug.com/api/developer/apply to generate '
+                 'your own `key` and `secret`.'))
   login_parser.set_defaults(func=lambda a: fs.smugmug.login((a.key, a.secret)))
   login_parser.add_argument('--key',
                             type=str,

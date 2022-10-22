@@ -12,7 +12,6 @@ import os
 import re
 import responses
 import shutil
-import six
 import sys
 import unittest
 
@@ -125,7 +124,7 @@ class EndToEndTest(unittest.TestCase):
       else:
         data = body
 
-      if isinstance(data, six.binary_type):
+      if isinstance(data, bytes):
         try:
           return data.decode('UTF-8')
         except:
@@ -206,7 +205,7 @@ class EndToEndTest(unittest.TestCase):
     except OSError:
       pass
     for f in files:
-      if isinstance(f, six.string_types):
+      if isinstance(f, str):
         shutil.copy(format_path(f), dest_path)
       else:
         shutil.copyfile(format_path(f[0]), os.path.join(dest_path, f[1]))

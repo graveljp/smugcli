@@ -3,7 +3,7 @@ from smugcli import thread_pool
 import io_expectation as expect
 
 import unittest
-from six.moves import queue
+import queue
 import sys
 
 class TestThreadPool(unittest.TestCase):

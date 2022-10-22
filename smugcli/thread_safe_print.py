@@ -2,8 +2,8 @@
 # atomically. This ensures that two lines won't be printed entangled with
 # each other.
 
+import io
 import os
-import six
 import sys
 import threading
 
@@ -24,11 +24,11 @@ class ThreadSafePrint(object):
 
   def write(self, string):
     if not hasattr(thread_local, 'stdout'):
-      thread_local.stdout = six.StringIO()
+      thread_local.stdout = io.StringIO()
     stdout = thread_local.stdout
 
     stdout.write(string.decode('utf-8')
-                 if isinstance(string, six.binary_type) else string)
+                 if isinstance(string, bytes) else string)
     stdout.seek(0)
     lines = stdout.readlines()
     stdout.seek(0)

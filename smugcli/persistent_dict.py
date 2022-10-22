@@ -2,7 +2,6 @@
 
 import json
 import os
-from six import string_types
 
 class Error(Exception):
   """Base class for all exception of this module."""
@@ -14,7 +13,7 @@ class UnknownError(Error):
   """An unexpected error occurred."""
 
 def _maybe_wrap(persistent_dict, item):
-  if hasattr(item, '__iter__') and not isinstance(item, string_types):
+  if hasattr(item, '__iter__') and not isinstance(item, str):
     return PersistentDictWrapper(persistent_dict, item)
   else:
     return item

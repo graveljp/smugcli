@@ -2,7 +2,7 @@ from smugcli import thread_pool, thread_safe_print
 
 import io_expectation as expect
 
-from six.moves import queue
+import queue
 import sys
 import unittest
 

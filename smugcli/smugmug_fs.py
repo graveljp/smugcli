@@ -3,28 +3,21 @@ from . import task_manager  # Must be included before hachoir so stdout override
 from . import thread_pool
 from . import thread_safe_print
 
-import six
 import collections
 import datetime
 import glob
-if six.PY2:
-  from hachoir_metadata import extractMetadata
-  from hachoir_parser import guessParser
-  from hachoir_core.stream import StringInputStream
-  from hachoir_core import config as hachoir_config
-else:
-  from hachoir.metadata import extractMetadata
-  from hachoir.parser import guessParser
-  from hachoir.stream import StringInputStream
-  from hachoir.core import config as hachoir_config
 
-from six.moves import input
+from hachoir.metadata import extractMetadata
+from hachoir.parser import guessParser
+from hachoir.stream import StringInputStream
+from hachoir.core import config as hachoir_config
+
 import itertools
 import json
 import hashlib
 import os
 import requests
-from six.moves import urllib
+from urllib import parse
 
 hachoir_config.quiet = True
 
@@ -103,8 +96,8 @@ class SmugMugFS(object):
     return all_nodes
 
   def get(self, url):
-    scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
-    params = urllib.parse.parse_qs(query)
+    scheme, netloc, path, query, fragment = parse.urlsplit(url)
+    params = parse.parse_qs(query)
     result = self._smugmug.get_json(path, params=params)
     print(json.dumps(result, sort_keys=True, indent=2, separators=(',', ': ')))
 
@@ -113,7 +106,7 @@ class SmugMugFS(object):
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
 
-    for folder, files in six.iteritems(files_by_folder):
+    for folder, files in files_by_folder.items():
       if not os.path.isdir(folder or '.'):
         print('Can\'t find folder "%s".' % folder)
         return

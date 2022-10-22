@@ -3,7 +3,6 @@ from __future__ import print_function
 import io_expectation as expect
 
 from parameterized import parameterized, param
-from six.moves import input
 import sys
 import unittest
 import re

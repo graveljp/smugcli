@@ -3,11 +3,11 @@ from smugcli import smugmug_fs
 
 import test_utils
 
+import io
 import json
 import os
 from parameterized import parameterized
 import responses
-from six.moves import StringIO
 import sys
 import unittest
 
@@ -19,7 +19,7 @@ class TestSmugMugFS(unittest.TestCase):
 
   def setUp(self):
     self._fs = smugmug_fs.SmugMugFS(smugmug.FakeSmugMug({'authuser': 'cmac'}))
-    self._cmd_output = StringIO()
+    self._cmd_output = io.StringIO()
     sys.stdout = self._cmd_output
 
     test_utils.add_mock_requests(responses)

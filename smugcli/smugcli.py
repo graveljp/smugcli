@@ -14,19 +14,10 @@ import inspect
 import json
 import os
 import signal
-import six
 import sys
 
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
-
-if six.PY3:
-  def arg_str_type(string):
-    return string
-else:
-  def arg_str_type(string):
-    return six.text_type(string, 'utf8')
-
 
 def run(args, config=None, requests_sent=None):
   try:
@@ -64,11 +55,11 @@ def run(args, config=None, requests_sent=None):
     'login', help='Login onto the SmugMug service')
   login_parser.set_defaults(func=lambda a: fs.smugmug.login((a.key, a.secret)))
   login_parser.add_argument('--key',
-                            type=arg_str_type,
+                            type=str,
                             required=True,
                             help='SmugMug API key')
   login_parser.add_argument('--secret',
-                            type=arg_str_type,
+                            type=str,
                             required=True,
                             help='SmugMug API secret')
   # ---------------
@@ -81,7 +72,7 @@ def run(args, config=None, requests_sent=None):
     'get', help='Do a GET request to SmugMug using the API V2 URL.')
   get_parser.set_defaults(func=lambda a: fs.get(a.url))
   get_parser.add_argument('url',
-                          type=arg_str_type,
+                          type=str,
                           help=('A SmugMug V2 API URL to get the JSON response '
                                 'from. Useful combined with `smugcli.py ls -l '
                                 '...` which will list URI you may want to '
@@ -93,7 +84,7 @@ def run(args, config=None, requests_sent=None):
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   ls_parser.set_defaults(func=lambda a: fs.ls(a.user, a.path, a.l))
   ls_parser.add_argument('path',
-                         type=arg_str_type,
+                         type=str,
                          nargs='?',
                          default=os.sep,
                          help='Path to list.')
@@ -104,7 +95,7 @@ def run(args, config=None, requests_sent=None):
                                'the JSON description.'),
                          action='store_true')
   ls_parser.add_argument('-u', '--user',
-                         type=arg_str_type,
+                         type=str,
                          default='',
                          help=('User whose SmugMug account is to be accessed. '
                                'Uses the logged-in user by default.'))
@@ -118,19 +109,19 @@ def run(args, config=None, requests_sent=None):
       func=lambda a, t=node_type: fs.make_node(a.user, a.path, a.p, t,
                                                a.privacy.title()))
     mkdir_parser.add_argument('path',
-                              type=arg_str_type,
+                              type=str,
                               nargs='+',
                               help='%ss to create.' % node_type)
     mkdir_parser.add_argument('-p',
                               action='store_true',
                               help='Create parents if they are missing.')
     mkdir_parser.add_argument('--privacy',
-                              type=arg_str_type,
+                              type=str,
                               default='public',
                               choices=['public', 'private', 'unlisted'],
                               help='Access control for the created folders.')
     mkdir_parser.add_argument('-u', '--user',
-                              type=arg_str_type,
+                              type=str,
                               default='',
                               help=('User whose SmugMug account is to be '
                                     'accessed. Uses the logged-in user by '
@@ -144,12 +135,12 @@ def run(args, config=None, requests_sent=None):
                             help=('Remove parent directory as well if they are '
                                   'empty'))
   rmdir_parser.add_argument('-u', '--user',
-                            type=arg_str_type,
+                            type=str,
                             default='',
                             help=('User whose SmugMug account is to be accessed. '
                                   'Uses the logged-in user by default.'))
   rmdir_parser.add_argument('dirs',
-                            type=arg_str_type,
+                            type=str,
                             nargs='+', help='Directories to create.')
   # ---------------
   rm_parser = subparsers.add_parser(
@@ -157,7 +148,7 @@ def run(args, config=None, requests_sent=None):
   rm_parser.set_defaults(
     func=lambda a: fs.rm(a.user, a.force, a.recursive, a.paths))
   rm_parser.add_argument('-u', '--user',
-                         type=arg_str_type,
+                         type=str,
                          default='',
                          help=('User whose SmugMug account is to be accessed. '
                                'Uses the logged-in user by default.'))
@@ -168,20 +159,20 @@ def run(args, config=None, requests_sent=None):
                          action='store_true',
                          help=('Recursively delete all of folder\'s content.'))
   rm_parser.add_argument('paths',
-                         type=arg_str_type,
+                         type=str,
                          nargs='+', help='Path to remove.')
   # ---------------
   upload_parser = subparsers.add_parser(
     'upload', help='Upload files to SmugMug.')
   upload_parser.set_defaults(func=lambda a: fs.upload(a.user, a.src, a.album))
   upload_parser.add_argument('src',
-                             type=arg_str_type,
+                             type=str,
                              nargs='+', help='Files to upload.')
   upload_parser.add_argument('album',
-                             type=arg_str_type,
+                             type=str,
                              help='Path to the album.')
   upload_parser.add_argument('-u', '--user',
-                             type=arg_str_type,
+                             type=str,
                              default='',
                              help=('User whose SmugMug account is to be '
                                    'accessed. Uses the logged-in user by '
@@ -200,7 +191,7 @@ def run(args, config=None, requests_sent=None):
                                                   a.upload_threads,
                                                   a.set_defaults))
   sync_parser.add_argument('source',
-                           type=arg_str_type,
+                           type=str,
                            nargs='*',
                            default=['.'],
                            help=('Folders/files to recursively sync to the '
@@ -209,13 +200,13 @@ def run(args, config=None, requests_sent=None):
                                  'synced instead of the folder itself.' %
                                  os.sep))
   sync_parser.add_argument('target',
-                           type=arg_str_type,
+                           type=str,
                            nargs='?',
                            default=[os.sep],
                            help=('The destination folder in which to upload '
                                  'data.'))
   sync_parser.add_argument('-t', '--target',
-                           type=arg_str_type,
+                           type=str,
                            dest='deprecated_target',
                            metavar='TARGET',
                            help=('DEPRECATED. -t/--targer is no longer needed, '
@@ -226,12 +217,12 @@ def run(args, config=None, requests_sent=None):
                            help=('Do not ask for confirmation before staring '
                                  'sync operation.'))
   sync_parser.add_argument('--privacy',
-                           type=arg_str_type,
+                           type=str,
                            default='public',
                            choices=['public', 'private', 'unlisted'],
                            help='Access control for the created folders.')
   sync_parser.add_argument('-u', '--user',
-                           type=arg_str_type,
+                           type=str,
                            default='',
                            help=('User whose SmugMug account is to be '
                                  'accessed. Uses the logged-in user by '
@@ -264,7 +255,7 @@ def run(args, config=None, requests_sent=None):
   ignore_parser.set_defaults(
     func=lambda a: fs.ignore_or_include(a.paths, True))
   ignore_parser.add_argument('paths',
-                             type=arg_str_type,
+                             type=str,
                              nargs='+',
                              help=('List of paths to ignore during sync.'))
   # ---------------
@@ -277,7 +268,7 @@ def run(args, config=None, requests_sent=None):
   include_parser.set_defaults(
     func=lambda a: fs.ignore_or_include(a.paths, False))
   include_parser.add_argument('paths',
-                              type=arg_str_type,
+                              type=str,
                               nargs='+',
                               help=('List of paths to include during sync.'))
   # ---------------

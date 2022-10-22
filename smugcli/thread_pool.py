@@ -1,5 +1,4 @@
-import six
-from six.moves import queue
+import queue
 import threading
 import time
 #import traceback
@@ -21,7 +20,7 @@ class Worker(threading.Thread):
           if func:
             func(*args, **kwargs)
         except Exception as e:
-          print(six.text_type(e))
+          print(str(e))
           # traceback.print_exc()
         finally:
           self._task_queue.task_done()

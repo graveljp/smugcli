@@ -4,7 +4,7 @@ folder hierarchy with a SmugMug account.
 
 Implemented using the Smugmug V2 API.
 
-Tested with Python 3.5, 3.6, 3.7, 3.8 and 3.9.
+Tested with Python 3.7, 3.8, 3.9, 3.10.
 
 # Installation
 

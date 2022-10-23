@@ -147,7 +147,7 @@ class EndToEndTest(unittest.TestCase):
                           'url': request.url,
                           'body': self._encode_body(request.body)},
               'response': {'status': response.status_code,
-                           'json': response.json()}}
+                           'text': response.text}}
       data_path = os.path.join(
         cache_folder, '%02d.%s.json' % (i, self._url_path(request)))
       with open(data_path, 'w') as f:
@@ -165,7 +165,7 @@ class EndToEndTest(unittest.TestCase):
         self.assertIn(name, self._pending)
         self._pending.remove(name)
         self.assertEqual(self._encode_body(req.body), expected_req['body'])
-        return resp['status'], {}, json.dumps(resp['json'])
+        return resp['status'], {}, resp['text']
       with open(file) as f:
         req_resp = json.load(f)
       req = req_resp['request']

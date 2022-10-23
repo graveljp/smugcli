@@ -263,13 +263,15 @@ class Node(object):
     print('Creating %s "%s".' % (params['Type'], os.path.join(self.path,
                                                               remote_name)))
     response = self.post('ChildNodes', data=sorted(node_params.items()))
-    if response.status_code != 201:
+
+    try:
+      response_json = response.json()
+    except requests.exceptions.JSONDecodeError:
       raise UnexpectedResponseError(
         'Error creating node "%s".\n'
-        'Server responded with status code %d: %s.' % (
-          name, response.status_code, response.json()['Message']))
+        'Expected a JSON response from SmugMug service.' % name)
 
-    node_json = response.json().get('Response', {}).get('Node')
+    node_json = response_json.get('Response', {}).get('Node')
     if not node_json:
       raise UnexpectedResponseError('Cannot resolve created node JSON')
 
@@ -279,11 +281,7 @@ class Node(object):
     self._get_child_nodes_by_name()[name] = [node]
 
     if node['Type'] == 'Album':
-      response = node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
-      if response.status_code != 200:
-        print('Failed setting SortMethod on Album "%s".' % name)
-        print('Server responded with status code %d: %s.' % (
-          response.status_code, response.json()['Message']))
+      node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
     return node
 
   def get_child(self, name: str) -> Union['Node', None]:
@@ -443,7 +441,12 @@ class SmugMug(object):
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
     resp.raise_for_status()
-    return resp.json()
+    try:
+      return resp.json()
+    except requests.exceptions.JSONDecodeError:
+      raise UnexpectedResponseError(
+        'Error parsing responses from "%s".\n'
+        'Expected a JSON response from SmugMug service.' % path)
 
   def get_node(self, path: str, parent=None, **kwargs) -> Node:
     reply = self.get_json(path, **kwargs)
@@ -473,6 +476,7 @@ class SmugMug(object):
     resp = self._session.send(req)
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
+    resp.raise_for_status()
     return resp
 
   def patch(self, path: str, data=None, json=None, **kwargs):
@@ -485,6 +489,7 @@ class SmugMug(object):
     resp = self._session.send(req)
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
+    resp.raise_for_status()
     return resp
 
   def delete(self, path: str, data=None, json=None, **kwargs):
@@ -496,6 +501,7 @@ class SmugMug(object):
     resp = self._session.send(req)
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
+    resp.raise_for_status()
     return resp
 
   def upload(self, uri: str, filename: str, data, progress_fn=None,
@@ -515,6 +521,7 @@ class SmugMug(object):
     resp = self._session.send(req)
     if self._requests_sent is not None:
       self._requests_sent.append((req, resp))
+    resp.raise_for_status()
     return resp
 
 

@@ -1,10 +1,17 @@
 # Interactive shell for running smugcli commands
 
 import cmd
-import os
 import shlex
-import sys
 import re
+
+
+class Error(Exception):
+  """Base class for all exception of this module."""
+
+
+class InitializationError(Error):
+  """Raised if shell can't be initialized."""
+
 
 class SmugMugShell(cmd.Cmd):
   intro = 'Welcome to the SmugMug shell.   Type help or ? to list commands.\n'
@@ -23,7 +30,11 @@ class SmugMugShell(cmd.Cmd):
   @classmethod
   def set_parser(cls, parser):
     usage = parser.format_usage()
-    commands = SmugMugShell._cmd_list_re.match(usage).group(1).split(',')
+    matches = SmugMugShell._cmd_list_re.match(usage)
+    if matches is None:
+      raise InitializationError(
+        'Failed creating shell commands from `smugcli` parser.')
+    commands = matches.group(1).split(',')
 
     def do_handler(command):
       def handler(self, args):

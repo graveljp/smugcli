@@ -1,5 +1,5 @@
 import setuptools
-import sys
+from smugcli import version
 
 with open('requirements.txt') as fh:
   install_requires = [l for l in fh.read().splitlines()
@@ -8,12 +8,9 @@ with open('requirements.txt') as fh:
 with open('README.md', 'r') as fh:
   long_description = fh.read()
 
-with open('smugcli/version.py') as fh:
-  exec(fh.read())
-
 setuptools.setup(
   name='smugcli',
-  version=__version__,
+  version=version.__version__,
   author='Jean-Philippe Gravel',
   author_email='jpgravel@gmail.com',
   description='Command line tool for SmugMug',

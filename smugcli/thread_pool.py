@@ -1,7 +1,6 @@
 import queue
 import threading
 import time
-#import traceback
 
 
 class Worker(threading.Thread):
@@ -33,7 +32,7 @@ class Worker(threading.Thread):
 
 class ThreadPool:
   """Pool of threads consuming tasks from a queue"""
-  def __init__(self, num_threads):
+  def __init__(self, num_threads: int) -> None:
     self._tasks = queue.Queue(num_threads)
     self._threads = []
     self._aborting = False
@@ -47,7 +46,7 @@ class ThreadPool:
   def aborting(self):
     return self._aborting
 
-  def add(self, func, *args, **kwargs):
+  def add(self, func, *args, **kwargs) -> None:
     """Add a task thread pool.
 
     Args:
@@ -57,7 +56,7 @@ class ThreadPool:
     """
     self._tasks.put((func, args, kwargs))
 
-  def join(self):
+  def join(self) -> None:
     """Wait for all the tasks to be executed in the thread pool."""
 
     # Busy-loop instead of using 'join' to allow for ctrl-C interrupts.

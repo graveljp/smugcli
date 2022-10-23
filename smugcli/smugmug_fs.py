@@ -1,4 +1,6 @@
+from typing import DefaultDict, List, Optional, Sequence, Tuple, Union
 from . import persistent_dict
+from . import smugmug as smugmug_lib
 from . import task_manager  # Must be included before hachoir so stdout override works.
 from . import thread_pool
 from . import thread_safe_print
@@ -41,8 +43,12 @@ class UnexpectedResponseError(Error):
   """Error raised when encountering unexpected data returned by SmugMug."""
 
 
+class ExtractMetadataError(Error):
+  """Error raised when metadata extraction fails."""
+
+
 class SmugMugFS(object):
-  def __init__(self, smugmug):
+  def __init__(self, smugmug: smugmug_lib.SmugMug) -> None:
     self._smugmug = smugmug
     self._aborting = False
 
@@ -52,22 +58,26 @@ class SmugMugFS(object):
       self.smugmug.config.get('media_extensions', DEFAULT_MEDIA_EXT)]
 
   @property
-  def smugmug(self):
+  def smugmug(self) -> smugmug_lib.SmugMug:
     return self._smugmug
 
-  def abort(self):
+  def abort(self) -> None:
     self._aborting = True
 
-  def get_root_node(self, user):
+  def get_root_node(self, user: str) -> smugmug_lib.Node:
     return self._smugmug.get_root_node(user)
 
-  def path_to_node(self, user, path):
+  def path_to_node(
+      self, user: str, path: str
+  ) -> Tuple[List[smugmug_lib.Node], List[str]]:
     current_node = self.get_root_node(user)
     parts = list(filter(bool, path.split(os.sep)))
     nodes = [current_node]
     return self._match_nodes(nodes, parts)
 
-  def _match_nodes(self, matched_nodes, dirs):
+  def _match_nodes(
+      self, matched_nodes: List[smugmug_lib.Node], dirs: Sequence[str]
+  ) -> Tuple[List[smugmug_lib.Node], List[str]]:
     unmatched_dirs = collections.deque(dirs)
     for dir in dirs:
       child_node = matched_nodes[-1].get_child(dir)
@@ -78,7 +88,12 @@ class SmugMugFS(object):
       unmatched_dirs.popleft()
     return matched_nodes, list(unmatched_dirs)
 
-  def _match_or_create_nodes(self, matched_nodes, dirs, node_type, privacy):
+  def _match_or_create_nodes(
+      self,
+      matched_nodes: List[smugmug_lib.Node],
+      dirs: List[str],
+      node_type: str,
+      privacy: str) -> List[smugmug_lib.Node]:
     folder_depth = len(matched_nodes) + len(dirs)
     folder_depth -= 1 if node_type == 'Album' else 0
     if folder_depth >= 7:  # matched_nodes include an extra node for the root.
@@ -95,13 +110,13 @@ class SmugMugFS(object):
       all_nodes.append(all_nodes[-1].get_or_create_child(dir, params))
     return all_nodes
 
-  def get(self, url):
+  def get(self, url: str) -> None:
     scheme, netloc, path, query, fragment = parse.urlsplit(url)
     params = parse.parse_qs(query)
     result = self._smugmug.get_json(path, params=params)
     print(json.dumps(result, sort_keys=True, indent=2, separators=(',', ': ')))
 
-  def ignore_or_include(self, paths, ignore):
+  def ignore_or_include(self, paths: Sequence[str], ignore: bool) -> None:
     files_by_folder = collections.defaultdict(list)
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
@@ -125,7 +140,7 @@ class SmugMugFS(object):
                                                       set(original_ignore)))
       configs['ignore'] = updated_ignore
 
-  def ls(self, user, path, details):
+  def ls(self, user: Optional[str], path: str, details: bool) -> None:
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if unmatched_dirs:
@@ -144,7 +159,14 @@ class SmugMugFS(object):
       else:
         print(name)
 
-  def make_node(self, user, paths, create_parents, node_type, privacy):
+  def make_node(
+      self,
+      user: Optional[str],
+      paths: Sequence[str],
+      create_parents: bool,
+      node_type: str,
+      privacy: str
+  ) -> None:
     user = user or self._smugmug.get_auth_user()
     for path in paths:
       matched_nodes, unmatched_dirs = self.path_to_node(user, path)
@@ -160,7 +182,7 @@ class SmugMugFS(object):
       self._match_or_create_nodes(
         matched_nodes, unmatched_dirs, node_type, privacy)
 
-  def rmdir(self, user, parents, dirs):
+  def rmdir(self, user: Optional[str], parents: bool, dirs: Sequence[str]) -> None:
     user = user or self._smugmug.get_auth_user()
     for dir in dirs:
       matched_nodes, unmatched_dirs = self.path_to_node(user, dir)
@@ -183,11 +205,17 @@ class SmugMugFS(object):
         if not parents:
           break
 
-  def _ask(self, question):
+  def _ask(self, question: str) -> bool:
     answer = input(question)
     return answer.lower() in ['y', 'yes']
 
-  def rm(self, user, force, recursive, paths):
+  def rm(
+      self,
+      user: Optional[str],
+      force: bool,
+      recursive: bool,
+      paths: Sequence[str]
+  ) -> None:
     user = user or self._smugmug.get_auth_user()
     for path in paths:
       matched_nodes, unmatched_dirs = self.path_to_node(user, path)
@@ -203,7 +231,10 @@ class SmugMugFS(object):
       else:
         print('Folder "%s" is not empty.' % path)
 
-  def upload(self, user, filenames, album):
+  def upload(self,
+             user: Optional[str],
+             filenames: Sequence[str],
+             album: str) -> None:
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, album)
     if unmatched_dirs:
@@ -232,7 +263,11 @@ class SmugMugFS(object):
         print('Server responded with %s.' % str(response))
         return None
 
-  def _get_common_path(self, matched_nodes, local_dirs):
+  def _get_common_path(
+      self,
+      matched_nodes: Sequence[smugmug_lib.Node],
+      local_dirs: Sequence[str]
+  ) -> Tuple[List[smugmug_lib.Node], List[str]]:
     new_matched_nodes = []
     unmatched_dirs = list(local_dirs)
     for remote, local in zip(matched_nodes, unmatched_dirs):
@@ -243,16 +278,16 @@ class SmugMugFS(object):
     return new_matched_nodes, unmatched_dirs
 
   def sync(self,
-           user,
-           sources,
-           target,
-           deprecated_target,
-           force,
-           privacy,
-           folder_threads,
-           file_threads,
-           upload_threads,
-           set_defaults):
+           user: Optional[str],
+           sources: List[str],
+           target: str,
+           deprecated_target: str,
+           force: bool,
+           privacy: str,
+           folder_threads: int,
+           file_threads: int,
+           upload_threads: int,
+           set_defaults: bool) -> None:
     if set_defaults:
       self.smugmug.config['folder_threads'] = folder_threads
       self.smugmug.config['file_threads'] = file_threads
@@ -292,7 +327,8 @@ class SmugMugFS(object):
     file_sources = [s for s in all_sources if os.path.isfile(s)]
     dir_sources = [s for s in all_sources if os.path.isdir(s)]
 
-    files_by_path = collections.defaultdict(list)
+    files_by_path = collections.defaultdict(
+      list)  # type: DefaultDict[str, List[str]]
     for file_source in file_sources:
       path, filename = os.path.split(file_source)
       files_by_path[path or '.'].append(filename)
@@ -330,12 +366,13 @@ class SmugMugFS(object):
          thread_pool.ThreadPool(upload_threads) as upload_pool, \
          thread_pool.ThreadPool(file_threads) as file_pool, \
          thread_pool.ThreadPool(folder_threads) as folder_pool:
+      empty_list = []  # type: List[str]
       for source, walk_steps in sorted(
           [(d, os.walk(d)) for d in dir_sources] +
-          [(p + os.sep, [(p, [], f)])
+          [(p + os.sep, [(p, empty_list, f)])
            for p, f in files_by_path.items()]):
         # Filter-out files and folders that must be ignored.
-        steps = []
+        steps = []  # type: List[Tuple[str, List[str], List[str]]]
         for walk_step in walk_steps:
           if self._aborting:
             return
@@ -368,15 +405,15 @@ class SmugMugFS(object):
     print('Sync complete.')
 
   def _sync_folder(self,
-                   manager,
-                   file_pool,
-                   upload_pool,
-                   source,
-                   target,
-                   privacy,
-                   walk_step,
-                   matched,
-                   unmatched_dirs):
+                   manager: task_manager.TaskManager,
+                   file_pool: thread_pool.ThreadPool,
+                   upload_pool: thread_pool.ThreadPool,
+                   source: str,
+                   target: str,
+                   privacy: str,
+                   walk_step: Tuple[str, List[str], List[str]],
+                   matched: Sequence[smugmug_lib.Node],
+                   unmatched_dirs: Sequence[str]) -> None:
     if self._aborting:
       return
     subdir, dirs, files = walk_step
@@ -409,7 +446,11 @@ class SmugMugFS(object):
                       matched[-1],
                       upload_pool)
 
-  def _sync_file(self, manager, file_path, node, upload_pool):
+  def _sync_file(self,
+                 manager: task_manager.TaskManager,
+                 file_path: str,
+                 node: smugmug_lib.Node,
+                 upload_pool: thread_pool.ThreadPool) -> None:
     if self._aborting:
       return
     with manager.start_task(1, '* Syncing file "%s"...' % file_path):
@@ -430,12 +471,15 @@ class SmugMugFS(object):
           # the MD5 to check if the file needs a re-sync. Use the last
           # modification time instead.
           remote_time = datetime.datetime.strptime(
-            remote_file.get('ImageMetadata')['DateTimeModified'],
+            remote_file.get_node('ImageMetadata')['DateTimeModified'],
             '%Y-%m-%dT%H:%M:%S')
 
           try:
             parser = guessParser(StringInputStream(file_content))
             metadata = extractMetadata(parser)
+            if metadata is None:
+              raise ExtractMetadataError(
+                'Failed extracting metadata from video file "%s".' % file_path)
             file_time = max(metadata.getValues('last_modification') +
                             metadata.getValues('creation_date'))
           except Exception as err:
@@ -469,7 +513,13 @@ class SmugMugFS(object):
                       file_name,
                       file_content)
 
-  def _upload_media(self, manager, node, remote_file, file_path, file_name, file_content):
+  def _upload_media(self,
+                    manager: task_manager.TaskManager,
+                    node: smugmug_lib.Node,
+                    remote_file: Union[smugmug_lib.Node, None],
+                    file_path: str,
+                    file_name: str,
+                    file_content: bytes) -> None:
     if self._aborting:
       return
     if remote_file:

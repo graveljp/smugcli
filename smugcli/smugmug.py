@@ -1,5 +1,8 @@
 # Main interface to the SmugMug web service.
 
+from typing import Any, DefaultDict, List, MutableSequence, Optional, Tuple
+from typing import Union
+
 from . import smugmug_oauth
 
 import base64
@@ -7,13 +10,12 @@ import collections
 import hashlib
 import heapq
 import io
-import json
 import math
 import os
 import re
 import requests
+import requests_oauthlib
 import threading
-import time
 
 API_ROOT = 'https://api.smugmug.com'
 API_UPLOAD = 'https://upload.smugmug.com/'
@@ -105,7 +107,7 @@ class ChildCacheGarbageCollector(object):
 
 
 class NodeList(object):
-  def __init__(self, smugmug, json, parent):
+  def __init__(self, smugmug: 'SmugMug', json, parent):
     self._smugmug = smugmug
     self._parent = parent
 
@@ -116,15 +118,15 @@ class NodeList(object):
     self._total_size = page_info['Total']
     num_pages = int(math.ceil(float(self._total_size) / self._page_size)
                     if self._page_size else 0)
-    self._pages = [None] * num_pages
+    self._pages = [None] * num_pages  # type: MutableSequence[Any]
     if num_pages:
       self._pages[0] = response[locator]
     self._uri = PAGE_START_RE.sub(r'\1%d', response['Uri'])
 
-  def __len__(self):
+  def __len__(self) -> int:
     return self._total_size
 
-  def __getitem__(self, item):
+  def __getitem__(self, item) -> 'Node':
     if item < 0 or item >= self._total_size:
       raise IndexError
 
@@ -141,7 +143,7 @@ class NodeList(object):
 
 
 class Node(object):
-  def __init__(self, smugmug, json, parent=None):
+  def __init__(self, smugmug: 'SmugMug', json, parent=None):
     self._smugmug = smugmug
     self._json = json
     self._parent = parent
@@ -153,21 +155,29 @@ class Node(object):
     return self._json
 
   @property
-  def name(self):
-    return self._json.get('FileName') or self._json['Name']
+  def name(self) -> str:
+    value = self._json.get('FileName') or self._json['Name']
+    if not isinstance(value, str):
+      raise UnexpectedResponseError(
+        'Expected node name to be a string, but got {0}'.format(value))
+    return value
 
   @property
-  def path(self):
+  def path(self) -> str:
     if self._parent is not None:
       return os.path.join(self._parent.path, self.name)
     else:
       return self.name
 
-  def get(self, url_name, **kwargs):
+  def get_node(self, url_name, **kwargs) -> 'Node':
     uri = self.uri(url_name)
-    return self._smugmug.get(uri, parent=self, **kwargs)
+    return self._smugmug.get_node(uri, parent=self, **kwargs)
 
-  def post(self, uri_name, data=None, json=None, **kwargs):
+  def get_list(self, url_name, **kwargs) -> NodeList:
+    uri = self.uri(url_name)
+    return self._smugmug.get_list(uri, parent=self, **kwargs)
+
+  def post(self, uri_name: str, data=None, json=None, **kwargs):
     uri = self.uri(uri_name)
     return self._smugmug.post(uri, data, json, **kwargs)
 
@@ -183,16 +193,20 @@ class Node(object):
     uri = self.uri(uri_name)
     return self._smugmug.upload(uri, filename, data, progress_fn, headers)
 
-  def uri(self, url_name):
+  def uri(self, url_name: str) -> str:
     uri = self._json.get('Uris', {}).get(url_name, {}).get('Uri')
     if not uri:
       raise UnexpectedResponseError('Node does not have a "%s" uri.' % url_name)
+    if not isinstance(uri, str):
+      raise UnexpectedResponseError(
+        'Expected uri "{0}" to be a string, but got: "{1}".'.format(url_name,
+                                                                    repr(uri)))
     return uri
 
-  def __getitem__(self, key):
+  def __getitem__(self, key: str):
     return self._json[key]
 
-  def __contains__(self, key):
+  def __contains__(self, key: str):
     return key in self._json
 
   def __eq__(self, other):
@@ -204,7 +218,7 @@ class Node(object):
   def __hash__(self):
     return id(self)
 
-  def get_children(self, params=None):
+  def get_children(self, params=None) -> NodeList:
     if 'Type' not in self._json:
       raise UnexpectedResponseError('Node does not have a "Type" attribute.')
 
@@ -214,11 +228,11 @@ class Node(object):
       'count': params.get('count', self._smugmug.config.get('page_size', 1000))}
 
     if self._json['Type'] == 'Album':
-      return self.get('Album').get('AlbumImages', params=params)
+      return self.get_node('Album').get_list('AlbumImages', params=params)
     else:
-      return self.get('ChildNodes', params=params)
+      return self.get_list('ChildNodes', params=params)
 
-  def _get_child_nodes_by_name(self):
+  def _get_child_nodes_by_name(self) -> DefaultDict[str, List['Node']]:
     if self._child_nodes_by_name is None:
       self._child_nodes_by_name = collections.defaultdict(list)
       for child in self.get_children():
@@ -227,7 +241,7 @@ class Node(object):
     self._smugmug.garbage_collector.visited(self)
     return self._child_nodes_by_name
 
-  def _create_child_node(self, name, params):
+  def _create_child_node(self, name: str, params) -> 'Node':
     if self._json['Type'] != 'Folder':
       raise InvalidArgumentError(
         'Nodes can only be created in folders.\n'
@@ -272,7 +286,7 @@ class Node(object):
           response.status_code, response.json()['Message']))
     return node
 
-  def get_child(self, name):
+  def get_child(self, name: str) -> Union['Node', None]:
     with self._lock:
       match = self._get_child_nodes_by_name().get(name)
 
@@ -285,7 +299,7 @@ class Node(object):
 
     return match[0]
 
-  def get_or_create_child(self, name, params):
+  def get_or_create_child(self, name: str, params) -> 'Node':
     with self._lock:
       match = self._get_child_nodes_by_name().get(name)
       if not match:
@@ -297,19 +311,9 @@ class Node(object):
 
     return match[0]
 
-  def reset_cache(self):
+  def reset_cache(self) -> None:
     with self._lock:
       self._child_nodes_by_name = None
-
-
-def Wrapper(smugmug, json, parent=None):
-  response = json['Response']
-  if 'Pages' in response:
-    return NodeList(smugmug, json, parent)
-  else:
-    locator = response['Locator']
-    endpoint = response[locator]
-    return Node(smugmug, endpoint, parent)
 
 
 class StreamingUpload(object):
@@ -339,7 +343,11 @@ class StreamingUpload(object):
 
 
 class SmugMug(object):
-  def __init__(self, config, requests_sent=None):
+  def __init__(
+      self,
+      config,
+      requests_sent: Optional[List[Tuple[requests.PreparedRequest,
+                                         requests.Response]]]=None) -> None:
     self._config = config
     self._smugmug_oauth = None
     self._oauth = None
@@ -357,10 +365,12 @@ class SmugMug(object):
     return self._garbage_collector
 
   @property
-  def service(self):
+  def service(self) -> smugmug_oauth.SmugMugOAuth:
     if not self._smugmug_oauth:
       if 'api_key' in self.config:
-        self._smugmug_oauth = smugmug_oauth.SmugMugOAuth(self.config['api_key'])
+        key, secret = self.config['api_key']
+        self._smugmug_oauth = smugmug_oauth.SmugMugOAuth(
+          smugmug_oauth.ApiKey(key, secret))
       else:
         print('No API key provided.')
         print('Please request an API key at %s' % API_REQUEST)
@@ -369,20 +379,23 @@ class SmugMug(object):
     return self._smugmug_oauth
 
   @property
-  def oauth(self):
+  def oauth(self) -> requests_oauthlib.OAuth1:
     if not self._oauth:
       if self.service and 'access_token' in self.config:
-        self._oauth = self.service.get_oauth(self.config['access_token'])
+        key, secret = self.config['access_token']
+        self._oauth = self.service.get_oauth(
+          smugmug_oauth.AccessToken(key, secret))
       else:
         print('User not logged in. Please run the "login" command')
         raise NotLoggedInError
     return self._oauth
 
-  def login(self, api_key):
-    self.config['api_key'] = api_key
-    self.config['access_token'] = self.service.request_access_token()
+  def login(self, key: str, secret: str) -> None:
+    self.config['api_key'] = (key, secret)
+    access_token = self.service.request_access_token()
+    self.config['access_token'] = (access_token.token, access_token.secret)
 
-  def logout(self):
+  def logout(self) -> None:
     if 'api_key' in self.config:
       del self.config['api_key']
     if 'access_token' in self.config:
@@ -391,34 +404,37 @@ class SmugMug(object):
       del self.config['authuser']
     if 'authuser_uri' in self.config:
       del self.config['authuser_uri']
-    self._service = None
-    self._session = None
 
-  def get_auth_user(self):
+  def get_auth_user(self) -> str:
     if not 'authuser' in self.config:
-      self.config['authuser'] = self.get('/api/v2!authuser')['NickName']
+      nickname = self.get_node('/api/v2!authuser')['NickName']
+      if not isinstance(nickname, str):
+        raise UnexpectedResponseError(
+          'Expected auth user nickname to be a string, but got "{0}".'
+          .format(repr(nickname)))
+      self.config['authuser'] = nickname
     return self.config['authuser']
 
-  def get_user_uri(self, user):
-    return self.get('/api/v2/user/%s' % user).uri('Node')
+  def get_user_uri(self, user: str) -> str:
+    return self.get_node('/api/v2/user/%s' % user).uri('Node')
 
-  def get_auth_user_uri(self):
+  def get_auth_user_uri(self) -> str:
     if not 'authuser_uri' in self._config:
       self.config['authuser_uri'] = self.get_user_uri(self.get_auth_user())
     return self.config['authuser_uri']
 
-  def get_auth_user_root_node(self):
+  def get_auth_user_root_node(self) -> Node:
     if self._user_root_node is None:
-      self._user_root_node = self.get(self.get_auth_user_uri())
+      self._user_root_node = self.get_node(self.get_auth_user_uri())
     return self._user_root_node
 
-  def get_root_node(self, user):
+  def get_root_node(self, user: str) -> Node:
     if user == self.get_auth_user():
       return self.get_auth_user_root_node()
     else:
-      return self.get(self.get_user_uri(user))
+      return self.get_node(self.get_user_uri(user))
 
-  def get_json(self, path, **kwargs):
+  def get_json(self, path: str, **kwargs):
     req = requests.Request('GET', API_ROOT + path,
                            headers={'Accept': 'application/json'},
                            auth=self.oauth,
@@ -429,11 +445,24 @@ class SmugMug(object):
     resp.raise_for_status()
     return resp.json()
 
-  def get(self, path, parent=None, **kwargs):
+  def get_node(self, path: str, parent=None, **kwargs) -> Node:
     reply = self.get_json(path, **kwargs)
-    return Wrapper(self, reply, parent)
+    response = reply['Response']
+    if 'Pages' in reply['Response']:
+      raise UnexpectedResponseError(
+        'Expected {} to be a node, not a list.'.format(path))
+    locator = response['Locator']
+    endpoint = response[locator]
+    return Node(self, endpoint, parent)
 
-  def post(self, path, data=None, json=None, **kwargs):
+  def get_list(self, path: str, parent=None, **kwargs) -> NodeList:
+    reply = self.get_json(path, **kwargs)
+    if 'Pages' not in reply['Response']:
+      raise UnexpectedResponseError(
+        'Expected {} to be a list.'.format(path))
+    return NodeList(self, reply, parent)
+
+  def post(self, path: str, data=None, json=None, **kwargs):
     req = requests.Request('POST',
                            API_ROOT + path,
                            data=data,
@@ -446,7 +475,7 @@ class SmugMug(object):
       self._requests_sent.append((req, resp))
     return resp
 
-  def patch(self, path, data=None, json=None, **kwargs):
+  def patch(self, path: str, data=None, json=None, **kwargs):
     req = requests.Request('PATCH',
                            API_ROOT + path,
                            data=data, json=json,
@@ -458,7 +487,7 @@ class SmugMug(object):
       self._requests_sent.append((req, resp))
     return resp
 
-  def delete(self, path, data=None, json=None, **kwargs):
+  def delete(self, path: str, data=None, json=None, **kwargs):
     req = requests.Request('DELETE',
                            API_ROOT + path,
                            auth=self.oauth,
@@ -469,7 +498,7 @@ class SmugMug(object):
       self._requests_sent.append((req, resp))
     return resp
 
-  def upload(self, uri, filename, data, progress_fn=None,
+  def upload(self, uri: str, filename: str, data, progress_fn=None,
              additional_headers=None):
     headers = {'Content-Length': str(len(data)),
                'Content-MD5': base64.b64encode(hashlib.md5(data).digest()),

@@ -69,6 +69,9 @@ class TestPersistentDict(unittest.TestCase):
       json.dump({'a': 'foo'}, handle)
     pdict = persistent_dict.PersistentDict(filename)
     self.assertEqual(pdict['a'], 'foo')
+    self.assertEqual(pdict.get('a'), 'foo')
+    self.assertEqual(pdict.get('a', 'bar'), 'foo')
+    self.assertEqual(pdict.get('b', 'bar'), 'bar')
 
   def test_automatically_save_modified_sub_fields(self):
     filename = path.join(self._test_dir, 'new_file')

@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Command line tool for SmugMug. Uses SmugMug API V2.
 
+from typing import List, Optional, Tuple
+
 from . import persistent_dict
 from . import smugmug as smugmug_lib
 from . import smugmug_fs
@@ -9,17 +11,18 @@ from . import version
 
 import argparse
 import atexit
-import collections
-import inspect
-import json
 import os
+import requests
 import signal
 import sys
 
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
-def run(args, config=None, requests_sent=None):
+def run(args,
+        config=None,
+        requests_sent: Optional[List[Tuple[requests.PreparedRequest,
+                                           requests.Response]]]=None) -> None:
   try:
     config = config or persistent_dict.PersistentDict(CONFIG_FILE)
   except persistent_dict.InvalidFileError:
@@ -31,6 +34,8 @@ def run(args, config=None, requests_sent=None):
   fs = smugmug_fs.SmugMugFS(smugmug)
 
   def signal_handler(signum, frame):
+    del signum  # Unused
+    del frame  # Unused
     print('Aborting...')
     fs.abort()
   def atexit_handler():
@@ -58,7 +63,7 @@ def run(args, config=None, requests_sent=None):
                  'with a valid API key. Visit '
                  'https://api.smugmug.com/api/developer/apply to generate '
                  'your own `key` and `secret`.'))
-  login_parser.set_defaults(func=lambda a: fs.smugmug.login((a.key, a.secret)))
+  login_parser.set_defaults(func=lambda a: fs.smugmug.login(a.key, a.secret))
   login_parser.add_argument('--key',
                             type=str,
                             required=True,

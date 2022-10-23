@@ -56,7 +56,9 @@ class TestSmugMugFS(unittest.TestCase):
   def test_get_child(self):
     root_node = self._fs.get_root_node('cmac')
     photography = root_node.get_child('Photography')
-    self.assertEqual(photography['Name'], 'Photography')
+    self.assertIsNotNone(photography)
+    if photography:
+      self.assertEqual(photography['Name'], 'Photography')
 
     invalid_child = root_node.get_child('Missing folder')
     self.assertIsNone(invalid_child)

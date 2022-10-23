@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Generic, MutableMapping, MutableSequence, TypeVar, Union
 
 class Error(Exception):
   """Base class for all exception of this module."""
@@ -12,18 +13,30 @@ class InvalidFileError(Error):
 class UnknownError(Error):
   """An unexpected error occurred."""
 
-def _maybe_wrap(persistent_dict, item):
-  if hasattr(item, '__iter__') and not isinstance(item, str):
+WrappableTypes = Union[MutableSequence, MutableMapping]
+NonWrappableTypes = Union[float, int, str]
+
+WrappableTypeVar = TypeVar('WrappableTypeVar',
+                           bound = WrappableTypes)
+NonWrappableTypeVar = TypeVar('NonWrappableTypeVar',
+                              bound = NonWrappableTypes)
+
+def _maybe_wrap(
+  persistent_dict: 'PersistentDict',
+  item: Union[WrappableTypeVar, NonWrappableTypeVar]
+) -> Union['PersistentDictWrapper[WrappableTypeVar]', NonWrappableTypeVar]:
+  if isinstance(item, (MutableSequence, MutableMapping)):
     return PersistentDictWrapper(persistent_dict, item)
   else:
     return item
 
-class PersistentDictWrapper(object):
-  def __init__(self, persistent_dict, value):
+
+class PersistentDictWrapper(Generic[WrappableTypeVar]):
+  def __init__(self, persistent_dict: 'PersistentDict', value: WrappableTypeVar):
     self._persistent_dict = persistent_dict
     self._value = value
 
-  def __getattr__(self, name):
+  def __getattr__(self, name: str):
     attribute = self._value.__getattribute__(name)
     if hasattr(attribute, '__call__'):
       def wrapped_function(*args, **kwargs):
@@ -57,7 +70,7 @@ class PersistentDictWrapper(object):
 
 
 class PersistentDict(object):
-  def __init__(self, path):
+  def __init__(self, path: str):
     self._path = path
     self._dict = self._read_from_disk()
 
@@ -70,8 +83,8 @@ class PersistentDict(object):
       return {}
     except ValueError:
       raise InvalidFileError
-
-    raise UnknownError
+    except:
+      raise UnknownError
 
   def _save_to_disk(self):
     if not self._dict:
@@ -84,7 +97,7 @@ class PersistentDict(object):
       json.dump(self._dict, handle, sort_keys=True, indent=2,
                 separators=(',', ': '))
 
-  def __getattr__(self, name):
+  def __getattr__(self, name: str):
     attribute = self._dict.__getattribute__(name)
     if hasattr(attribute, '__call__'):
       def wrapped_function(*args, **kwargs):
@@ -103,7 +116,7 @@ class PersistentDict(object):
     self._dict.__setitem__(key, value)
     self._save_to_disk()
 
-  def __getitem__(self, key):
+  def __getitem__(self, key: str):
     value = self._dict.__getitem__(key)
     return _maybe_wrap(self, value)
 

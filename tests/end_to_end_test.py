@@ -1,3 +1,4 @@
+from typing import List, Sequence, Tuple
 from urllib.parse import urlsplit
 from smugcli import smugcli
 from smugcli import version
@@ -10,6 +11,7 @@ import glob
 import json
 import os
 import re
+import requests
 import responses
 import shutil
 import sys
@@ -30,7 +32,7 @@ def set_cwd(new_dir):
 ROOT_DIR = '__smugcli_tests__'
 
 
-def format_path(path):
+def format_path(path: str) -> str:
   try:
     path = path.format(root=ROOT_DIR,
                        testdata=os.path.join(TEST_DIR, 'testdata'))
@@ -110,7 +112,7 @@ class EndToEndTest(unittest.TestCase):
     return os.path.join(
       TEST_DIR, 'testdata', 'request_cache', test_file, test_name)
 
-  def _get_cache_folder(self, args):
+  def _get_cache_folder(self, args: Sequence[str]):
     return os.path.join(
       self._get_cache_base_folder(), '%02d_%s' % (self._command_index, args[0]))
 
@@ -133,11 +135,14 @@ class EndToEndTest(unittest.TestCase):
 
     return body
 
-  def _save_requests(self, cache_folder, requests_sent):
+  def _save_requests(
+      self,
+      cache_folder: str,
+      requests_sent: List[Tuple[requests.PreparedRequest, requests.Response]]
+  ) -> None:
     os.makedirs(cache_folder)
 
     for i, (request, response) in enumerate(requests_sent):
-
       data = {'request': {'method': request.method,
                           'url': request.url,
                           'body': self._encode_body(request.body)},
@@ -149,7 +154,9 @@ class EndToEndTest(unittest.TestCase):
         f.write(json.dumps(
           data, sort_keys=True, indent=2, separators=(',', ': ')))
 
-  def _mock_requests(self, cache_folder, rsps):
+  def _mock_requests(self,
+                     cache_folder: str,
+                     rsps: responses.RequestsMock) -> None:
     files = glob.glob(os.path.join(cache_folder, '*'))
     for file in files:
       name = os.sep.join(file.split(os.sep)[-3:])
@@ -170,7 +177,7 @@ class EndToEndTest(unittest.TestCase):
         url=req['url'],
         callback=lambda x, req=req, resp=resp, name=name: callback(x, req, resp, name))
 
-  def _do(self, command, expected_io=None):
+  def _do(self, command: str, expected_io=None):
     command = format_path(command)
     print('$ %s' % command)
     self._io.set_expected_io(expected_io)
@@ -191,7 +198,7 @@ class EndToEndTest(unittest.TestCase):
           # exception emitted by the tested code.
           rsps.assert_all_requests_are_fired = False
     else:
-      requests_sent = []
+      requests_sent = []  # type: List[Tuple[requests.PreparedRequest, requests.Response]]
       smugcli.run(args, self._config, requests_sent=requests_sent)
       self._save_requests(cache_folder, requests_sent)
 

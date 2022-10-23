@@ -634,7 +634,7 @@ class ExpectedInputOutput(object):
     if not reply:
       raise AssertionError(
         'Unexpected user input prompt request. Expected:\n'
-        '%s' % self._expected_io.description(fulfilled=False))
+        '%s' % self._expected_io.description(saturated=False))
     reply += '\n'
     self._original_stdout.write(reply)
     return reply

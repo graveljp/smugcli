@@ -2,14 +2,14 @@
 
 import bottle
 import rauth
-import requests
 import requests_oauthlib
+import signal
 import socket
 import subprocess
+import sys
 import threading
 from urllib import parse
 import webbrowser
-from wsgiref.simple_server import make_server
 
 OAUTH_ORIGIN = 'https://secure.smugmug.com'
 REQUEST_TOKEN_URL = OAUTH_ORIGIN + '/services/oauth/1.0a/getRequestToken'
@@ -31,28 +31,29 @@ class SmugMugOAuth(object):
 
   def request_access_token(self):
     port = self._get_free_port()
-    state = {'running': True, 'port': port}
-    app = bottle.Bottle()
-    app.route('/', callback=lambda s=state: self._index(s))
-    app.route('/callback', callback=lambda s=state: self._callback(s))
-    httpd = make_server('', port, app)
+    state = {'running': True, 'port': port, 'app': bottle.Bottle()}
+    state['app'].route('/', callback=lambda s=state: self._index(s))
+    state['app'].route('/callback', callback=lambda s=state: self._callback(s))
 
-    def _handle_requests(httpd, state):
-      try:
-        while state['running']:
-          httpd.handle_request()
-      except:
-        pass
-    thread = threading.Thread(target=_handle_requests,
-                              args=(httpd, state))
+    def abort(signum, frame):
+      print('SIGINT received, aborting...')
+      state['app'].close()
+      state['running']=False
+      sys.exit(1)
+    signal.signal(signal.SIGINT, abort)
+
+    def _start_web_server():
+      bottle.run(state['app'], port=port)
+    thread = threading.Thread(target=_start_web_server)
     thread.daemon = True
+
     try:
       thread.start()
 
       login_url = 'http://localhost:%d/' % port
       print('Started local server.')
       print('Visit %s to grant SmugCli access to your SmugMug account.' % login_url)
-      print('Opening page in default browser...')
+      print('Opening %s in default browser...' % login_url)
       if self._is_cygwin():
         try:
           return_code = subprocess.call(['cygstart', login_url],
@@ -68,10 +69,10 @@ class SmugMugOAuth(object):
         print('Could not start default browser automatically.')
         print('Please visit %s to complete login process.' % login_url)
 
-      while thread.is_alive():
+      while state['running'] and thread.is_alive():
         thread.join(1)
     finally:
-      httpd.server_close()
+      state['app'].close()
 
     return state['access_token'], state['access_token_secret']
 
@@ -110,6 +111,7 @@ class SmugMugOAuth(object):
        state['request_token'], state['request_token_secret'],
        params={'oauth_verifier': bottle.request.query['oauth_verifier']})
 
+    state['app'].close()
     state['running'] = False
     return 'Login successful. You may close this window.'
 

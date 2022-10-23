@@ -1,6 +1,6 @@
 from typing import List, Sequence, Tuple
 from urllib.parse import urlsplit
-from smugcli import smugcli
+from smugcli import smugcli_commands
 from smugcli import version
 
 import io_expectation as expect
@@ -188,7 +188,7 @@ class EndToEndTest(unittest.TestCase):
       with responses.RequestsMock() as rsps:
         self._mock_requests(cache_folder, rsps)
         try:
-          smugcli.run(args, self._config)
+          smugcli_commands.run(args, self._config)
         finally:
           # assert_all_requests_are_fired has to be True during code execution
           # so that RequestMock could advance in the pending HTTP request list
@@ -199,7 +199,7 @@ class EndToEndTest(unittest.TestCase):
           rsps.assert_all_requests_are_fired = False
     else:
       requests_sent = []  # type: List[Tuple[requests.PreparedRequest, requests.Response]]
-      smugcli.run(args, self._config, requests_sent=requests_sent)
+      smugcli_commands.run(args, self._config, requests_sent=requests_sent)
       self._save_requests(cache_folder, requests_sent)
 
     self._command_index += 1

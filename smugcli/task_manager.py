@@ -43,8 +43,12 @@ class TaskManager(object):
       self._original_stdout.write('\033[J')
 
   def write(self, string):
+    # Clear the end of each terminal lines before moving to the next line.
+    endline = '\033[K' + os.linesep
+    string = endline.join(string.split(os.linesep))
+
     with self._mutex:
-      self._original_stdout.write('\033[J' + string + self.get_status_string())
+      self._original_stdout.write(string + self.get_status_string())
       self._original_stdout.flush()
       self._last_update_time = time.time()
 
@@ -66,15 +70,22 @@ class TaskManager(object):
 
   def get_status_string(self):
     terminal_width = terminal_size.get_terminal_size()[0] - 1
+
+    # Clear the end of each console line before moving to the next line.
+    endline = '\033[K' + os.linesep
+
     with self._mutex:
       text = (
-        os.linesep +
-        (os.linesep * 2).join(
-          os.linesep.join(self._clip_long_line('%s%s' % (t, s), terminal_width)
-                          for t, s in sorted(tasks.items()))
+        endline +
+        (endline * 2).join(
+          endline.join(self.clip_long_line(f'{t}{s}', terminal_width)
+                       for t, s in sorted(tasks.items()))
           for _, tasks in sorted(self._tasks_in_progress.items())) +
-        os.linesep)
-      return text + '\033[%dA\r' % (len(text.split(os.linesep))-1)
+        endline)
+
+      # Print the status text, clear the remaining of the console and move
+      # the cursor up to the first status line, ready for the next print.
+      return text + '\033[J' + f'\033[{len(text.split(os.linesep))-1}A\r'
 
   def print_status(self):
     self.write('')

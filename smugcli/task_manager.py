@@ -2,6 +2,7 @@
 
 import collections
 import os
+import platform
 import sys
 import time
 import threading
@@ -9,8 +10,8 @@ import threading
 from . import stdout_interceptor
 from . import terminal_size
 
-if os.name == 'nt':
-  import colorama
+if platform.system() == 'Windows':
+  import colorama  # pylint: disable=import-error
   colorama.init()
 
 

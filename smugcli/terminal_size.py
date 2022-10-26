@@ -7,10 +7,15 @@
 import os
 import shlex
 import struct
-import pkgutil
 import platform
 import subprocess
 from typing import Tuple
+
+if platform.system() == 'Windows':
+  import ctypes  # pylint: disable=import-error
+else:
+  import fcntl  # pylint: disable=import-error
+  import termios  # pylint: disable=import-error
 
 
 def get_terminal_size() -> Tuple[int, int]:
@@ -39,11 +44,9 @@ def _get_terminal_size_windows():
     # stdin handle is -10
     # stdout handle is -11
     # stderr handle is -12
-    windll = pkgutil.resolve_name('ctypes.windll')
-    create_string_buffer = pkgutil.resolve_name('ctypes.create_string_buffer')
-    handle = windll.kernel32.GetStdHandle(-12)
-    buffer = create_string_buffer(22)
-    res = windll.kernel32.GetConsoleScreenBufferInfo(handle, buffer)
+    handle = ctypes.windll.kernel32.GetStdHandle(-12)
+    buffer = ctypes.create_string_buffer(22)
+    res = ctypes.windll.kernel32.GetConsoleScreenBufferInfo(handle, buffer)
     if res:
       (buf_x, buf_y, cur_x, cur_y, attr,  # pylint: disable=unused-variable
        left, top, right, bottom,
@@ -69,25 +72,30 @@ def _get_terminal_size_tput():
 
 
 def _get_terminal_size_linux():
+  if platform.system() == 'Windows':
+    return None
+
   def ioctl_gwinsz(file):
     try:
       return struct.unpack(
-          'hh', pkgutil.resolve_name('fcntl.ioctl')(
-              file, pkgutil.resolve_name('termios.TIOCGWINSZ'), '1234'))
+          'hh', fcntl.ioctl(  # type: ignore
+              file, termios.TIOCGWINSZ, '1234'))  # type: ignore
     except Exception:  # pylint: disable=broad-except
       pass
     return None
   size = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
   if not size:
     try:
-      file = os.open(pkgutil.resolve_name('os.ctermid')(), os.O_RDONLY)
+      file = os.open(os.ctermid(),  # type: ignore  # pylint: disable=no-member
+                     os.O_RDONLY)
       size = ioctl_gwinsz(file)
       os.close(file)
     except Exception:  # pylint: disable=broad-except
       pass
   if not size:
     try:
-      size = (os.environ['LINES'], os.environ['COLUMNS'])
+      size = (os.environ['LINES'],
+              os.environ['COLUMNS'])
     except Exception:  # pylint: disable=broad-except
       return None
   return int(size[1]), int(size[0])

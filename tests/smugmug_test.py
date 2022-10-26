@@ -6,6 +6,7 @@ import freezegun
 
 from smugcli import smugmug
 
+
 class MockNode(object):
   """A mock version of `smugmug.Node`."""
   def __init__(self):

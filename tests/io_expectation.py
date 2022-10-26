@@ -251,6 +251,7 @@ class ExpectStringBase(ExpectBase):
     args = repr(self._expected)
     return f'{name}({args})'
 
+
 class Equals(ExpectStringBase):
   """Matches a string equal to the specified string.
 
@@ -324,7 +325,7 @@ class And(ExpectBase):
     for expected in self._expected_list:
       expected.apply_transform(callback)
 
-  def description(self, saturated: bool)-> str:
+  def description(self, saturated: bool) -> str:
     parts = [a.description(saturated) for a in self._expected_list
              if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:

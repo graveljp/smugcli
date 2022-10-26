@@ -1,12 +1,15 @@
+"""Setup script for building SmugCLI."""
+
+import locale
 import setuptools
 from smugcli import version
 
-with open('requirements.txt') as fh:
-  install_requires = [l for l in fh.read().splitlines()
-                      if l.strip() and not l.strip().startswith('#')]
+with open('requirements.txt', encoding=locale.getpreferredencoding()) as file:
+  install_requires = [line for line in file.read().splitlines()
+                      if line.strip() and not line.strip().startswith('#')]
 
-with open('README.md', 'r') as fh:
-  long_description = fh.read()
+with open('README.md', 'r', encoding=locale.getpreferredencoding()) as file:
+  long_description = file.read()
 
 setuptools.setup(
   name='smugcli',

@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 
 API_ROOT = 'https://api.smugmug.com'
 
+
 def add_mock_requests(responses):
   """Add mock HTTP requests for tests to use."""
   testdir = os.path.dirname(os.path.realpath(__file__))

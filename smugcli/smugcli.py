@@ -11,9 +11,11 @@ if sys.version_info < (3, 7, 0):
 
 from . import smugcli_commands  # pylint: disable=wrong-import-position
 
+
 def main():
   """SmugCLI main function."""
   smugcli_commands.run(sys.argv[1:])
+
 
 if __name__ == '__main__':
   main()

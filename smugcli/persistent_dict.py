@@ -5,22 +5,27 @@ import locale
 import os
 from typing import Generic, MutableMapping, MutableSequence, TypeVar, Union
 
+
 class Error(Exception):
   """Base class for all exception of this module."""
+
 
 class InvalidFileError(Error):
   """Error raised if the dict cannot be deserialize from disk."""
 
+
 class UnknownError(Error):
   """An unexpected error occurred."""
+
 
 WrappableTypes = Union[MutableSequence, MutableMapping]
 NonWrappableTypes = Union[float, int, str]
 
 WrappableTypeVar = TypeVar('WrappableTypeVar',
-                           bound = WrappableTypes)
+                           bound=WrappableTypes)
 NonWrappableTypeVar = TypeVar('NonWrappableTypeVar',
-                              bound = NonWrappableTypes)
+                              bound=NonWrappableTypes)
+
 
 def _maybe_wrap(
   persistent_dict: 'PersistentDict',

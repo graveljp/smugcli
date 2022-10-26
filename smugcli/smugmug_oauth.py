@@ -85,7 +85,7 @@ class SmugMugOAuth(object):
       del signum, frame  # Unused.
       print('SIGINT received, aborting...')
       state.app.close()
-      state.running=False
+      state.running = False
       sys.exit(1)
     signal.signal(signal.SIGINT, abort)
 

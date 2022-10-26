@@ -714,7 +714,7 @@ class IoExpectationTest(unittest.TestCase):
                    print('Third expected output')),
       error_message=("Unexpected output:\n"
                      "- InOrder(Equals('Second expected output'), "
-                               "Equals('Third expected output'))\n"
+                     "Equals('Third expected output'))\n"
                      "+ 'Third expected output\\n'")),
 
     param(
@@ -772,8 +772,8 @@ class IoExpectationTest(unittest.TestCase):
                    print('In order 1-b')),
       error_message=("Unexpected output:\n"
                      "- AnyOrder(Contains('In order 1-b'), "
-                                "InOrder(Contains('In order 2-a'), "
-                                        "Contains('In order 2-b')))\n"
+                     "InOrder(Contains('In order 2-a'), "
+                     "Contains('In order 2-b')))\n"
                      "+ 'In order 2-b\\n'")),
 
     param(
@@ -818,7 +818,7 @@ class IoExpectationTest(unittest.TestCase):
       expected_io=(
         expect.AnyOrder(
           expect.InOrder(
-            expect.Equals('Repeated output').times(2,4),
+            expect.Equals('Repeated output').times(2, 4),
             expect.Equals('Last in order')),
           expect.Equals('At any time'))),
       ios=lambda: (print('Repeated output'),

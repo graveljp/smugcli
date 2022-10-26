@@ -16,10 +16,11 @@ from . import version
 
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
+
 def run(args,
         config=None,
-        requests_sent: Optional[List[Tuple[requests.PreparedRequest,
-                                           requests.Response]]]=None) -> None:
+        requests_sent: Optional[List[Tuple[
+            requests.PreparedRequest, requests.Response]]] = None) -> None:
   """Run a `smugcli` command."""
   try:
     config = config or persistent_dict.PersistentDict(CONFIG_FILE)
@@ -35,6 +36,7 @@ def run(args,
     del signum, frame  # Unused
     print('Aborting...')
     file_system.abort()
+
   def atexit_handler():
     file_system.abort()
 
@@ -115,7 +117,7 @@ def run(args,
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     mkdir_parser.set_defaults(
       func=lambda a, t=node_type: file_system.make_node(a.user, a.path, a.p, t,
-                                               a.privacy.title()))
+                                                        a.privacy.title()))
     mkdir_parser.add_argument('path',
                               type=str,
                               nargs='+',

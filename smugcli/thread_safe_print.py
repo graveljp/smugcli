@@ -34,7 +34,6 @@ class ThreadSafePrint(object):
     self._original_stdout = None
     self._mutex = threading.Lock()
 
-
   def __enter__(self):
     self._original_stdout = sys.stdout
     sys.stdout = self

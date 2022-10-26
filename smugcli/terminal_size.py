@@ -1,6 +1,6 @@
-"""Returns the size of the terminal we are running in."""
+#!/usr/bin/env python3
 
-#!/usr/bin/env python
+"""Returns the size of the terminal we are running in."""
 
 # Source: https://gist.github.com/jtriley/1108174
 
@@ -47,7 +47,8 @@ def _get_terminal_size_windows():
     if res:
       (buf_x, buf_y, cur_x, cur_y, attr,  # pylint: disable=unused-variable
        left, top, right, bottom,
-       max_x, max_y) = struct.unpack("hhhhHhhhhhh", buffer.raw)  # pylint: disable=unused-variable
+       max_x, max_y  # pylint: disable=unused-variable
+       ) = struct.unpack("hhhhHhhhhhh", buffer.raw)
       size_x = right - left + 1
       size_y = bottom - top + 1
       return size_x, size_y
@@ -58,7 +59,7 @@ def _get_terminal_size_windows():
 
 def _get_terminal_size_tput():
   # get terminal width
-  # src: http://stackoverflow.com/questions/263890/how-do-i-find-the-width-height-of-a-terminal-window  # pylint: disable=line-too-long
+  # src: http://stackoverflow.com/questions/263890/how-do-i-find-the-width-height-of-a-terminal-window  # pylint: disable=line-too-long  # noqa: E501
   try:
     cols = int(subprocess.check_call(shlex.split('tput cols')))
     rows = int(subprocess.check_call(shlex.split('tput lines')))

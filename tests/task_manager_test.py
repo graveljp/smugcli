@@ -22,7 +22,7 @@ class TaskManagerTests(unittest.TestCase):
                                  r'\033\[K|'
                                  r'\033\[\d+A|'
                                  r'\n|'
-                               r'\r').repeatedly()
+                                 r'\r').repeatedly()
     return expect.InOrder([expect_escape] +
                           list(itertools.chain.from_iterable(
                            [s, expect_escape] for s in status_string)))

@@ -24,6 +24,7 @@ API_REQUEST = 'https://api.smugmug.com/api/developer/apply'
 
 PAGE_START_RE = re.compile(r'(\?.*start=)[0-9]+')
 
+
 class Error(Exception):
   """Base class for all exception of this module."""
 
@@ -384,7 +385,7 @@ class SmugMug():
       self,
       config,
       requests_sent: Optional[List[Tuple[requests.PreparedRequest,
-                                         requests.Response]]]=None) -> None:
+                                         requests.Response]]] = None) -> None:
     self._config = config
     self._smugmug_oauth = None
     self._oauth = None
@@ -450,7 +451,7 @@ class SmugMug():
 
   def get_auth_user(self) -> str:
     """Returns the name of the currently logged-in user."""
-    if not 'authuser' in self.config:
+    if 'authuser' not in self.config:
       nickname = self.get_node('/api/v2!authuser')['NickName']
       if not isinstance(nickname, str):
         raise UnexpectedResponseError(
@@ -465,7 +466,7 @@ class SmugMug():
 
   def get_auth_user_uri(self) -> str:
     """Returns the logged-in user's root node URI."""
-    if not 'authuser_uri' in self._config:
+    if 'authuser_uri' not in self._config:
       self.config['authuser_uri'] = self.get_user_uri(self.get_auth_user())
     return self.config['authuser_uri']
 

@@ -41,7 +41,7 @@ class Task():
     del exc_type, exc_value, traceback  # Unused.
     self._task_manager.task_completed(self._category, self._task)
 
-  def update_status(self, status: str='') -> None:
+  def update_status(self, status: str = '') -> None:
     """Update the progress string for this task."""
     self._task_manager.update_status(self._category, self._task, status)
 
@@ -157,7 +157,7 @@ class TaskManager():
     return Task(self, category, task, status)
 
   def update_status(
-      self, category: int, task: str, status: str='') -> None:
+      self, category: int, task: str, status: str = '') -> None:
     """Update the status of a task"""
     with self._mutex:
       self._tasks_in_progress[category][task] = status

@@ -163,6 +163,7 @@ class IntegrationTestBase(unittest.TestCase):
                      cache_folder: str,
                      rsps: responses.RequestsMock) -> None:
     files = glob.glob(os.path.join(cache_folder, '*'))
+
     def callback(req, expected_req, resp, name):
       self.assertIn(name, self._pending)
       self._pending.remove(name)
@@ -203,7 +204,7 @@ class IntegrationTestBase(unittest.TestCase):
           # exception emitted by the tested code.
           rsps.assert_all_requests_are_fired = False
     else:
-      requests_sent = []  # type: List[Tuple[requests.PreparedRequest, requests.Response]]  # pylint: disable=line-too-long
+      requests_sent = []  # type: List[Tuple[requests.PreparedRequest, requests.Response]]  # pylint: disable=line-too-long  # noqa: E501
       smugcli_commands.run(args, self._config, requests_sent=requests_sent)
       self._save_requests(cache_folder, requests_sent)
 

@@ -89,7 +89,7 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertEqual(len(matched_nodes), 2)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(matched_nodes[1].name, 'Photography')
-    self.assertEqual(matched_nodes[1]['Name'],'Photography')
+    self.assertEqual(matched_nodes[1]['Name'], 'Photography')
     self.assertEqual(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
@@ -105,7 +105,7 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(matched_nodes[1]['Name'], 'Photography')
     self.assertEqual(matched_nodes[2]['Name'],
-                      'San Francisco by helicopter 2014')
+                     'San Francisco by helicopter 2014')
     self.assertEqual(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(

@@ -1,12 +1,16 @@
-from smugcli import thread_pool, thread_safe_print
-
-import io_expectation as expect
+"""Tests for thread_safe_print.py"""
 
 import queue
 import sys
 import unittest
 
+import io_expectation as expect
+
+from smugcli import thread_pool, thread_safe_print
+
+
 class TestThreadSafePrint(unittest.TestCase):
+  """Test for the `thread_safe_print.ThreadSafePrint` class."""
 
   def _thread1(self, thread1_turn, thread2_turn):
     thread1_turn.get()
@@ -33,7 +37,8 @@ class TestThreadSafePrint(unittest.TestCase):
     thread2_turn.get()
     sys.stdout.write('\n')
 
-  def testWrite(self):
+  def test_multi_threaded_interleaved_write(self):
+    """Tests that multithreaded interleaved IOs get printed correctly."""
     mock_io = expect.ExpectedInputOutput()
     sys.stdout = mock_io
 

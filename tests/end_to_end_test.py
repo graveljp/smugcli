@@ -1,232 +1,30 @@
-from typing import List, Sequence, Tuple
-from urllib.parse import urlsplit
-from smugcli import smugcli_commands
-from smugcli import version
+"""Integration test invoking SmugCLI against the real SmugMug service."""
 
+import unittest
+import os
+
+import integration_test_base
 import io_expectation as expect
 
-import base64
-import contextlib
-import glob
-import json
-import os
-import re
-import requests
-import responses
-import shutil
-import sys
-import unittest
-
-CONFIG_FILE = os.path.expanduser('~/.smugcli')
-TEST_DIR = os.path.dirname(os.path.realpath(__file__))
-
-@contextlib.contextmanager
-def set_cwd(new_dir):
-  original_dir = os.getcwd()
-  try:
-    os.chdir(new_dir)
-    yield
-  finally:
-    os.chdir(original_dir)
-
-ROOT_DIR = '__smugcli_tests__'
+from smugcli import version
 
 
-def format_path(path: str) -> str:
-  try:
-    path = path.format(root=ROOT_DIR,
-                       testdata=os.path.join(TEST_DIR, 'testdata'))
-  except ValueError:  # Ignore unmatched '{'.
-    pass
-
-  # On windows, replace '/' for '\\', keeping '\\/' as '/'.
-  fix_slash_re = re.compile(r'([^\\])/')
-  path = fix_slash_re.sub(r'\1\%s' % os.sep, path)
-  path = path.replace('\\/', '/')
-  return path
-
-
-class EndToEndTest(unittest.TestCase):
-
-  def setUp(self):
-    print('\n-------------------------')
-    print('Running: %s\n' % self.id())
-
-    # The response library cannot replay requests in a multi-threaded
-    # environment. We have to disable threading for testing...
-    with open(CONFIG_FILE) as f:
-      self._config = json.load(f)
-    self._config.update({
-      'folder_threads': 1,
-      'file_threads': 1,
-      'upload_threads': 1,
-    })
-
-    cache_folder = self._get_cache_base_folder()
-    reuse_responses = os.environ.get('REUSE_RESPONSES')
-    if (reuse_responses is None or
-        reuse_responses.lower() not in ('true', 't', 'yes', 'y', 1)):
-      shutil.rmtree(cache_folder, ignore_errors=True)
-
-    self._io = expect.ExpectedInputOutput()
-    self._io.set_transform_fn(format_path)
-    sys.stdin = self._io
-    sys.stdout = self._io
-
-    self._api_url_re = re.compile(
-      r'https://api\.smugmug\.com/api/v2[\!/](?P<path>.*)')
-    self._upload_url_re = re.compile(
-      r'https://(?P<path>upload)\.smugmug\.com/')
-    self._path_replace_re = re.compile(r'[!/?]')
-
-    self._command_index = 0
-    self._pending = set()
-    self._replay_cached_requests = os.path.exists(cache_folder)
-
-    self._do('rm -r -f {root}')
-    shutil.rmtree(ROOT_DIR, ignore_errors=True)
-
-  def tearDown(self):
-    self._io.set_expected_io(None)
-    self._do('rm -r -f {root}')
-    shutil.rmtree(ROOT_DIR, ignore_errors=True)
-
-    if self._pending:
-      raise AssertionError(
-        'Not all requests have been executed:\n%s' % (
-          '\n'.join(sorted(self._pending))))
-
-    sys.stdin = self._io._original_stdin
-    sys.stdout = self._io._original_stdout
-
-  def _url_path(self, request):
-    match = (self._api_url_re.match(request.url) or
-             self._upload_url_re.match(request.url))
-    assert match
-    path = match.group('path')
-    path = self._path_replace_re.sub('.', path)
-    return '%s.%s' % (request.method, path)
-
-  def _get_cache_base_folder(self):
-    test_file, test_name = self.id().split('.', 1)
-    return os.path.join(
-      TEST_DIR, 'testdata', 'request_cache', test_file, test_name)
-
-  def _get_cache_folder(self, args: Sequence[str]):
-    return os.path.join(
-      self._get_cache_base_folder(), '%02d_%s' % (self._command_index, args[0]))
-
-  def _encode_body(self, body):
-    if body:
-      if hasattr(body, 'read'):
-        pos = body.tell()
-        body.seek(0)
-        data = body.read()
-        body.seek(pos)
-      else:
-        data = body
-
-      if isinstance(data, bytes):
-        try:
-          return data.decode('UTF-8')
-        except:
-          return base64.b64encode(data).decode('utf-8')
-      return data
-
-    return body
-
-  def _save_requests(
-      self,
-      cache_folder: str,
-      requests_sent: List[Tuple[requests.PreparedRequest, requests.Response]]
-  ) -> None:
-    os.makedirs(cache_folder)
-
-    for i, (request, response) in enumerate(requests_sent):
-      data = {'request': {'method': request.method,
-                          'url': request.url,
-                          'body': self._encode_body(request.body)},
-              'response': {'status': response.status_code,
-                           'text': response.text}}
-      data_path = os.path.join(
-        cache_folder, '%02d.%s.json' % (i, self._url_path(request)))
-      with open(data_path, 'w') as f:
-        f.write(json.dumps(
-          data, sort_keys=True, indent=2, separators=(',', ': ')))
-
-  def _mock_requests(self,
-                     cache_folder: str,
-                     rsps: responses.RequestsMock) -> None:
-    files = glob.glob(os.path.join(cache_folder, '*'))
-    for file in files:
-      name = os.sep.join(file.split(os.sep)[-3:])
-      self._pending.add(name)
-      def callback(req, expected_req, resp, name):
-        self.assertIn(name, self._pending)
-        self._pending.remove(name)
-        self.assertEqual(self._encode_body(req.body), expected_req['body'])
-        return resp['status'], {}, resp['text']
-      with open(file) as f:
-        req_resp = json.load(f)
-      req = req_resp['request']
-      resp = req_resp['response']
-      rsps.add_callback(
-        match=[responses.matchers.query_string_matcher(
-          urlsplit(req['url']).query)],
-        method=req['method'],
-        url=req['url'],
-        callback=lambda x, req=req, resp=resp, name=name: callback(x, req, resp, name))
-
-  def _do(self, command: str, expected_io=None):
-    command = format_path(command)
-    print('$ %s' % command)
-    self._io.set_expected_io(expected_io)
-
-    args = command.split(' ')
-    cache_folder = self._get_cache_folder(args)
-    if self._replay_cached_requests:
-      with responses.RequestsMock() as rsps:
-        self._mock_requests(cache_folder, rsps)
-        try:
-          smugcli_commands.run(args, self._config)
-        finally:
-          # assert_all_requests_are_fired has to be True during code execution
-          # so that RequestMock could advance in the pending HTTP request list
-          # if many requests have the same URI.
-          # assert_all_requests_are_fired has to be False when exiting the
-          # context manager because RequestMock.__exit__ otherwise hides all
-          # exception emitted by the tested code.
-          rsps.assert_all_requests_are_fired = False
-    else:
-      requests_sent = []  # type: List[Tuple[requests.PreparedRequest, requests.Response]]
-      smugcli_commands.run(args, self._config, requests_sent=requests_sent)
-      self._save_requests(cache_folder, requests_sent)
-
-    self._command_index += 1
-    self._io.assert_expectations_fulfilled()
-
-  def _stage_files(self, dest, files):
-    dest_path = format_path(dest)
-    try:
-      os.makedirs(dest_path)
-    except OSError:
-      pass
-    for f in files:
-      if isinstance(f, str):
-        shutil.copy(format_path(f), dest_path)
-      else:
-        shutil.copyfile(format_path(f[0]), os.path.join(dest_path, f[1]))
+class EndToEndTest(integration_test_base.IntegrationTestBase):
+  """Integration test invoking SmugCLI against the real SmugMug service."""
 
   def test_version(self):
+    """Test for `smugcli --version`."""
     self._do('--version', 'Version: ' + version.__version__)
 
   def test_get(self):
+    """Test for `smugcli get`."""
     self._do('get \\/api\\/v2\\/user',
              expect.Somewhere(
                ['"Code": 200,',
                 '"Message": "Ok",']))
 
   def test_ls(self):
+    """Test for `smugcli ls`."""
     # Fails if node doesn't exists.
     self._do('ls {root}',
              '"{root}" not found in "".')
@@ -250,6 +48,7 @@ class EndToEndTest(unittest.TestCase):
              expect.Somewhere('Photography'))
 
   def test_mkdir(self):
+    """Test for `smugcli mkdir`."""
     # Missing parent.
     self._do('mkdir {root}/foo',
              '"{root}" not found in "".')
@@ -295,6 +94,7 @@ class EndToEndTest(unittest.TestCase):
               'foo'])
 
   def test_mkdir_privacy(self):
+    """Test the `--privacy` option of `smugcli mkdir`."""
     self._do('mkdir -p {root}/default/folder')
     self._do('ls -l {root}/default',
              expect.Somewhere('"Privacy": "Public",'))
@@ -312,6 +112,7 @@ class EndToEndTest(unittest.TestCase):
              expect.Somewhere('"Privacy": "Private",'))
 
   def test_mkdir_folder_depth_limits(self):
+    """Test SmugMug's folder nesting limit when using `smugcli mkdir`."""
     # Can't create more than 5 folder deep.
     self._do('mkdir -p {root}/1/2/3/4',
              ['Creating Folder "{root}".',
@@ -326,6 +127,7 @@ class EndToEndTest(unittest.TestCase):
              ['Creating Album "{root}/1/2/3/4/5".'])
 
   def test_mkalbum(self):
+    """The for `smugcli mkalbum`."""
     # Missing parent.
     self._do('mkalbum {root}/folder/album',
              ['"{root}" not found in "".'])
@@ -337,6 +139,7 @@ class EndToEndTest(unittest.TestCase):
               'Creating Album "{root}/folder/album".'])
 
   def test_mkalbum_privacy(self):
+    """Test the `--privacy` option of `smugcli mkalbum`."""
     self._do('mkalbum -p {root}/default/album')
     self._do('ls -l {root}/default',
              expect.Somewhere('"Privacy": "Public",'))
@@ -354,6 +157,7 @@ class EndToEndTest(unittest.TestCase):
              expect.Somewhere('"Privacy": "Private",'))
 
   def test_rmdir(self):
+    """Test for `smugcli rmdir`."""
     # Create a test folder hierarchy.
     self._do('mkdir -p {root}/foo/bar/baz')
     self._do('mkdir -p {root}/buz')
@@ -374,7 +178,7 @@ class EndToEndTest(unittest.TestCase):
     self._do('ls {root}/foo/bar',
              [])  # Folder exists, but is empty.
 
-    # Can delete folder and all it's non-empty parents.
+    # Can delete folder and all its non-empty parents.
     self._do('rmdir -p {root}/foo/bar',
              ['Deleting "{root}/foo/bar".',
               'Deleting "{root}/foo".',
@@ -386,6 +190,7 @@ class EndToEndTest(unittest.TestCase):
              ['buz'])
 
   def test_rm(self):
+    """Test for `smugcli rm`."""
     self._do('mkdir -p {root}/foo/bar/baz')
     self._do('mkdir -p {root}/fuz/buz/biz')
 
@@ -427,6 +232,7 @@ class EndToEndTest(unittest.TestCase):
               'Removing "{root}".'])
 
   def test_upload(self):
+    """Test for `smugcli upload`."""
     # Can't upload to non-existing album.
     self._do('upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
              ['Album not found: "{root}/folder/album".'])
@@ -460,6 +266,7 @@ class EndToEndTest(unittest.TestCase):
        'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
 
   def test_sync(self):
+    """Test for `smugcli sync`."""
     self._stage_files('{root}/dir', ['{testdata}/SmugCLI_1.jpg',
                                      '{testdata}/SmugCLI_2.jpg',
                                      '{testdata}/SmugCLI_3.jpg'])
@@ -491,7 +298,7 @@ class EndToEndTest(unittest.TestCase):
          'Found matching remote album "{root}/dir/Images from folder dir".',
          'Found matching remote album "{root}/dir/album".')])
 
-    with set_cwd(format_path('{root}')):
+    with self._set_cwd(self._format_path('{root}')):
       self._do(
         'sync dir {root}',
         ['Syncing "dir" to SmugMug folder "/{root}".',
@@ -523,6 +330,7 @@ class EndToEndTest(unittest.TestCase):
          'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
   def test_sync_heic(self):
+    """Test `smugcli sync` for HEIC files."""
     self._stage_files('{root}/album',
                       [('{testdata}/SmugCLI_1.heic', 'SmugCLI_1.heic'),
                        ('{testdata}/SmugCLI_1.heic', 'SmugCLI_2.HEIC')])
@@ -558,6 +366,7 @@ class EndToEndTest(unittest.TestCase):
                   'Uploaded "{root}/album/SmugCLI_2.HEIC".')).repeatedly())])
 
   def test_sync_privacy(self):
+    """Test the `--privacy` option of `smugcli sync`."""
     self._stage_files('{root}/default/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
              expect.Somewhere(expect.Reply('yes')))
@@ -583,6 +392,7 @@ class EndToEndTest(unittest.TestCase):
              expect.Somewhere('"Privacy": "Private",'))
 
   def test_sync_folder_depth_limits(self):
+    """Test SmugMug's folder nesting limit when using `smugcli sync`."""
     self._stage_files('{root}/1/2/3/4/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do(
       'sync {root}',
@@ -599,7 +409,7 @@ class EndToEndTest(unittest.TestCase):
          'Creating Album "{root}/1/2/3/4/album".',
          'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".')])
 
-    with set_cwd(format_path('{root}/1')):
+    with self._set_cwd(self._format_path('{root}/1')):
       self._do('sync 2 {root}/1',
                ['Syncing "2" to SmugMug folder "/{root}/1".',
                 'Proceed (yes\\/no)?',
@@ -618,7 +428,7 @@ class EndToEndTest(unittest.TestCase):
                 'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
                 ' support folder more than 5 level deep.')])
 
-    with set_cwd(format_path('{root}/1')):
+    with self._set_cwd(self._format_path('{root}/1')):
       self._do('sync 2 {root}/1',
                ['Syncing "2" to SmugMug folder "/{root}/1".',
                 'Proceed (yes\\/no)?',
@@ -629,6 +439,7 @@ class EndToEndTest(unittest.TestCase):
                   ' support folder more than 5 level deep.')])
 
   def test_sync_whitespace(self):
+    """Test `smugcli sync` when files or folders contain whitespaces."""
     if os.name == 'nt':
       folder = '{root}/ folder/ album'
       filename = ' file . jpg'
@@ -646,7 +457,7 @@ class EndToEndTest(unittest.TestCase):
                 'Creating Folder "{root}".',
                 'Creating Folder "{root}/folder".',
                 'Creating Album "{root}/folder/album".',
-                'Uploaded "%s/%s".' % (folder, filename))])
+                f'Uploaded "{folder}/{filename}".')])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
@@ -656,6 +467,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/folder/album".')])
 
   def test_sync_confirmation(self):
+    """Test the different ways `smugcli sync` operation can be confirmed."""
     self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
@@ -686,6 +498,7 @@ class EndToEndTest(unittest.TestCase):
               expect.Reply('n')])
 
   def test_sync_force(self):
+    """Test the `--force` option of `smugcli sync`."""
     self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync -f {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
@@ -702,6 +515,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/album".')])
 
   def test_sync_sub_folders(self):
+    """Test syncing to sub-folders."""
     self._stage_files('{root}/local/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('mkdir -p {root}/Pics')
     self._do('sync {root}/local/album {root}/Pics',
@@ -723,6 +537,7 @@ class EndToEndTest(unittest.TestCase):
                 'Found matching remote album "{root}/Pics/album".')])
 
   def test_sync_invalid_src(self):
+    """Test invalid source file handling for `smugcli sync`."""
     self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('mkalbum -p {root}')
 
@@ -748,6 +563,7 @@ class EndToEndTest(unittest.TestCase):
               expect.Reply('no')])
 
   def test_sync_folder(self):
+    """Test `smugcli sync` for folder source."""
     self._stage_files('{root}/src/album1', ['{testdata}/SmugCLI_1.jpg',
                                             '{testdata}/SmugCLI_2.jpg'])
     self._stage_files('{root}/src/album2', ['{testdata}/SmugCLI_3.jpg'])
@@ -766,6 +582,7 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "{root}/src/album2/SmugCLI_3.jpg".')])
 
   def test_sync_multiple_files(self):
+    """Test `smugcli sync` with multiple input files."""
     self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg'])
     self._stage_files('{root}/dir2', ['{testdata}/SmugCLI_1.jpg',
                                       '{testdata}/SmugCLI_2.jpg',
@@ -794,6 +611,7 @@ class EndToEndTest(unittest.TestCase):
                 'Sync complete.')])
 
   def test_sync_multiple_folders(self):
+    """Test `smugcli sync` for multiple input folders."""
     self._stage_files('{root}/album1', ['{testdata}/SmugCLI_1.jpg'])
     self._stage_files('{root}/dir2/album2', ['{testdata}/SmugCLI_2.jpg'])
     self._stage_files('{root}/dir3/subdir3/album3',
@@ -820,6 +638,7 @@ class EndToEndTest(unittest.TestCase):
                 'Sync complete.')])
 
   def test_sync_paths_to_album(self):
+    """Test `smugcli sync` for a list of source paths to an album node."""
     self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg',
                                       '{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
@@ -837,10 +656,11 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "{root}/dir1/SmugCLI_2.jpg".')])
 
   def test_sync_files_to_album(self):
+    """Test `smugcli sync` for a list of source files to an album node."""
     self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg',
                                       '{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
-    with set_cwd(format_path('{root}/dir1')):
+    with self._set_cwd(self._format_path('{root}/dir1')):
       self._do('sync * {root}/album',
                ['Syncing:',
                 '  SmugCLI_1.jpg',
@@ -855,6 +675,7 @@ class EndToEndTest(unittest.TestCase):
                   'Uploaded "./SmugCLI_2.jpg".')])
 
   def test_sync_files_to_folder(self):
+    """Test that `smugcli sync` rejects syncing files to a folder node."""
     self._stage_files('{root}', ['{testdata}/SmugCLI_1.jpg',
                                  '{testdata}/SmugCLI_2.jpg'])
     self._do('mkdir -p {root}/folder')
@@ -862,6 +683,7 @@ class EndToEndTest(unittest.TestCase):
              'Can\'t upload files to folder. Please sync to an album node.')
 
   def test_sync_folders_to_album(self):
+    """Test that `smugcli sync` rejects syncing folder to an album node."""
     self._stage_files('{root}/dir1', ['{testdata}/SmugCLI_1.jpg'])
     self._stage_files('{root}/dir2', ['{testdata}/SmugCLI_2.jpg'])
     self._do('mkalbum -p {root}/album')
@@ -869,6 +691,7 @@ class EndToEndTest(unittest.TestCase):
              'Can\'t upload folders to an album. Please sync to a folder node.')
 
   def test_sync_default_arguments(self):
+    """Test default arguments for `smugcli sync`."""
     self._stage_files('{root}', ['{testdata}/SmugCLI_1.jpg',
                                  '{testdata}/SmugCLI_2.jpg',
                                  '{testdata}/SmugCLI_3.jpg'])
@@ -897,6 +720,7 @@ class EndToEndTest(unittest.TestCase):
               expect.Reply('no')])
 
   def test_sync_deprecated_target_argument(self):
+    """Test handling of deprecated `smugcli sync --target`."""
     self._do('sync -t dst',
              ['-t\\/--target argument no longer exists.',
               'Specify the target folder as the last positional argument.'])
@@ -922,6 +746,7 @@ class EndToEndTest(unittest.TestCase):
               'Specify the target folder as the last positional argument.'])
 
   def test_ignore_include(self):
+    """Test for `smugcli ignore` and `smugcli include`."""
     self._stage_files('{root}/album1', ['{testdata}/SmugCLI_1.jpg',
                                         '{testdata}/SmugCLI_2.jpg',
                                         '{testdata}/SmugCLI_3.jpg'])
@@ -957,6 +782,7 @@ class EndToEndTest(unittest.TestCase):
                 'Uploaded "{root}/album2/SmugCLI_4.jpg".',
                 'Uploaded "{root}/album2/SmugCLI_5.jpg".',
                 'Sync complete.')])
+
 
 if __name__ == '__main__':
   unittest.main()

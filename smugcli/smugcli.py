@@ -1,5 +1,6 @@
-#!/usr/bin/python
-# Command line tool for SmugMug. Uses SmugMug API V2.
+#!/usr/bin/python3
+
+"""Command line tool for SmugMug. Uses SmugMug API V2."""
 
 import sys
 
@@ -8,9 +9,10 @@ if sys.version_info < (3, 7, 0):
   sys.exit(1)
 
 
-from . import smugcli_commands
+from . import smugcli_commands  # pylint: disable=wrong-import-position
 
 def main():
+  """SmugCLI main function."""
   smugcli_commands.run(sys.argv[1:])
 
 if __name__ == '__main__':

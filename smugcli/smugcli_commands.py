@@ -1,4 +1,12 @@
+"""Entry point for all `smugcli` commands."""
+
 from typing import List, Optional, Tuple
+
+import argparse
+import atexit
+import os
+import signal
+import requests
 
 from . import persistent_dict
 from . import smugmug as smugmug_lib
@@ -6,35 +14,29 @@ from . import smugmug_fs
 from . import smugmug_shell
 from . import version
 
-import argparse
-import atexit
-import os
-import requests
-import signal
-
 CONFIG_FILE = os.path.expanduser('~/.smugcli')
 
 def run(args,
         config=None,
         requests_sent: Optional[List[Tuple[requests.PreparedRequest,
                                            requests.Response]]]=None) -> None:
+  """Run a `smugcli` command."""
   try:
     config = config or persistent_dict.PersistentDict(CONFIG_FILE)
   except persistent_dict.InvalidFileError:
-    print('Config file (%s) is invalid. '
-          'Please fix or delete the file.' % CONFIG_FILE)
+    print(f'Config file ({CONFIG_FILE}) is invalid. '
+          'Please fix or delete the file.')
     return
 
   smugmug = smugmug_lib.SmugMug(config, requests_sent)
-  fs = smugmug_fs.SmugMugFS(smugmug)
+  file_system = smugmug_fs.SmugMugFS(smugmug)
 
   def signal_handler(signum, frame):
-    del signum  # Unused
-    del frame  # Unused
+    del signum, frame  # Unused
     print('Aborting...')
-    fs.abort()
+    file_system.abort()
   def atexit_handler():
-    fs.abort()
+    file_system.abort()
 
   atexit.register(atexit_handler)
   signal.signal(signal.SIGINT, signal_handler)
@@ -58,7 +60,8 @@ def run(args,
                  'with a valid API key. Visit '
                  'https://api.smugmug.com/api/developer/apply to generate '
                  'your own `key` and `secret`.'))
-  login_parser.set_defaults(func=lambda a: fs.smugmug.login(a.key, a.secret))
+  login_parser.set_defaults(
+    func=lambda a: file_system.smugmug.login(a.key, a.secret))
   login_parser.add_argument('--key',
                             type=str,
                             required=True,
@@ -70,12 +73,12 @@ def run(args,
   # ---------------
   logout_parser = subparsers.add_parser(
     'logout', help='Logout of the SmugMug service')
-  logout_parser.set_defaults(func=lambda a: fs.smugmug.logout())
+  logout_parser.set_defaults(func=lambda a: file_system.smugmug.logout())
 
   # ---------------
   get_parser = subparsers.add_parser(
     'get', help='Do a GET request to SmugMug using the API V2 URL.')
-  get_parser.set_defaults(func=lambda a: fs.get(a.url))
+  get_parser.set_defaults(func=lambda a: file_system.get(a.url))
   get_parser.add_argument('url',
                           type=str,
                           help=('A SmugMug V2 API URL to get the JSON response '
@@ -87,7 +90,7 @@ def run(args,
     'ls',
     help='List the content of a folder or album.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  ls_parser.set_defaults(func=lambda a: fs.ls(a.user, a.path, a.l))
+  ls_parser.set_defaults(func=lambda a: file_system.ls(a.user, a.path, a.l))
   ls_parser.add_argument('path',
                          type=str,
                          nargs='?',
@@ -108,15 +111,15 @@ def run(args,
   for cmd, node_type in (('mkdir', 'Folder'), ('mkalbum', 'Album')):
     mkdir_parser = subparsers.add_parser(
       cmd,
-      help='Create a %s.' % node_type.lower(),
+      help=f'Create a {node_type.lower()}.',
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     mkdir_parser.set_defaults(
-      func=lambda a, t=node_type: fs.make_node(a.user, a.path, a.p, t,
+      func=lambda a, t=node_type: file_system.make_node(a.user, a.path, a.p, t,
                                                a.privacy.title()))
     mkdir_parser.add_argument('path',
                               type=str,
                               nargs='+',
-                              help='%ss to create.' % node_type)
+                              help=f'{node_type}s to create.')
     mkdir_parser.add_argument('-p',
                               action='store_true',
                               help='Create parents if they are missing.')
@@ -134,7 +137,8 @@ def run(args,
   # ---------------
   rmdir_parser = subparsers.add_parser(
     'rmdir', help='Remove a folder(s) if they are empty.')
-  rmdir_parser.set_defaults(func=lambda a: fs.rmdir(a.user, a.parents, a.dirs))
+  rmdir_parser.set_defaults(
+    func=lambda a: file_system.rmdir(a.user, a.parents, a.dirs))
   rmdir_parser.add_argument('-p', '--parents',
                             action='store_true',
                             help=('Remove parent directory as well if they are '
@@ -142,8 +146,9 @@ def run(args,
   rmdir_parser.add_argument('-u', '--user',
                             type=str,
                             default='',
-                            help=('User whose SmugMug account is to be accessed. '
-                                  'Uses the logged-in user by default.'))
+                            help=('User whose SmugMug account is to be '
+                                  'accessed. Uses the logged-in user by '
+                                  'default.'))
   rmdir_parser.add_argument('dirs',
                             type=str,
                             nargs='+', help='Directories to create.')
@@ -151,7 +156,7 @@ def run(args,
   rm_parser = subparsers.add_parser(
     'rm', help='Remove files from SmugMug.')
   rm_parser.set_defaults(
-    func=lambda a: fs.rm(a.user, a.force, a.recursive, a.paths))
+    func=lambda a: file_system.rm(a.user, a.force, a.recursive, a.paths))
   rm_parser.add_argument('-u', '--user',
                          type=str,
                          default='',
@@ -169,7 +174,8 @@ def run(args,
   # ---------------
   upload_parser = subparsers.add_parser(
     'upload', help='Upload files to SmugMug.')
-  upload_parser.set_defaults(func=lambda a: fs.upload(a.user, a.src, a.album))
+  upload_parser.set_defaults(
+    func=lambda a: file_system.upload(a.user, a.src, a.album))
   upload_parser.add_argument('src',
                              type=str,
                              nargs='+', help='Files to upload.')
@@ -187,23 +193,25 @@ def run(args,
     'sync',
     help='Synchronize all local albums with SmugMug.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  sync_parser.set_defaults(func=lambda a: fs.sync(a.user, a.source, a.target,
-                                                  a.deprecated_target,
-                                                  a.force,
-                                                  a.privacy.title(),
-                                                  a.folder_threads,
-                                                  a.file_threads,
-                                                  a.upload_threads,
-                                                  a.set_defaults))
+  sync_parser.set_defaults(
+    func=lambda a: file_system.sync(a.user,
+                                    a.source,
+                                    a.target,
+                                    a.deprecated_target,
+                                    a.force,
+                                    a.privacy.title(),
+                                    a.folder_threads,
+                                    a.file_threads,
+                                    a.upload_threads,
+                                    a.set_defaults))
   sync_parser.add_argument('source',
                            type=str,
                            nargs='*',
                            default=['.'],
                            help=('Folders/files to recursively sync to the '
                                  'target SmugMug location. For paths ending '
-                                 'with "%s", the content of the folder is '
-                                 'synced instead of the folder itself.' %
-                                 os.sep))
+                                 f'with "{os.sep}", the content of the folder '
+                                 'is synced instead of the folder itself.'))
   sync_parser.add_argument('target',
                            type=str,
                            nargs='?',
@@ -258,7 +266,7 @@ def run(args,
   ignore_parser = subparsers.add_parser(
     'ignore', help='Mark paths to be ignored during sync.')
   ignore_parser.set_defaults(
-    func=lambda a: fs.ignore_or_include(a.paths, True))
+    func=lambda a: file_system.ignore_or_include(a.paths, True))
   ignore_parser.add_argument('paths',
                              type=str,
                              nargs='+',
@@ -271,7 +279,7 @@ def run(args,
                  'included by default, this commands is used to negate the '
                  'effect of the "ignore" command.'))
   include_parser.set_defaults(
-    func=lambda a: fs.ignore_or_include(a.paths, False))
+    func=lambda a: file_system.ignore_or_include(a.paths, False))
   include_parser.add_argument('paths',
                               type=str,
                               nargs='+',
@@ -281,7 +289,7 @@ def run(args,
   shell_parser = subparsers.add_parser(
     'shell', help=('Start smugcli in interactive shell mode.'))
   shell_parser.set_defaults(
-    func=lambda a: smugmug_shell.SmugMugShell(fs).cmdloop())
+    func=lambda a: smugmug_shell.SmugMugShell(file_system).cmdloop())
   # ---------------
 
   parsed = main_parser.parse_args(args)
@@ -296,7 +304,7 @@ def run(args,
 
   try:
     parsed.func(parsed)
-  except smugmug_fs.Error as e:
-    print(e)
+  except smugmug_fs.Error as exc:
+    print(exc)
   except smugmug_lib.NotLoggedInError:
     return

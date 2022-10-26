@@ -1,6 +1,8 @@
-# Guard object intercepting writes to stdout and making sure lines are written
-# atomically. This ensures that two lines won't be printed entangled with
-# each other.
+"""
+Context manager object intercepting writes to stdout and making sure lines
+are written atomically. This ensures that two lines printed by two different
+threads won't be printed entangled with each other.
+"""
 
 import io
 import os
@@ -11,18 +13,45 @@ import threading
 thread_local = threading.local()
 
 
+class Error(Exception):
+  """Base class for all exception of this module."""
+
+
+class InvalidUsageError(Error):
+  """Error raised on incorrect API uses."""
+
+
 class ThreadSafePrint(object):
+  """Context manager allow multiple threads to print to the same console.
+
+  When used in a `with:` statement, ThreadSafePrint replaces the global
+  stdout, intercepting all writes and making sure lines are written atomically.
+  This ensures that two lines printed by two different threads won't be
+  printed entangled with each other.
+  """
+
+  def __init__(self):
+    self._original_stdout = None
+    self._mutex = threading.Lock()
+
 
   def __enter__(self):
     self._original_stdout = sys.stdout
-    self._mutex = threading.Lock()
     sys.stdout = self
     return self
 
-  def __exit__(self, type, value, traceback):
+  def __exit__(self, exc_type, exc_value, traceback):
+    del exc_type, exc_value, traceback  # Unused.
+    if self._original_stdout is None:
+      raise InvalidUsageError(
+          "Object must be used as a context manager, in a `with:` statement.")
     sys.stdout = self._original_stdout
 
   def write(self, string):
+    """Write a string to stdout."""
+    if self._original_stdout is None:
+      raise InvalidUsageError(
+          "Object must be used as a context manager, in a `with:` statement.")
     if not hasattr(thread_local, 'stdout'):
       thread_local.stdout = io.StringIO()
     stdout = thread_local.stdout

@@ -1,10 +1,7 @@
-# SumgMug OAuth client
+"""SumgMug OAuth client."""
 
-from dataclasses import dataclass
-from typing import Any, MutableMapping, Optional, Tuple
-import bottle
-import rauth
-import requests_oauthlib
+from typing import Optional
+
 import signal
 import socket
 import subprocess
@@ -12,6 +9,11 @@ import sys
 import threading
 from urllib import parse
 import webbrowser
+
+from dataclasses import dataclass
+import bottle
+import rauth
+import requests_oauthlib
 
 OAUTH_ORIGIN = 'https://secure.smugmug.com'
 REQUEST_TOKEN_URL = OAUTH_ORIGIN + '/services/oauth/1.0a/getRequestToken'
@@ -31,18 +33,21 @@ class LoginError(Error):
 
 @dataclass
 class ApiKey:
+  """A SmugMug API key."""
   key: str
   secret: str
 
 
 @dataclass
 class RequestToken:
+  """An OAuth request token."""
   token: str
   secret: str
 
 
 @dataclass
 class AccessToken:
+  """An OAuth access token."""
   token: str
   secret: str
 
@@ -57,24 +62,27 @@ class _State:
 
 
 class SmugMugOAuth(object):
+  """SumgMug OAuth client."""
 
   def __init__(self, api_key: ApiKey):
     self._service = self._create_service(api_key)
 
   def _get_free_port(self) -> int:
-    s = socket.socket()
-    s.bind(('', 0))
-    port = s.getsockname()[1]
-    s.close()
+    sock = socket.socket()
+    sock.bind(('', 0))
+    port = sock.getsockname()[1]
+    sock.close()
     return port
 
   def request_access_token(self) -> AccessToken:
+    """Request an OAuth access token for the SmugMug service."""
     port = self._get_free_port()
     state = _State(running=True, port=port, app=bottle.Bottle())
     state.app.route('/', callback=lambda s=state: self._index(s))
     state.app.route('/callback', callback=lambda s=state: self._callback(s))
 
     def abort(signum, frame):
+      del signum, frame  # Unused.
       print('SIGINT received, aborting...')
       state.app.close()
       state.running=False
@@ -89,24 +97,25 @@ class SmugMugOAuth(object):
     try:
       thread.start()
 
-      login_url = 'http://localhost:%d/' % port
+      login_url = f'http://localhost:{port}/'
       print('Started local server.')
-      print('Visit %s to grant SmugCli access to your SmugMug account.' % login_url)
-      print('Opening %s in default browser...' % login_url)
+      print(f'Visit {login_url} to grant SmugCli access to your SmugMug '
+            'account.')
+      print(f'Opening {login_url} in default browser...')
       if self._is_cygwin():
         try:
           return_code = subprocess.call(['cygstart', login_url],
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
           success = (return_code == 0)
-        except:
+        except Exception:  # pylint: disable=broad-except
           success = False
       else:
         success = webbrowser.open(login_url)
 
       if not success:
         print('Could not start default browser automatically.')
-        print('Please visit %s to complete login process.' % login_url)
+        print(f'Please visit {login_url} to complete login process.')
 
       while state.running and thread.is_alive():
         thread.join(1)
@@ -120,6 +129,7 @@ class SmugMugOAuth(object):
 
   def get_oauth(
       self, access_token: AccessToken) -> requests_oauthlib.OAuth1:
+    """Returns an OAuth1 instance."""
     return requests_oauthlib.OAuth1(
         self._service.consumer_key,
         self._service.consumer_secret,
@@ -137,19 +147,19 @@ class SmugMugOAuth(object):
       base_url=API_ORIGIN + '/api/v2')
 
   def _index(self, state: _State) -> None:
-    """This route is where our client goes to begin the authorization process."""
+    """Route initiating the authorization process."""
     request_token, request_token_secret = self._service.get_request_token(
-       params={'oauth_callback': 'http://localhost:%d/callback' % state.port})
+       params={'oauth_callback': f'http://localhost:{state.port}/callback'})
     state.request_token = RequestToken(
       token=request_token, secret=request_token_secret)
 
     auth_url = self._service.get_authorize_url(request_token)
-    auth_url = self._add_auth_params(auth_url, access='Full', permissions='Modify')
+    auth_url = self._add_auth_params(
+        auth_url, access='Full', permissions='Modify')
     bottle.redirect(auth_url)
 
   def _callback(self, state: _State) -> str:
-    """This route is where we receive the callback after the user accepts or
-      rejects the authorization request."""
+    """Route invoked after the user completes the authorization request."""
     if state.request_token is None:
       raise LoginError("No request token obtained.")
 
@@ -178,6 +188,6 @@ class SmugMugOAuth(object):
       return_code = subprocess.call(['which', 'cygstart'],
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE)
-      return (return_code == 0)
-    except:
+      return return_code == 0
+    except Exception:  # pylint: disable=broad-except
       return False

@@ -1,6 +1,7 @@
-# dict implementation that automatically saves it's state to a file on disk.
+"""`dict` automatically saving it's state to a file on disk."""
 
 import json
+import locale
 import os
 from typing import Generic, MutableMapping, MutableSequence, TypeVar, Union
 
@@ -24,15 +25,19 @@ NonWrappableTypeVar = TypeVar('NonWrappableTypeVar',
 def _maybe_wrap(
   persistent_dict: 'PersistentDict',
   item: Union[WrappableTypeVar, NonWrappableTypeVar]
-) -> Union['PersistentDictWrapper[WrappableTypeVar]', NonWrappableTypeVar]:
+) -> Union['_PersistentDictWrapper[WrappableTypeVar]', NonWrappableTypeVar]:
   if isinstance(item, (MutableSequence, MutableMapping)):
-    return PersistentDictWrapper(persistent_dict, item)
+    return _PersistentDictWrapper(persistent_dict, item)
   else:
     return item
 
 
-class PersistentDictWrapper(Generic[WrappableTypeVar]):
-  def __init__(self, persistent_dict: 'PersistentDict', value: WrappableTypeVar):
+class _PersistentDictWrapper(Generic[WrappableTypeVar]):
+  """Wraps objects held in PersistentDict propagating the auto-save logic."""
+
+  def __init__(self,
+               persistent_dict: 'PersistentDict',
+               value: WrappableTypeVar) -> None:
     self._persistent_dict = persistent_dict
     self._value = value
 
@@ -41,7 +46,7 @@ class PersistentDictWrapper(Generic[WrappableTypeVar]):
     if hasattr(attribute, '__call__'):
       def wrapped_function(*args, **kwargs):
         result = attribute(*args, **kwargs)
-        self._persistent_dict._save_to_disk()
+        self._persistent_dict.save_to_disk()
         return _maybe_wrap(self._persistent_dict, result)
       return wrapped_function
     else:
@@ -49,11 +54,11 @@ class PersistentDictWrapper(Generic[WrappableTypeVar]):
 
   def __delitem__(self, key):
     self._value.__delitem__(key)
-    self._persistent_dict._save_to_disk()
+    self._persistent_dict.save_to_disk()
 
   def __setitem__(self, key, value):
     self._value.__setitem__(key, value)
-    self._persistent_dict._save_to_disk()
+    self._persistent_dict.save_to_disk()
 
   def __getitem__(self, key):
     value = self._value.__getitem__(key)
@@ -69,32 +74,36 @@ class PersistentDictWrapper(Generic[WrappableTypeVar]):
     return self._value.__iter__()
 
 
-class PersistentDict(object):
+class PersistentDict():
+  """`dict` that automatically saves its content to disk when updated."""
+
   def __init__(self, path: str):
     self._path = path
     self._dict = self._read_from_disk()
 
   def _read_from_disk(self):
     try:
-      with open(self._path) as f:
-        return json.load(f)
+      with open(self._path, encoding=locale.getpreferredencoding()) as file:
+        return json.load(file)
     except IOError:
       # Couldn't read file. Default to empty dict.
       return {}
-    except ValueError:
-      raise InvalidFileError
-    except:
-      raise UnknownError
+    except ValueError as exc:
+      raise InvalidFileError('Invalid config file.') from exc
+    except Exception as exc:
+      raise UnknownError(
+        'An unknown error occurred reading config file.') from exc
 
-  def _save_to_disk(self):
+  def save_to_disk(self):
+    """Save this `PersistentDict` to disk"""
     if not self._dict:
       try:
         os.remove(self._path)
       except OSError:
         pass
       return
-    with open(self._path, 'w') as handle:
-      json.dump(self._dict, handle, sort_keys=True, indent=2,
+    with open(self._path, 'w', encoding=locale.getpreferredencoding()) as file:
+      json.dump(self._dict, file, sort_keys=True, indent=2,
                 separators=(',', ': '))
 
   def __getattr__(self, name: str):
@@ -102,7 +111,7 @@ class PersistentDict(object):
     if hasattr(attribute, '__call__'):
       def wrapped_function(*args, **kwargs):
         result = attribute(*args, **kwargs)
-        self._save_to_disk()
+        self.save_to_disk()
         return _maybe_wrap(self, result)
       return wrapped_function
     else:
@@ -110,11 +119,11 @@ class PersistentDict(object):
 
   def __delitem__(self, key):
     self._dict.__delitem__(key)
-    self._save_to_disk()
+    self.save_to_disk()
 
   def __setitem__(self, key, value):
     self._dict.__setitem__(key, value)
-    self._save_to_disk()
+    self.save_to_disk()
 
   def __getitem__(self, key: str):
     value = self._dict.__getitem__(key)

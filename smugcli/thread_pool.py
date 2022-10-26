@@ -1,3 +1,5 @@
+"""Pool of threads consuming tasks from a queue"""
+
 import queue
 import threading
 import time
@@ -18,12 +20,11 @@ class Worker(threading.Thread):
         try:
           if func:
             func(*args, **kwargs)
-        except Exception as e:
-          print(str(e))
-          # traceback.print_exc()
+        except Exception as exc:  # pylint: disable=broad-except
+          print(str(exc))
         finally:
           self._task_queue.task_done()
-      except queue.Empty as e:
+      except queue.Empty:
         pass
 
       if self._thread_pool.aborting:
@@ -37,13 +38,14 @@ class ThreadPool:
     self._threads = []
     self._aborting = False
     for _ in range(num_threads):
-      t = Worker(self, self._tasks)
-      t.daemon = True
-      t.start()
-      self._threads.append(t)
+      worker = Worker(self, self._tasks)
+      worker.daemon = True
+      worker.start()
+      self._threads.append(worker)
 
   @property
   def aborting(self):
+    """Returns whether the threadpool is aborting."""
     return self._aborting
 
   def add(self, func, *args, **kwargs) -> None:
@@ -66,22 +68,24 @@ class ThreadPool:
     self._stop_workers()
 
     # Wait for all threads to quit.
-    for t in self._threads:
-      while t.is_alive():
-        t.join(1)
+    for thread in self._threads:
+      while thread.is_alive():
+        thread.join(1)
 
   def _stop_workers(self, signum=None, frame=None):
+    del signum, frame  # Unused.
     self._aborting = True
 
     # Wake up any remaining blocked threads.
-    for t in self._threads:
+    for _ in self._threads:
       try:
         self._tasks.put((None, None, None), block=False)
-      except queue.Full as e:
+      except queue.Full:
         pass
 
   def __enter__(self):
     return self
 
-  def __exit__(self, type, value, traceback):
+  def __exit__(self, exc_type, exc_value, traceback):
+    del exc_type, exc_value, traceback  # Unused.
     self.join()

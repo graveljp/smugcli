@@ -1,27 +1,28 @@
-from __future__ import print_function
+"""Test for io_expectation.py."""
+
+import sys
+import unittest
+
+from parameterized import parameterized, param
 
 import io_expectation as expect
 
-from parameterized import parameterized, param
-import sys
-import unittest
-import re
 
-def AssertEquals(lhs, rhs):
+def assert_equals(lhs, rhs):
+  """Asserts that `lhs` equals `rhs`. Usable at the global scope."""
   if lhs != rhs:
-    raise AssertionError('Strings are not equals: %s != %s' % (lhs, rhs))
+    raise AssertionError(f'Strings are not equals: {lhs} != {rhs}')
 
 
 class IoExpectationTest(unittest.TestCase):
-
+  """Tests for the class `io_expectation.ExpectedInputOutput`."""
   def setUp(self):
     self._io = expect.ExpectedInputOutput()
     sys.stdin = self._io
     sys.stdout = self._io
 
   def tearDown(self):
-    sys.stdin = self._io._original_stdin
-    sys.stdout = self._io._original_stdout
+    self._io.close()
 
   @parameterized.expand([
     # ==== expect.Equals ====
@@ -140,48 +141,62 @@ class IoExpectationTest(unittest.TestCase):
     # ==== expect.Regex ====
     param(
       'expect_regex',
-      expected_io=expect.Regex('.xpec.*d.*'),
+      expected_io=expect.Regex('.*out.ut'),
       ios=lambda: print('Expected output'),
       error_message=None),
 
     param(
+      'expect_regex_allows_partial_match',
+      expected_io=expect.Regex('.*out.u'),
+      ios=lambda: print('Expected output'),
+      error_message=None),
+
+    param(
+      'expect_regex_can_require_full_match',
+      expected_io=expect.Regex('.*out.u$'),
+      ios=lambda: print('Expected output'),
+      error_message=("Unexpected output:\n"
+                     "- Regex('.*out.u$')\n"
+                     "+ 'Expected output\\n'")),
+
+    param(
       'expect_regex_no_output',
-      expected_io=expect.Regex('.xpec.*d.*'),
+      expected_io=expect.Regex('.*out.ut'),
       ios=lambda: None,
       error_message=("Pending IO expectation never fulfilled:\n"
-                     "Regex('.xpec.*d.*')")),
+                     "Regex('.*out.ut')")),
 
     param(
       'expect_regex_mismatch',
-      expected_io=expect.Regex('Expec.*d'),
+      expected_io=expect.Regex('Expect.*put'),
       ios=lambda: print('Something else'),
       error_message=("Unexpected output:\n"
-                     "- Regex('Expec.*d')\n"
+                     "- Regex('Expect.*put')\n"
                      "+ 'Something else\\n'")),
 
     param(
       'expect_regex_extra_output',
-      expected_io=expect.Regex('.*xpec.*d.*'),
+      expected_io=expect.Regex('Expect.*put'),
       ios=lambda: (print('Expected output'),
                    print('Unexpected output')),
       error_message="No more output expected, but got: 'Unexpected output\n'"),
 
     # ==== expect.Anything ====
     param(
-      'expect_anyting_success',
+      'expect_anything_success',
       expected_io=expect.Anything(),
       ios=lambda: print('Some output'),
       error_message=None),
 
     param(
-      'expect_anyting_no_output',
+      'expect_anything_no_output',
       expected_io=expect.Anything(),
       ios=lambda: None,
       error_message=("Pending IO expectation never fulfilled:\n"
                      "Anything()")),
 
     param(
-      'expect_anyting_extra_output',
+      'expect_anything_extra_output',
       expected_io=expect.Anything(),
       ios=lambda: (print('Some output'),
                    print('Some more output')),
@@ -418,15 +433,16 @@ class IoExpectationTest(unittest.TestCase):
 
     param(
       'expect_not_equals_and_not_equals_repeatedly_error',
-      expected_io=(expect.Not(expect.Equals('Unexp 1')) &
-                   expect.Not(expect.Equals('Unexp 2'))).repeatedly(),
+      expected_io=(expect.Not(expect.Equals('Unexpected 1')) &
+                   expect.Not(expect.Equals('Unexpected 2'))).repeatedly(),
       ios=lambda: (print('Expected 1'),
                    print('Expected 2'),
-                   print('Unexp 1')),
+                   print('Unexpected 1')),
       error_message=(
         "Unexpected output:\n"
-        "- Repeatedly(Not(Equals('Unexp 1')) and Not(Equals('Unexp 2')))\n"
-        "+ 'Unexp 1\\n'")),
+        "- Repeatedly(Not(Equals('Unexpected 1')) and "
+        "Not(Equals('Unexpected 2')))\n"
+        "+ 'Unexpected 1\\n'")),
 
     param(
       'expect_not_equals_or_equals_repeatedly',
@@ -845,7 +861,7 @@ class IoExpectationTest(unittest.TestCase):
     param(
       'expect_reply',
       expected_io=expect.Reply('yes'),
-      ios=lambda: AssertEquals(input(), 'yes'),
+      ios=lambda: assert_equals(input(), 'yes'),
       error_message=None),
 
     param(
@@ -854,7 +870,7 @@ class IoExpectationTest(unittest.TestCase):
         expect.InOrder(
           expect.Equals('Will it work? '),
           expect.Reply('yes'))),
-      ios=lambda: AssertEquals(input('Will it work? '), 'yes'),
+      ios=lambda: assert_equals(input('Will it work? '), 'yes'),
       error_message=None),
 
     # ==== Syntactic sugars ====
@@ -886,6 +902,8 @@ class IoExpectationTest(unittest.TestCase):
       error_message=None),
   ])
   def test_expectation(self, test_name, expected_io, ios, error_message):
+    """Parameterized test validating io expectations."""
+    del test_name  # Unused.
     self._io.set_expected_io(expected_io)
     ios()
     if error_message is None:
@@ -897,6 +915,7 @@ class IoExpectationTest(unittest.TestCase):
         self.assertEqual(error_message, str(error.exception))
 
   def test_documentation_example(self):
+    """Test the example provided in the documentation."""
     self._io.set_expected_io(
       expect.InOrder(
         expect.Contains('initialization'),
@@ -917,12 +936,14 @@ class IoExpectationTest(unittest.TestCase):
     self._io.assert_expectations_fulfilled()
 
   def test_output_was(self):
+    """Tests the `assert_output_was` method."""
     print('Some output')
     self._io.assert_output_was('Some output')
     print('Some more output')
     self._io.assert_output_was('Some more output')
 
   def test_set_expected_io_ignore_previous_outputs(self):
+    """Only IOs happening after setting expectations are considered."""
     print('Some ignored output')
     self._io.set_expected_io('Some expected output')
     print('Some expected output')

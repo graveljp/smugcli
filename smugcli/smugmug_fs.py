@@ -1,25 +1,26 @@
+"""File-system-like API for SmugMug."""
+
 from typing import DefaultDict, List, Optional, Sequence, Tuple, Union
-from . import persistent_dict
-from . import smugmug as smugmug_lib
-from . import task_manager  # Must be included before hachoir so stdout override works.
-from . import thread_pool
-from . import thread_safe_print
 
 import collections
 import datetime
 import glob
+import itertools
+import json
+import hashlib
+import os
+from urllib import parse
 
 from hachoir.metadata import extractMetadata
 from hachoir.parser import guessParser
 from hachoir.stream import StringInputStream
 from hachoir.core import config as hachoir_config
 
-import itertools
-import json
-import hashlib
-import os
-import requests
-from urllib import parse
+from . import persistent_dict
+from . import smugmug as smugmug_lib
+from . import task_manager
+from . import thread_pool
+from . import thread_safe_print
 
 hachoir_config.quiet = True
 
@@ -48,6 +49,7 @@ class ExtractMetadataError(Error):
 
 
 class SmugMugFS(object):
+  """File-system-like API for SmugMug."""
   def __init__(self, smugmug: smugmug_lib.SmugMug) -> None:
     self._smugmug = smugmug
     self._aborting = False
@@ -59,17 +61,21 @@ class SmugMugFS(object):
 
   @property
   def smugmug(self) -> smugmug_lib.SmugMug:
+    """Returns the SmugMug web interface object."""
     return self._smugmug
 
   def abort(self) -> None:
+    """Requests the commands that is currently running to abort."""
     self._aborting = True
 
   def get_root_node(self, user: str) -> smugmug_lib.Node:
+    """Returns the specified user's root node."""
     return self._smugmug.get_root_node(user)
 
   def path_to_node(
       self, user: str, path: str
   ) -> Tuple[List[smugmug_lib.Node], List[str]]:
+    """Loads the node of the specified path in the user's MugMug account."""
     current_node = self.get_root_node(user)
     parts = list(filter(bool, path.split(os.sep)))
     nodes = [current_node]
@@ -79,8 +85,8 @@ class SmugMugFS(object):
       self, matched_nodes: List[smugmug_lib.Node], dirs: Sequence[str]
   ) -> Tuple[List[smugmug_lib.Node], List[str]]:
     unmatched_dirs = collections.deque(dirs)
-    for dir in dirs:
-      child_node = matched_nodes[-1].get_child(dir)
+    for child in dirs:
+      child_node = matched_nodes[-1].get_child(child)
       if not child_node:
         break
 
@@ -98,37 +104,40 @@ class SmugMugFS(object):
     folder_depth -= 1 if node_type == 'Album' else 0
     if folder_depth >= 7:  # matched_nodes include an extra node for the root.
       raise SmugMugLimitsError(
-        'Cannot create "%s", SmugMug does not support folder more than 5 level '
-        'deep.' % os.sep.join([matched_nodes[-1].path] + dirs))
+        f'Cannot create "{os.sep.join([matched_nodes[-1].path] + dirs)}", '
+        'SmugMug does not support folder more than 5 level deep.')
 
     all_nodes = list(matched_nodes)
-    for i, dir in enumerate(dirs):
+    for i, child in enumerate(dirs):
       params = {
         'Type': node_type if i == len(dirs) - 1 else 'Folder',
         'Privacy': privacy,
       }
-      all_nodes.append(all_nodes[-1].get_or_create_child(dir, params))
+      all_nodes.append(all_nodes[-1].get_or_create_child(child, params))
     return all_nodes
 
   def get(self, url: str) -> None:
+    """Load the specified SmugMug API URL and return its JSON content."""
     scheme, netloc, path, query, fragment = parse.urlsplit(url)
+    del scheme, netloc, fragment  # Unused.
     params = parse.parse_qs(query)
     result = self._smugmug.get_json(path, params=params)
     print(json.dumps(result, sort_keys=True, indent=2, separators=(',', ': ')))
 
   def ignore_or_include(self, paths: Sequence[str], ignore: bool) -> None:
+    """Set a path to be ignored or included in the sync operation."""
     files_by_folder = collections.defaultdict(list)
     for folder, file in [os.path.split(path) for path in paths]:
       files_by_folder[folder].append(file)
 
     for folder, files in files_by_folder.items():
       if not os.path.isdir(folder or '.'):
-        print('Can\'t find folder "%s".' % folder)
+        print(f'Can\'t find folder "{folder}".')
         return
       for file in files:
         full_path = os.path.join(folder, file)
         if not os.path.exists(full_path):
-          print('"%s" doesn\'t exists.' % full_path)
+          print(f'"{full_path}" doesn\'t exists.')
           return
 
       configs = persistent_dict.PersistentDict(os.path.join(folder, '.smugcli'))
@@ -140,12 +149,14 @@ class SmugMugFS(object):
                                                       set(original_ignore)))
       configs['ignore'] = updated_ignore
 
-  def ls(self, user: Optional[str], path: str, details: bool) -> None:
+  def ls(  # pylint: disable=invalid-name
+      self, user: Optional[str], path: str, details: bool) -> None:
+    """Lists the content of a SmugMug folder."""
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if unmatched_dirs:
-      print('"%s" not found in "%s".' % (
-        unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes)))
+      print(f'"{unmatched_dirs[0]}" not found '
+            f'in "{os.sep.join(m.name for m in matched_nodes)}".')
       return
 
     node = matched_nodes[-1]
@@ -167,27 +178,30 @@ class SmugMugFS(object):
       node_type: str,
       privacy: str
   ) -> None:
+    """Create a node in the SmugMug database."""
     user = user or self._smugmug.get_auth_user()
     for path in paths:
       matched_nodes, unmatched_dirs = self.path_to_node(user, path)
       if len(unmatched_dirs) > 1 and not create_parents:
-        print('"%s" not found in "%s".' % (
-          unmatched_dirs[0], os.sep.join(m.name for m in matched_nodes)))
+        print(f'"{unmatched_dirs[0]}" not found '
+              f'in "{os.sep.join(m.name for m in matched_nodes)}".')
         continue
 
-      if not len(unmatched_dirs):
-        print('Path "%s" already exists.' % path)
+      if len(unmatched_dirs) == 0:
+        print(f'Path "{path}" already exists.')
         continue
 
       self._match_or_create_nodes(
         matched_nodes, unmatched_dirs, node_type, privacy)
 
-  def rmdir(self, user: Optional[str], parents: bool, dirs: Sequence[str]) -> None:
+  def rmdir(  # pylint: disable=invalid-name
+      self, user: Optional[str], parents: bool, dirs: Sequence[str]) -> None:
+    """Deletes a folder in SmugMug."""
     user = user or self._smugmug.get_auth_user()
-    for dir in dirs:
-      matched_nodes, unmatched_dirs = self.path_to_node(user, dir)
+    for name in dirs:
+      matched_nodes, unmatched_dirs = self.path_to_node(user, name)
       if unmatched_dirs:
-        print('Folder or album "%s" not found.' % dir)
+        print(f'Folder or album "{name}" not found.')
         continue
 
       matched_nodes.pop(0)
@@ -195,11 +209,11 @@ class SmugMugFS(object):
         current_dir = os.sep.join(m.name for m in matched_nodes)
         node = matched_nodes.pop()
         if len(node.get_children({'count': 1})):
-          print('Cannot delete %s: "%s" is not empty.' % (
-            node['Type'], current_dir))
+          node_type = node['Type']
+          print(f'Cannot delete {node_type}: "{current_dir}" is not empty.')
           break
 
-        print('Deleting "%s".' % current_dir)
+        print(f'Deleting "{current_dir}".')
         node.delete()
 
         if not parents:
@@ -209,59 +223,56 @@ class SmugMugFS(object):
     answer = input(question)
     return answer.lower() in ['y', 'yes']
 
-  def rm(
+  def rm(  # pylint: disable=invalid-name
       self,
       user: Optional[str],
       force: bool,
       recursive: bool,
       paths: Sequence[str]
   ) -> None:
+    """Deletes a file in SmugMug."""
     user = user or self._smugmug.get_auth_user()
     for path in paths:
       matched_nodes, unmatched_dirs = self.path_to_node(user, path)
       if unmatched_dirs:
-        print('"%s" not found.' % path)
+        print(f'"{path}" not found.')
         continue
 
       node = matched_nodes[-1]
       if recursive or len(node.get_children({'count': 1})) == 0:
-        if force or self._ask('Remove %s node "%s"? ' % (node['Type'], path)):
-          print('Removing "%s".' % path)
+        node_type = node['Type']
+        if force or self._ask(f'Remove {node_type} node "{path}"? '):
+          print(f'Removing "{path}".')
           node.delete()
       else:
-        print('Folder "%s" is not empty.' % path)
+        print(f'Folder "{path}" is not empty.')
 
   def upload(self,
              user: Optional[str],
              filenames: Sequence[str],
              album: str) -> None:
+    """Upload a file to SmugMug."""
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, album)
     if unmatched_dirs:
-      print('Album not found: "%s".' % album)
+      print(f'Album not found: "{album}".')
       return
 
     node = matched_nodes[-1]
-    if node['Type'] != 'Album':
-      print('Cannot upload images in node of type "%s".' % node['Type'])
+    node_type = node['Type']
+    if node_type != 'Album':
+      print(f'Cannot upload images in node of type "{node_type}".')
       return
 
     for filename in itertools.chain(*(glob.glob(f) for f in filenames)):
       file_basename = os.path.basename(filename).strip()
       if node.get_child(file_basename):
-        print('Skipping "%s", file already exists in Album "%s".' % (filename,
-                                                                     album))
+        print(f'Skipping "{filename}", file already exists in Album "{album}".')
         continue
 
-      print('Uploading "%s" to "%s"...' % (filename, album))
-      with open(filename, 'rb') as f:
-        response = node.upload('Album',
-                               file_basename,
-                               f.read())
-      if response.status_code != requests.codes.ok:
-        print('Error uploading "%s" to "%s".' % (filename, album))
-        print('Server responded with %s.' % str(response))
-        return None
+      print(f'Uploading "{filename}" to "{album}"...')
+      with open(filename, 'rb') as file:
+        node.upload('Album', file_basename, file.read())
 
   def _get_common_path(
       self,
@@ -288,6 +299,7 @@ class SmugMugFS(object):
            file_threads: int,
            upload_threads: int,
            set_defaults: bool) -> None:
+    """Synchronize a local folder with a folder in SmugMug"""
     if set_defaults:
       self.smugmug.config['folder_threads'] = folder_threads
       self.smugmug.config['file_threads'] = file_threads
@@ -338,7 +350,7 @@ class SmugMugFS(object):
     target = target if target.startswith(os.sep) else os.sep + target
     matched, unmatched_dirs = self.path_to_node(user, target)
     if unmatched_dirs:
-      print('Target folder not found: "%s".' % target)
+      print(f'Target folder not found: "{target}".')
       return
     target_type = matched[-1]['Type'].lower()
 
@@ -353,11 +365,11 @@ class SmugMugFS(object):
 
     # Request confirmation before proceeding.
     if len(all_sources) == 1:
-      print('Syncing "%s" to SmugMug %s "%s".' % (
-        all_sources[0], target_type, target))
+      print(f'Syncing "{all_sources[0]}" to SmugMug {target_type} "{target}".')
     else:
-      print('Syncing:\n%s\nto SmugMug %s "%s".' % (
-        '  ' + '\n  '.join(all_sources), target_type, target))
+      print('Syncing:\n'
+            '  ' + '\n  '.join(all_sources) + '\n'
+            f'to SmugMug {target_type} "{target}".')
     if not force and not self._ask('Proceed (yes/no)? '):
       return
 
@@ -400,8 +412,7 @@ class SmugMugFS(object):
                           target,
                           privacy,
                           walk_step,
-                          matched,
-                          unmatched_dirs)
+                          matched)
     print('Sync complete.')
 
   def _sync_folder(self,
@@ -412,8 +423,7 @@ class SmugMugFS(object):
                    target: str,
                    privacy: str,
                    walk_step: Tuple[str, List[str], List[str]],
-                   matched: Sequence[smugmug_lib.Node],
-                   unmatched_dirs: Sequence[str]) -> None:
+                   matched: Sequence[smugmug_lib.Node]) -> None:
     if self._aborting:
       return
     subdir, dirs, files = walk_step
@@ -434,15 +444,15 @@ class SmugMugFS(object):
         matched = self._match_or_create_nodes(
           matched, unmatched, 'Album', privacy)
       else:
-        print('Found matching remote album "%s".' % os.path.join(*target_dirs))
+        print(f'Found matching remote album "{os.path.join(*target_dirs)}".')
 
       # Iterate in sorted order to make unit tests deterministic.
-      for f in sorted(media_files):
+      for file in sorted(media_files):
         if self._aborting:
           return
         file_pool.add(self._sync_file,
                       manager,
-                      os.path.join(subdir, f),
+                      os.path.join(subdir, file),
                       matched[-1],
                       upload_pool)
 
@@ -453,10 +463,11 @@ class SmugMugFS(object):
                  upload_pool: thread_pool.ThreadPool) -> None:
     if self._aborting:
       return
-    with manager.start_task(1, '* Syncing file "%s"...' % file_path):
+    with manager.start_task(category=1,
+                            task=f'* Syncing file "{file_path}"...'):
       file_name = file_path.split(os.sep)[-1].strip()
-      with open(file_path, 'rb') as f:
-        file_content = f.read()
+      with open(file_path, 'rb') as file:
+        file_content = file.read()
       file_root, file_extension = os.path.splitext(file_name)
       if file_extension.lower() == '.heic':
         # SmugMug converts HEIC files to JPEG and renames them in the process
@@ -479,12 +490,13 @@ class SmugMugFS(object):
             metadata = extractMetadata(parser)
             if metadata is None:
               raise ExtractMetadataError(
-                'Failed extracting metadata from video file "%s".' % file_path)
+                f'Failed extracting metadata from video file "{file_path}".')
             file_time = max(metadata.getValues('last_modification') +
                             metadata.getValues('creation_date'))
-          except Exception as err:
-            print('Failed extracting metadata for file "%s".' % file_path)
-            file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+          except Exception:  # pylint: disable=broad-except
+            print(f'Failed extracting metadata for file "{file_path}".')
+            file_time = datetime.datetime.fromtimestamp(
+                os.path.getmtime(file_path))
 
           time_delta = abs(remote_time - file_time)
           same_file = (time_delta <= datetime.timedelta(seconds=1))
@@ -523,27 +535,26 @@ class SmugMugFS(object):
     if self._aborting:
       return
     if remote_file:
-      print('File "%s" exists, but has changed. '
-            'Deleting old version.' % file_path)
+      print(f'File "{file_path}" exists, but has changed. '
+            'Deleting old version.')
       remote_file.delete()
-      task = '+ Re-uploading "%s"' % file_path
+      task_str = f'+ Re-uploading "{file_path}"'
     else:
-      task = '+ Uploading "%s"' % file_path
+      task_str = f'+ Uploading "{file_path}"'
 
-    def get_progress_fn(task):
-      def progress_fn(percent):
-        manager.update_progress(0, task, ': %d%%' % percent)
-        return self._aborting
-      return progress_fn
-
-    with manager.start_task(0, task):
+    with manager.start_task(0, task_str) as task:
+      def get_progress_fn(task: task_manager.Task):
+        def progress_fn(percent: int):
+          task.update_status(f': {percent:.1f}%')
+          return self._aborting
+        return progress_fn
       node.upload('Album', file_name, file_content,
                   progress_fn=get_progress_fn(task))
 
     if remote_file:
-      print('Re-uploaded "%s".' % file_path)
+      print(f'Re-uploaded "{file_path}".')
     else:
-      print('Uploaded "%s".' % file_path)
+      print(f'Uploaded "{file_path}".')
 
   def _is_media(self, path):
     extension = os.path.splitext(path)[1][1:].lower().strip()

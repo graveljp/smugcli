@@ -1,83 +1,97 @@
-from smugcli import smugmug
+"""Unit test for smugmug.py"""
 
-import test_utils
-
-import freezegun
 import unittest
 
+import freezegun
+
+from smugcli import smugmug
+
 class MockNode(object):
+  """A mock version of `smugmug.Node`."""
   def __init__(self):
-    self._reset_times = 0
+    self._reset_count = 0
 
   def reset_cache(self):
-    self._reset_times += 1
+    """Override of `smugmug.Node.reset_cache`, tracking invocation count."""
+    self._reset_count += 1
+
+  @property
+  def reset_count(self):
+    """Returns the number of time `reset_cache` was called on this node."""
+    return self._reset_count
 
 
 class TestChildCacheGarbageCollector(unittest.TestCase):
+  """Test for `smugmug.ChildCacheGarbageCollector`."""
 
   def test_clears_child_cache(self):
-    gc = smugmug.ChildCacheGarbageCollector(3)
+    """Tests that nodes get reset, oldest visited first."""
+    collector = smugmug.ChildCacheGarbageCollector(3)
     nodes = [MockNode(), MockNode(), MockNode(), MockNode(), MockNode()]
-    gc.visited(nodes[0])
-    gc.visited(nodes[1])
-    gc.visited(nodes[2])
-    gc.visited(nodes[3])
-    gc.visited(nodes[4])
+    collector.visited(nodes[0])
+    collector.visited(nodes[1])
+    collector.visited(nodes[2])
+    collector.visited(nodes[3])
+    collector.visited(nodes[4])
 
-    self.assertEqual(nodes[0]._reset_times, 1)
-    self.assertEqual(nodes[1]._reset_times, 1)
-    self.assertEqual(nodes[2]._reset_times, 0)
-    self.assertEqual(nodes[3]._reset_times, 0)
-    self.assertEqual(nodes[4]._reset_times, 0)
+    self.assertEqual(nodes[0].reset_count, 1)
+    self.assertEqual(nodes[1].reset_count, 1)
+    self.assertEqual(nodes[2].reset_count, 0)
+    self.assertEqual(nodes[3].reset_count, 0)
+    self.assertEqual(nodes[4].reset_count, 0)
 
   def test_repeated_visit_are_ignored(self):
-    gc = smugmug.ChildCacheGarbageCollector(2)
+    """Tests that repeating visits do not count."""
+    collector = smugmug.ChildCacheGarbageCollector(2)
     nodes = [MockNode(), MockNode(), MockNode()]
-    gc.visited(nodes[0])
-    gc.visited(nodes[1])
-    gc.visited(nodes[2])
-    gc.visited(nodes[2])
-    gc.visited(nodes[2])
+    collector.visited(nodes[0])
+    collector.visited(nodes[1])
+    collector.visited(nodes[2])
+    collector.visited(nodes[2])
+    collector.visited(nodes[2])
 
-    self.assertEqual(nodes[0]._reset_times, 1)
-    self.assertEqual(nodes[1]._reset_times, 0)
-    self.assertEqual(nodes[2]._reset_times, 0)
+    self.assertEqual(nodes[0].reset_count, 1)
+    self.assertEqual(nodes[1].reset_count, 0)
+    self.assertEqual(nodes[2].reset_count, 0)
 
   def test_optimally_resets_alternating_nodes(self):
-    gc = smugmug.ChildCacheGarbageCollector(2)
+    """Tests that alternating visits do not count."""
+    collector = smugmug.ChildCacheGarbageCollector(2)
 
     nodes = [MockNode(), MockNode()]
-    gc.visited(nodes[1])
-    gc.visited(nodes[0])
-    gc.visited(nodes[1])
-    gc.visited(nodes[0])
+    collector.visited(nodes[1])
+    collector.visited(nodes[0])
+    collector.visited(nodes[1])
+    collector.visited(nodes[0])
 
-    self.assertEqual(nodes[0]._reset_times, 0)
-    self.assertEqual(nodes[1]._reset_times, 0)
+    self.assertEqual(nodes[0].reset_count, 0)
+    self.assertEqual(nodes[1].reset_count, 0)
 
   def test_heap_does_not_grow_out_of_control(self):
-    gc = smugmug.ChildCacheGarbageCollector(1)
+    """Tests garbage collector's memory usage."""
+    collector = smugmug.ChildCacheGarbageCollector(1)
 
     node = MockNode()
-    gc.visited(node)
-    gc.visited(node)
-    gc.visited(node)
-    gc.visited(node)
+    collector.visited(node)
+    collector.visited(node)
+    collector.visited(node)
+    collector.visited(node)
 
-    self.assertEqual(len(gc._nodes), 1)
-    self.assertEqual(len(gc._oldest), 1)
+    self.assertEqual(len(collector.nodes), 1)
+    self.assertEqual(len(collector.oldest), 1)
 
   def test_time_keyed_heap_works_with_nodes_created_on_same_timestamp(self):
+    """Tests that nodes created on the same timestamps gets GCed the same."""
     with freezegun.freeze_time('2019-01-01') as frozen_time:
-      gc = smugmug.ChildCacheGarbageCollector(1)
+      collector = smugmug.ChildCacheGarbageCollector(1)
       nodes = [MockNode(), MockNode(), MockNode()]
 
-      gc.visited(nodes[0])
-      gc.visited(nodes[1])
+      collector.visited(nodes[0])
+      collector.visited(nodes[1])
 
       frozen_time.tick()
-      gc.visited(nodes[2])
+      collector.visited(nodes[2])
 
-    self.assertEqual(nodes[0]._reset_times, 1)
-    self.assertEqual(nodes[1]._reset_times, 1)
-    self.assertEqual(nodes[2]._reset_times, 0)
+    self.assertEqual(nodes[0].reset_count, 1)
+    self.assertEqual(nodes[1].reset_count, 1)
+    self.assertEqual(nodes[2].reset_count, 0)

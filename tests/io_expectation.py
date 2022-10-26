@@ -1,62 +1,63 @@
-# Framework for setting Input and Output expectations in a unit test.
-#
-# This file defines the class ExpectedInputOutput which can be used to override
-# sys.stdout to validate that expected outputs are printed and sys.stdin to
-# inject mock responses in the standard input. This is useful in unit test, to
-# validate that a command line tool behaves as expected.
-#
-# The following example tests a program printing a few lines, asking a question
-# and acting according to the response:
-#
-#   import io_expectation as expect
-#
-#   mock_io = expect.ExpectedInputOutput()
-#   sys.stdin = mock_io
-#   sys.stdout = mock_io
-#
-#   # Set expected I/Os.
-#   mock_io.set_expected_io(
-#     expect.InOrder(
-#       expect.Contains('initialization'),
-#       expect.Anything().repeatedly(),
-#       expect.Equals('Proceed?'),
-#       expect.Reply('yes'),
-#       expect.Prefix('Success')))
-#
-#   # Run the program under test.
-#   print('Program initialization...')
-#   print('Loading resources...')
-#   print('Initialization complete.')
-#   print('Proceed? ')
-#   if raw_input() == 'yes':
-#     print('Success')
-#   else:
-#     print('Aborting')
-#
-#   # Validate that the program matched all expectations.
-#   mock_io.assert_expectations_fulfilled()
-#
-# Some expectation can be abbreviated, for instance, the following two
-# expectations are equivalent:
-#   io.set_expected_io(AnyOrder(Contains('foo'), Contains('bar')))
-#   io.set_expected_io(['foo', 'bar'])
-#
-# If no inputs are expected, expectation can be specified after the fact, which
-# is usually more readable in unit tests. For instance:
-#
-#   print('Some output text')
-#   mock_io.assert_output_was('Some output text')
-#
-#   print('More output')
-#   print('Some more output')
-#   mock_io.assert_output_was(['More output', 'Some more output'])
+"""Framework for setting Input and Output expectations in a unit test.
 
+This file defines the class ExpectedInputOutput which can be used to override
+sys.stdout to validate that expected outputs are printed and sys.stdin to
+inject mock responses in the standard input. This is useful in unit test, to
+validate that a command line tool behaves as expected.
+
+The following example tests a program printing a few lines, asking a question
+and acting according to the response:
+
+  import io_expectation as expect
+
+  mock_io = expect.ExpectedInputOutput()
+  sys.stdin = mock_io
+  sys.stdout = mock_io
+
+  # Set expected I/Os.
+  mock_io.set_expected_io(
+    expect.InOrder(
+      expect.Contains('initialization'),
+      expect.Anything().repeatedly(),
+      expect.Equals('Proceed?'),
+      expect.Reply('yes'),
+      expect.Prefix('Success')))
+
+  # Run the program under test.
+  print('Program initialization...')
+  print('Loading resources...')
+  print('Initialization complete.')
+  print('Proceed? ')
+  if raw_input() == 'yes':
+    print('Success')
+  else:
+    print('Aborting')
+
+  # Validate that the program matched all expectations.
+  mock_io.assert_expectations_fulfilled()
+
+Some expectation can be abbreviated, for instance, the following two
+expectations are equivalent:
+  io.set_expected_io(AnyOrder(Contains('foo'), Contains('bar')))
+  io.set_expected_io(['foo', 'bar'])
+
+If no inputs are expected, expectation can be specified after the fact, which
+is usually more readable in unit tests. For instance:
+
+  print('Some output text')
+  mock_io.assert_output_was('Some output text')
+
+  print('More output')
+  print('Some more output')
+  mock_io.assert_output_was(['More output', 'Some more output'])
+"""
 
 import copy
 import difflib
 import io
 import re
 import sys
+from typing import Callable, Optional
 
 
 def default_expectation(expected_io):
@@ -97,30 +98,35 @@ class ExpectBase(object):
     self._thrifty = False
 
   @property
-  def fulfilled(self):
+  def consumed(self) -> bool:
+    """True when the expectation has been consumed."""
+    return self._consumed
+
+  @property
+  def fulfilled(self) -> bool:
     """True when the expectation base condition has been met.
     The expectation could still accept more matches, until it's saturated.
     """
     return self._fulfilled
 
   @property
-  def saturated(self):
-    """True when the expectation reached it's upper limit of allowed matches."""
+  def saturated(self) -> bool:
+    """True when the expectation reached its upper limit of allowed matches."""
     return self._saturated
 
   @property
-  def greedy(self):
+  def greedy(self) -> bool:
     """If True, repeated expectation will match as much as possible, possibly
     starving the following expectations."""
     return self._greedy
 
   @property
-  def thrifty(self):
+  def thrifty(self) -> bool:
     """If True, the expectation will only match if no other alternative
     expectations match."""
     return self._thrifty
 
-  def consume(self, string):
+  def consume(self, string: str) -> bool:
     """Matches a string against this expectation.
 
     Consumer expectation sub-classes must override this function.
@@ -133,10 +139,11 @@ class ExpectBase(object):
 
     Returns:
       bool: True if the string matched successfully."""
+    del string  # Unused.
     self._consumed = True
     return False
 
-  def test_consume(self, string):
+  def test_consume(self, string: str) -> bool:
     """Tests if the expectation would success at consuming a string.
 
     Consumer expectation sub-classes must override this function.
@@ -146,9 +153,10 @@ class ExpectBase(object):
     Returns:
       bool: True if the string would match successfully.
     """
+    del string  # Unused.
     return False
 
-  def produce(self):
+  def produce(self) -> Optional[str]:
     """Produces a string, as if entered by the user in response to a prompt.
 
     Producer expectation sub-classes must override this function.
@@ -158,7 +166,9 @@ class ExpectBase(object):
     """
     return None
 
-  def repeatedly(self, min_repetition=0, max_repetition=None):
+  def repeatedly(self,
+                 min_repetition: int = 0,
+                 max_repetition: Optional[int] = None) -> 'Repeatedly':
     """Shorthand for making this expectation repeat indefinitely.
 
     Returns:
@@ -167,7 +177,9 @@ class ExpectBase(object):
     """
     return Repeatedly(self, min_repetition, max_repetition)
 
-  def times(self, min_repetition, max_repetition=None):
+  def times(self,
+            min_repetition: int = 0,
+            max_repetition: Optional[int] = None) -> 'Repeatedly':
     """Shorthand for making this expectation repeat a given number of times.
 
     Args:
@@ -183,7 +195,7 @@ class ExpectBase(object):
     max_repetition = max_repetition or min_repetition
     return Repeatedly(self, min_repetition, max_repetition)
 
-  def apply_transform(self, fn):
+  def apply_transform(self, callback: Callable[[str], str]):
     """Apply a transformation on the expectation definition.
 
     The ExpectedInputOutput class calls this function on every expectations
@@ -192,43 +204,52 @@ class ExpectBase(object):
     the OS format in expectations containing paths.
 
     Args:
-      fn: callback function to call to transform the expectation. Callback
-          takes a string as input and returns a transforms version of that
-          string.
+      callback: callback function to call to transform the expectation.
+          Callback takes a string as input and returns a transforms version of
+          that string.
     """
-    pass
+    del callback  # Unused.
 
-  def __and__(self, other):
+  def description(self, saturated: bool) -> str:
+    """Returns a textural description of this matcher."""
+    del saturated  # Unused.
+    raise NotImplementedError()
+
+  def __and__(self, other: 'ExpectBase') -> 'And':
     ret = And(self, other)
     return ret
 
-  def __or__(self, other):
+  def __or__(self, other: 'ExpectBase') -> 'Or':
     ret = Or(self, other)
     return ret
 
 
 class ExpectStringBase(ExpectBase):
-
-  def __init__(self, expected):
+  """Base class for all string expectations."""
+  def __init__(self, expected: str):
     super(ExpectStringBase, self).__init__()
     self._expected = expected
 
-  def consume(self, string):
+  def consume(self, string: str) -> bool:
     self._consumed = True
     self._fulfilled = self._saturated = self.test_consume(string)
     return self._fulfilled
 
-  def test_consume(self, string):
+  def test_consume(self, string: str) -> bool:
     return self._match(string)
 
-  def apply_transform(self, fn):
-    self._expected = fn(self._expected)
+  def apply_transform(self, callback: Callable[[str], str]) -> None:
+    self._expected = callback(self._expected)
 
-  def _match(self, string):
+  def _match(self, string: str) -> bool:
+    del string  # Unused.
     raise NotImplementedError()
 
-  def description(self, saturated):
-    return '%s(%s)' % (type(self).__name__, repr(self._expected))
+  def description(self, saturated: bool) -> str:
+    del saturated  # Unused.
+    name = type(self).__name__
+    args = repr(self._expected)
+    return f'{name}({args})'
 
 class Equals(ExpectStringBase):
   """Matches a string equal to the specified string.
@@ -236,74 +257,76 @@ class Equals(ExpectStringBase):
   Leading and trailing white-spaces are stripped.
   """
 
-  def _match(self, string):
+  def _match(self, string: str) -> bool:
     return string.strip() == self._expected.strip()
 
 
 class Contains(ExpectStringBase):
   """Matches a string containing a specific sub-string."""
 
-  def _match(self, string):
+  def _match(self, string: str) -> bool:
     return self._expected in string
 
 
 class Prefix(ExpectStringBase):
   """Matches a string having a specific prefix."""
 
-  def _match(self, string):
+  def _match(self, string: str) -> bool:
     return string.strip().startswith(self._expected)
 
 
 class Regex(ExpectStringBase):
   """Matches a string using a regular expression."""
 
-  def _match(self, other):
-    return re.match(self._expected, other, re.DOTALL)
+  def _match(self, string: str) -> bool:
+    return re.match(self._expected, string, re.DOTALL) is not None
 
 
 class Anything(ExpectBase):
   """Matches anything once."""
 
-  def consume(self, string):
+  def consume(self, string: str) -> bool:
     self._consumed = True
     self._fulfilled = self._saturated = self.test_consume(string)
     return True
 
-  def test_consume(self, string):
+  def test_consume(self, string: str) -> bool:
+    del string  # Unused.
     return True
 
-  def description(self, saturated):
-    return '%s()' % type(self).__name__
+  def description(self, saturated: bool) -> str:
+    del saturated  # Unused.
+    return f'{type(self).__name__}()'
 
 
 class And(ExpectBase):
-
+  """Matcher succeeding when all its sub matcher succeed."""
   def __init__(self, *args):
     super(And, self).__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
 
   @property
-  def fulfilled(self):
+  def fulfilled(self) -> bool:
     return all(e.fulfilled for e in self._expected_list)
 
   @property
-  def saturated(self):
+  def saturated(self) -> bool:
     return any(e.saturated for e in self._expected_list)
 
-  def consume(self, string):
+  def consume(self, string: str) -> bool:
     self._consumed = True
     return all(e.consume(string) for e in self._expected_list)
 
-  def test_consume(self, string):
+  def test_consume(self, string: str) -> bool:
     return all(e.test_consume(string) for e in self._expected_list)
 
-  def apply_transform(self, fn):
+  def apply_transform(self, callback: Callable[[str], str]) -> None:
     for expected in self._expected_list:
-      expected.apply_transform(fn)
+      expected.apply_transform(callback)
 
-  def description(self, saturated):
+  def description(self, saturated: bool)-> str:
     parts = [a.description(saturated) for a in self._expected_list
-             if not a._consumed or a.saturated == saturated]
+             if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
     else:
@@ -311,7 +334,7 @@ class And(ExpectBase):
 
 
 class Or(ExpectBase):
-
+  """Matcher succeeding when one of its sub matcher succeed."""
   def __init__(self, *args):
     super(Or, self).__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
@@ -331,13 +354,13 @@ class Or(ExpectBase):
   def test_consume(self, string):
     return any(e.test_consume(string) for e in self._expected_list)
 
-  def apply_transform(self, fn):
+  def apply_transform(self, callback: Callable[[str], str]):
     for expected in self._expected_list:
-      expected.apply_transform(fn)
+      expected.apply_transform(callback)
 
   def description(self, saturated):
     parts = [a.description(saturated) for a in self._expected_list
-             if not a._consumed or a.saturated == saturated]
+             if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
     else:
@@ -345,7 +368,7 @@ class Or(ExpectBase):
 
 
 class Not(ExpectBase):
-
+  """Matcher succeeding when it's sub-matcher fails."""
   def __init__(self, expected):
     super(Not, self).__init__()
     self._expected = expected
@@ -360,11 +383,11 @@ class Not(ExpectBase):
   def test_consume(self, string):
     return not self._expected.test_consume(string)
 
-  def apply_transform(self, fn):
-    self._expected.apply_transform(fn)
+  def apply_transform(self, callback: Callable[[str], str]):
+    self._expected.apply_transform(callback)
 
   def description(self, saturated):
-    return 'Not(%s)' % (self._expected.description(not saturated))
+    return f'Not({self._expected.description(not saturated)})'
 
 
 class Repeatedly(ExpectBase):
@@ -406,17 +429,18 @@ class Repeatedly(ExpectBase):
       self._current_expectation = copy.deepcopy(self._sub_expectation)
     return result
 
-  def apply_transform(self, fn):
-    self._sub_expectation.apply_transform(fn)
+  def apply_transform(self, callback: Callable[[str], str]):
+    self._sub_expectation.apply_transform(callback)
 
   def description(self, saturated):
     arg1 = max(self._min_repetition - self._current_repetition, 0)
     arg2 = (self._max_repetition - self._current_repetition
             if self._max_repetition is not None else None)
-    return '%s(%s%s%s)' % (
-      type(self).__name__, self._current_expectation.description(saturated),
-      ', %d' % arg1 if arg1 > 0 or arg2 is not None else '',
-      ', %d' % arg2 if arg2 else '')
+    name = type(self).__name__
+    desc = self._current_expectation.description(saturated)
+    arg1_str = f', {arg1}' if arg1 > 0 or arg2 is not None else ''
+    arg2_str = f', {arg2}' if arg2 else ''
+    return f'{name}({desc}{arg1_str}{arg2_str})'
 
 
 class ExpectSequenceBase(ExpectBase):
@@ -434,17 +458,19 @@ class ExpectSequenceBase(ExpectBase):
   def saturated(self):
     return all(e.saturated for e in self._expected_list)
 
-  def apply_transform(self, fn):
+  def apply_transform(self, callback: Callable[[str], str]):
     for expected in self._expected_list:
-      expected.apply_transform(fn)
+      expected.apply_transform(callback)
 
   def description(self, saturated):
     parts = [a.description(saturated) for a in self._expected_list
-             if not a._consumed or a.saturated == saturated]
+             if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
     else:
-      return '%s(%s)' % (type(self).__name__, ', '.join(parts))
+      name = type(self).__name__
+      args = ', '.join(parts)
+      return f'{name}({args})'
 
 
 class InOrder(ExpectSequenceBase):
@@ -469,7 +495,7 @@ class InOrder(ExpectSequenceBase):
     if to_consume is not None:
       i, expected = to_consume
       consumed = expected.consume(string)
-      assert(consumed)
+      assert consumed
       # We got a match somewhere down the sequence. Discard any preceding
       # fulfilled expectations.
       self._expected_list = self._expected_list[i:]
@@ -516,7 +542,7 @@ class AnyOrder(ExpectSequenceBase):
 
     if to_consume is not None:
       consumed = to_consume.consume(string)
-      assert(consumed)
+      assert consumed
       if to_consume.saturated:
         self._expected_list.remove(to_consume)
       return True
@@ -537,7 +563,7 @@ class AnyOrder(ExpectSequenceBase):
     return None
 
 
-def Somewhere(expectation):
+def Somewhere(expectation):  # pylint: disable=invalid-name
   """Match an expectation anywhere in a document."""
   return InOrder(Anything().repeatedly(),
                  expectation,
@@ -556,10 +582,12 @@ class Reply(ExpectBase):
     return self._reply_string
 
   def _consume(self, line):
-    raise AssertionError('Expecting user input but got output line: %s' % line)
+    raise AssertionError(f'Expecting user input but got output line: {line}')
 
   def description(self, saturated):
-    return '%s(%s)' % (type(self).__name__, self._reply_string)
+    name = type(self).__name__
+    args = self._reply_string
+    return f'{name}({args})'
 
 
 class ExpectedInputOutput(object):
@@ -570,8 +598,17 @@ class ExpectedInputOutput(object):
     self.set_expected_io(None)
     self._original_stdin = sys.stdin
     self._original_stdout = sys.stdout
+    self._expected_io = None
+    self._cmd_output = io.StringIO()
 
-  def set_transform_fn(self, transform_fn):
+  def close(self) -> None:
+    """Close this object and restore global io streams."""
+    sys.stdin = self._original_stdin
+    sys.stdout = self._original_stdout
+    self._expected_io = None
+    self._cmd_output = io.StringIO()
+
+  def set_transform_fn(self, transform_fn: Optional[Callable[[str], str]]):
     """Callback to transform all expectations passed in set_expected_io.
 
     Useful for 'patching' all expectations with the same transformation. A
@@ -633,8 +670,8 @@ class ExpectedInputOutput(object):
     reply = self._expected_io.produce()
     if not reply:
       raise AssertionError(
-        'Unexpected user input prompt request. Expected:\n'
-        '%s' % self._expected_io.description(saturated=False))
+        'Unexpected user input prompt request. Expected:\n' +
+        self._expected_io.description(saturated=False))
     reply += '\n'
     self._original_stdout.write(reply)
     return reply
@@ -650,7 +687,7 @@ class ExpectedInputOutput(object):
     self._match_pending_outputs()
     if self._expected_io:
       if not self._expected_io.fulfilled:
-        raise AssertionError('Pending IO expectation never fulfilled:\n%s' %
+        raise AssertionError('Pending IO expectation never fulfilled:\n' +
                              self._expected_io.description(saturated=False))
 
     self.set_expected_io(None)
@@ -697,8 +734,7 @@ class ExpectedInputOutput(object):
     if self._expected_io:
       for line in output_lines:
         if self._expected_io.saturated:
-          raise AssertionError('No more output expected, but got: \'%s\'' %
-                               line)
+          raise AssertionError(f'No more output expected, but got: \'{line}\'')
         if not self._expected_io.consume(line):
           raise AssertionError(
             'Unexpected output:\n'

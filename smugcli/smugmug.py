@@ -1,9 +1,7 @@
-# Main interface to the SmugMug web service.
+"""Python interface to SmugMug's V2 API."""
 
-from typing import Any, DefaultDict, List, MutableSequence, Optional, Tuple
+from typing import Any, List, MutableMapping, MutableSequence, Optional, Tuple
 from typing import Union
-
-from . import smugmug_oauth
 
 import base64
 import collections
@@ -13,9 +11,12 @@ import io
 import math
 import os
 import re
+import threading
+
 import requests
 import requests_oauthlib
-import threading
+
+from . import smugmug_oauth
 
 API_ROOT = 'https://api.smugmug.com'
 API_UPLOAD = 'https://upload.smugmug.com/'
@@ -43,11 +44,11 @@ class UnexpectedResponseError(Error):
   """Error raised when encountering unexpected data returned by SmugMug."""
 
 
-class InterruptedError(Error):
+class ConnectionInterruptedError(Error):
   """Error raised when a network operation is interrupted."""
 
 
-class ChildCacheGarbageCollector(object):
+class ChildCacheGarbageCollector():
   """Garbage collector for clearing the node's children cache.
 
   Because multiple threads could process the same nodes in parallel, the nodes
@@ -65,8 +66,17 @@ class ChildCacheGarbageCollector(object):
     self._oldest = []
     self._nodes = {}
     self._mutex = threading.Lock()
-    self._DELETED = '__DELETED__'
     self._age_index = 0
+
+  @property
+  def nodes(self):
+    """Returns the list of nodes held in the cache."""
+    return self._nodes
+
+  @property
+  def oldest(self):
+    """Returns a heap of the nodes ordered by age."""
+    return self._oldest
 
   def set_max_children_cache(self, max_nodes):
     """Set the maximum number of children cache to keep in memory.
@@ -106,7 +116,9 @@ class ChildCacheGarbageCollector(object):
           del self._nodes[node_to_clear]
 
 
-class NodeList(object):
+class NodeList():
+  """A list of JSON node returned by SmugMug."""
+
   def __init__(self, smugmug: 'SmugMug', json, parent):
     self._smugmug = smugmug
     self._parent = parent
@@ -142,65 +154,81 @@ class NodeList(object):
                 self._parent)
 
 
-class Node(object):
-  def __init__(self, smugmug: 'SmugMug', json, parent=None):
+class Node():
+  """A single JSON object node returned by SmugMug."""
+
+  def __init__(
+      self,
+      smugmug: 'SmugMug',
+      json,
+      parent: Optional['Node'] = None,
+      child_nodes_by_name: Optional[MutableMapping[str, List['Node']]] = None):
     self._smugmug = smugmug
     self._json = json
     self._parent = parent
-    self._child_nodes_by_name = None
+    self._child_nodes_by_name = child_nodes_by_name
     self._lock = threading.Lock()
 
   @property
   def json(self):
+    """Returns the JSON data this node holds."""
     return self._json
 
   @property
   def name(self) -> str:
+    """Extracts the name of this node from the JSON data."""
     value = self._json.get('FileName') or self._json['Name']
     if not isinstance(value, str):
       raise UnexpectedResponseError(
-        'Expected node name to be a string, but got {0}'.format(value))
+        f'Expected node name to be a string, but got {value}.')
     return value
 
   @property
   def path(self) -> str:
+    """Returns the path to this node in the node hierarchy."""
     if self._parent is not None:
       return os.path.join(self._parent.path, self.name)
     else:
       return self.name
 
   def get_node(self, url_name, **kwargs) -> 'Node':
+    """Queries this node's `url_name` child, expecting it to be a node."""
     uri = self.uri(url_name)
     return self._smugmug.get_node(uri, parent=self, **kwargs)
 
   def get_list(self, url_name, **kwargs) -> NodeList:
+    """Queries this node's `url_name` child, expecting it to be a node list."""
     uri = self.uri(url_name)
     return self._smugmug.get_list(uri, parent=self, **kwargs)
 
   def post(self, uri_name: str, data=None, json=None, **kwargs):
+    """Does a POST request to this node's `uri_name` endpoint."""
     uri = self.uri(uri_name)
     return self._smugmug.post(uri, data, json, **kwargs)
 
   def patch(self, uri_name, data=None, json=None, **kwargs):
+    """Does a PATCH request to this node's `uri_name` endpoint."""
     uri = self.uri(uri_name)
     return self._smugmug.patch(uri, data, json, **kwargs)
 
   def delete(self, **kwargs):
+    """Does a DELETE request to this node's `uri_name` endpoint."""
     uri = self._json.get('Uri')
     return self._smugmug.delete(uri, **kwargs)
 
   def upload(self, uri_name, filename, data, progress_fn=None, headers=None):
+    """Does an UPLOAD request to this node's `uri_name` endpoint."""
     uri = self.uri(uri_name)
     return self._smugmug.upload(uri, filename, data, progress_fn, headers)
 
   def uri(self, url_name: str) -> str:
+    """Returns the uri of this node's `url_name` child."""
     uri = self._json.get('Uris', {}).get(url_name, {}).get('Uri')
     if not uri:
-      raise UnexpectedResponseError('Node does not have a "%s" uri.' % url_name)
+      raise UnexpectedResponseError(f'Node does not have a "{url_name}" uri.')
     if not isinstance(uri, str):
       raise UnexpectedResponseError(
-        'Expected uri "{0}" to be a string, but got: "{1}".'.format(url_name,
-                                                                    repr(uri)))
+        f'Expected uri "{url_name}" to be a string, but got: "{repr(uri)}".')
     return uri
 
   def __getitem__(self, key: str):
@@ -219,6 +247,7 @@ class Node(object):
     return id(self)
 
   def get_children(self, params=None) -> NodeList:
+    """Get the children list of this node."""
     if 'Type' not in self._json:
       raise UnexpectedResponseError('Node does not have a "Type" attribute.')
 
@@ -232,7 +261,7 @@ class Node(object):
     else:
       return self.get_list('ChildNodes', params=params)
 
-  def _get_child_nodes_by_name(self) -> DefaultDict[str, List['Node']]:
+  def _get_child_nodes_by_name(self) -> MutableMapping[str, List['Node']]:
     if self._child_nodes_by_name is None:
       self._child_nodes_by_name = collections.defaultdict(list)
       for child in self.get_children():
@@ -242,14 +271,15 @@ class Node(object):
     return self._child_nodes_by_name
 
   def _create_child_node(self, name: str, params) -> 'Node':
-    if self._json['Type'] != 'Folder':
+    node_type = self._json['Type']
+    if node_type != 'Folder':
       raise InvalidArgumentError(
         'Nodes can only be created in folders.\n'
-        '"%s" is of type "%s".' % (self.name, self._json['Type']))
+        f'"{self.name}" is of type "{node_type}".')
 
     if name in self._get_child_nodes_by_name():
-      raise InvalidArgumentError('Node %s already exists in folder %s' % (
-                                 name, self.name))
+      raise InvalidArgumentError(
+          f'Node {name} already exists in folder {self.name}')
 
     remote_name = name.strip()
     node_params = {
@@ -260,23 +290,23 @@ class Node(object):
     }
     node_params.update(params or {})
 
-    print('Creating %s "%s".' % (params['Type'], os.path.join(self.path,
-                                                              remote_name)))
+    child_type = params['Type']
+    print(f'Creating {child_type} "{os.path.join(self.path, remote_name)}".')
     response = self.post('ChildNodes', data=sorted(node_params.items()))
 
     try:
       response_json = response.json()
-    except requests.exceptions.JSONDecodeError:
+    except requests.exceptions.JSONDecodeError as exc:
       raise UnexpectedResponseError(
-        'Error creating node "%s".\n'
-        'Expected a JSON response from SmugMug service.' % name)
+        f'Error creating node "{name}".\n'
+        'Expected a JSON response from SmugMug service.') from exc
 
     node_json = response_json.get('Response', {}).get('Node')
     if not node_json:
       raise UnexpectedResponseError('Cannot resolve created node JSON')
 
-    node = Node(self._smugmug, node_json, parent=self)
-    node._child_nodes_by_name = {}
+    node = Node(self._smugmug, node_json, parent=self,
+                child_nodes_by_name={})
     self._smugmug.garbage_collector.visited(node)
     self._get_child_nodes_by_name()[name] = [node]
 
@@ -285,6 +315,7 @@ class Node(object):
     return node
 
   def get_child(self, name: str) -> Union['Node', None]:
+    """Returns this node's child named `name`."""
     with self._lock:
       match = self._get_child_nodes_by_name().get(name)
 
@@ -293,11 +324,12 @@ class Node(object):
 
     if len(match) > 1:
       raise RemoteDataError(
-        'Multiple remote nodes matches "%s" in node "%s".' % (name, self.name))
+        f'Multiple remote nodes matches "{name}" in node "{self.name}".')
 
     return match[0]
 
   def get_or_create_child(self, name: str, params) -> 'Node':
+    """Returns this node's `name` child, create it if not found."""
     with self._lock:
       match = self._get_child_nodes_by_name().get(name)
       if not match:
@@ -305,17 +337,19 @@ class Node(object):
 
     if len(match) > 1:
       raise RemoteDataError(
-        'Multiple remote nodes matches "%s" in node "%s".' % (name, self.name))
+        f'Multiple remote nodes matches "{name}" in node "{self.name}".')
 
     return match[0]
 
   def reset_cache(self) -> None:
+    """Reset this node's children cache."""
     with self._lock:
       self._child_nodes_by_name = None
 
 
-class StreamingUpload(object):
-  def __init__(self, data, progress_fn, chunk_size=1<<13):
+class StreamingUpload():
+  """Helper for uploading a data stream to SmugMug."""
+  def __init__(self, data, progress_fn):
     self._data = io.BytesIO(data)
     self._len = len(data)
     self._progress_fn = progress_fn
@@ -324,23 +358,28 @@ class StreamingUpload(object):
   def __len__(self):
     return self._len
 
-  def read(self, n=-1):
-    chunk = self._data.read(n)
+  def read(self, size=-1):
+    """Read `size` bytes from stream."""
+    chunk = self._data.read(size)
     self._progress += len(chunk)
     if self._progress_fn:
       aborting = self._progress_fn(100 * self._progress / self._len)
       if aborting:
-        raise InterruptedError('File transfer interrupted.')
+        raise ConnectionInterruptedError('File transfer interrupted.')
     return chunk
 
   def tell(self):
+    """Returns the current stream position."""
     return self._data.tell()
 
   def seek(self, offset, whence=0):
+    """Change the stream position to the given offset."""
     self._data.seek(offset, whence)
 
 
-class SmugMug(object):
+class SmugMug():
+  """Python interface to SmugMug's V2 API."""
+
   def __init__(
       self,
       config,
@@ -356,14 +395,17 @@ class SmugMug(object):
 
   @property
   def config(self):
+    """Returns the config object."""
     return self._config
 
   @property
   def garbage_collector(self):
+    """Returns the garbage collector."""
     return self._garbage_collector
 
   @property
   def service(self) -> smugmug_oauth.SmugMugOAuth:
+    """Creates and returns a SmugMugOAuth instance."""
     if not self._smugmug_oauth:
       if 'api_key' in self.config:
         key, secret = self.config['api_key']
@@ -371,13 +413,14 @@ class SmugMug(object):
           smugmug_oauth.ApiKey(key, secret))
       else:
         print('No API key provided.')
-        print('Please request an API key at %s' % API_REQUEST)
+        print(f'Please request an API key at {API_REQUEST}')
         print('and run "smugcli.py login"')
         raise NotLoggedInError
     return self._smugmug_oauth
 
   @property
   def oauth(self) -> requests_oauthlib.OAuth1:
+    """Requests a SmugMug access token."""
     if not self._oauth:
       if self.service and 'access_token' in self.config:
         key, secret = self.config['access_token']
@@ -389,11 +432,13 @@ class SmugMug(object):
     return self._oauth
 
   def login(self, key: str, secret: str) -> None:
+    """Does an OAuth login to the SmugMug service."""
     self.config['api_key'] = (key, secret)
     access_token = self.service.request_access_token()
     self.config['access_token'] = (access_token.token, access_token.secret)
 
   def logout(self) -> None:
+    """Logout from the SmugMug service."""
     if 'api_key' in self.config:
       del self.config['api_key']
     if 'access_token' in self.config:
@@ -404,35 +449,41 @@ class SmugMug(object):
       del self.config['authuser_uri']
 
   def get_auth_user(self) -> str:
+    """Returns the name of the currently logged-in user."""
     if not 'authuser' in self.config:
       nickname = self.get_node('/api/v2!authuser')['NickName']
       if not isinstance(nickname, str):
         raise UnexpectedResponseError(
-          'Expected auth user nickname to be a string, but got "{0}".'
-          .format(repr(nickname)))
+          'Expected auth user nickname to be a string, but '
+          f'got "{repr(nickname)}".')
       self.config['authuser'] = nickname
     return self.config['authuser']
 
   def get_user_uri(self, user: str) -> str:
-    return self.get_node('/api/v2/user/%s' % user).uri('Node')
+    """Returns the specified user's root node URI."""
+    return self.get_node(f'/api/v2/user/{user}').uri('Node')
 
   def get_auth_user_uri(self) -> str:
+    """Returns the logged-in user's root node URI."""
     if not 'authuser_uri' in self._config:
       self.config['authuser_uri'] = self.get_user_uri(self.get_auth_user())
     return self.config['authuser_uri']
 
   def get_auth_user_root_node(self) -> Node:
+    """Returns the logged-in user's root node."""
     if self._user_root_node is None:
       self._user_root_node = self.get_node(self.get_auth_user_uri())
     return self._user_root_node
 
   def get_root_node(self, user: str) -> Node:
+    """Returns the specified user's root node."""
     if user == self.get_auth_user():
       return self.get_auth_user_root_node()
     else:
       return self.get_node(self.get_user_uri(user))
 
   def get_json(self, path: str, **kwargs):
+    """Queries the specified path and return its JSON payload."""
     req = requests.Request('GET', API_ROOT + path,
                            headers={'Accept': 'application/json'},
                            auth=self.oauth,
@@ -443,29 +494,33 @@ class SmugMug(object):
     resp.raise_for_status()
     try:
       return resp.json()
-    except requests.exceptions.JSONDecodeError:
+    except requests.exceptions.JSONDecodeError as exc:
       raise UnexpectedResponseError(
-        'Error parsing responses from "%s".\n'
-        'Expected a JSON response from SmugMug service.' % path)
+        f'Error parsing responses from "{path}".\n'
+        'Expected a JSON response from SmugMug service.') from exc
 
-  def get_node(self, path: str, parent=None, **kwargs) -> Node:
+  def get_node(
+      self, path: str, parent: Optional[Node] = None, **kwargs) -> Node:
+    """Queries the specified path and return its content as a `Node`."""
     reply = self.get_json(path, **kwargs)
     response = reply['Response']
     if 'Pages' in reply['Response']:
       raise UnexpectedResponseError(
-        'Expected {} to be a node, not a list.'.format(path))
+        f'Expected {path} to be a node, not a list.')
     locator = response['Locator']
     endpoint = response[locator]
     return Node(self, endpoint, parent)
 
   def get_list(self, path: str, parent=None, **kwargs) -> NodeList:
+    """Queries the specified path and return its content as a `NodeList`."""
     reply = self.get_json(path, **kwargs)
     if 'Pages' not in reply['Response']:
       raise UnexpectedResponseError(
-        'Expected {} to be a list.'.format(path))
+        f'Expected {path} to be a list.')
     return NodeList(self, reply, parent)
 
   def post(self, path: str, data=None, json=None, **kwargs):
+    """Does a POST request to the specified path"""
     req = requests.Request('POST',
                            API_ROOT + path,
                            data=data,
@@ -480,6 +535,7 @@ class SmugMug(object):
     return resp
 
   def patch(self, path: str, data=None, json=None, **kwargs):
+    """Does a PATCH request to the specified path"""
     req = requests.Request('PATCH',
                            API_ROOT + path,
                            data=data, json=json,
@@ -492,7 +548,8 @@ class SmugMug(object):
     resp.raise_for_status()
     return resp
 
-  def delete(self, path: str, data=None, json=None, **kwargs):
+  def delete(self, path: str, **kwargs):
+    """Does a DELETE request to the specified path"""
     req = requests.Request('DELETE',
                            API_ROOT + path,
                            auth=self.oauth,
@@ -506,6 +563,7 @@ class SmugMug(object):
 
   def upload(self, uri: str, filename: str, data, progress_fn=None,
              additional_headers=None):
+    """Does an UPLOAD request to the specified path"""
     headers = {'Content-Length': str(len(data)),
                'Content-MD5': base64.b64encode(hashlib.md5(data).digest()),
                'X-Smug-AlbumUri': uri,
@@ -526,6 +584,7 @@ class SmugMug(object):
 
 
 class FakeSmugMug(SmugMug):
+  """Fake SmugMug object, for unit testing purpose."""
   def __init__(self, config=None):
     config = config or {}
     config['page_size'] = 10

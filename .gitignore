@@ -1,5 +1,6 @@
 # SmugCLI specifics:
 tests/testdata/request_cache
+__smugcli_tests*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

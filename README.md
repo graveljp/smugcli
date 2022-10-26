@@ -1,4 +1,6 @@
 # smugcli
+![Linting: pylint](https://github.com/graveljp/smugcli/actions/workflows/pylint.yml/badge.svg)
+
 Command line tool for SmugMug, useful for automatically synchronizing a local
 folder hierarchy with a SmugMug account.
 

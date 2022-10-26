@@ -6,22 +6,15 @@ threads won't be printed entangled with each other.
 
 import io
 import os
-import sys
 import threading
+
+from . import stdout_interceptor
 
 
 thread_local = threading.local()
 
 
-class Error(Exception):
-  """Base class for all exception of this module."""
-
-
-class InvalidUsageError(Error):
-  """Error raised on incorrect API uses."""
-
-
-class ThreadSafePrint():
+class ThreadSafePrint(stdout_interceptor.StdoutInterceptor):
   """Context manager allow multiple threads to print to the same console.
 
   When used in a `with:` statement, ThreadSafePrint replaces the global
@@ -31,26 +24,11 @@ class ThreadSafePrint():
   """
 
   def __init__(self):
-    self._original_stdout = None
+    super().__init__()
     self._mutex = threading.Lock()
-
-  def __enter__(self):
-    self._original_stdout = sys.stdout
-    sys.stdout = self
-    return self
-
-  def __exit__(self, exc_type, exc_value, traceback):
-    del exc_type, exc_value, traceback  # Unused.
-    if self._original_stdout is None:
-      raise InvalidUsageError(
-          "Object must be used as a context manager, in a `with:` statement.")
-    sys.stdout = self._original_stdout
 
   def write(self, string):
     """Write a string to stdout."""
-    if self._original_stdout is None:
-      raise InvalidUsageError(
-          "Object must be used as a context manager, in a `with:` statement.")
     if not hasattr(thread_local, 'stdout'):
       thread_local.stdout = io.StringIO()
     stdout = thread_local.stdout
@@ -68,10 +46,10 @@ class ThreadSafePrint():
           # time, some of the printed lines get's prefixed with a whitespace. I
           # could not find where that space is coming from, so I'm stripping it
           # away for now.
-          self._original_stdout.write(line.strip() + os.linesep)
+          super().stdout.write(line.strip() + os.linesep)
         elif '\r' in line:
-          self._original_stdout.write(line)
-          self._original_stdout.flush()
+          super().stdout.write(line)
+          super().stdout.flush()
         else:
           stdout.write(line)
           break

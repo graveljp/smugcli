@@ -6,19 +6,12 @@ import sys
 import time
 import threading
 
+from . import stdout_interceptor
 from . import terminal_size
 
 if os.name == 'nt':
   import colorama
   colorama.init()
-
-
-class Error(Exception):
-  """Base class for all exception of this module."""
-
-
-class InvalidUsageError(Error):
-  """Error raised on incorrect API uses."""
 
 
 class Task():
@@ -46,7 +39,7 @@ class Task():
     self._task_manager.update_status(self._category, self._task, status)
 
 
-class TaskManager():
+class TaskManager(stdout_interceptor.StdoutInterceptor):
   """Context manager replacing global stdout to maintain task status on screen.
 
   TaskManager is used to allow many threads to write to stdout simultaneously,
@@ -116,40 +109,25 @@ class TaskManager():
   """
 
   def __init__(self):
+    super().__init__()
     self._tasks_in_progress = collections.defaultdict(dict)
     self._mutex = threading.RLock()
     self._last_update_time = 0
-    self._original_stdout = None
-
-  def __enter__(self) -> 'TaskManager':
-    """Replaces global stdout and starts printing status after last write."""
-    self._original_stdout = sys.stdout
-    sys.stdout = self
-    return self
 
   def __exit__(self, exc_type, exc_value, traceback) -> None:
     """Terminate this TaskManager and restore global stdout."""
-    del exc_type, exc_value, traceback  # Unused.
-    if self._original_stdout is None:
-      raise InvalidUsageError(
-          "Object must be used as a context manager, in a `with:` statement.")
-    with self._mutex:
-      sys.stdout = self._original_stdout
-      self._original_stdout.write('\033[J')
+    super().__exit__(exc_type, exc_value, traceback)
+    sys.stdout.write('\033[J')
 
   def write(self, string: str) -> None:
     """Erase previous status, prints the specified text and re-print status."""
-    if self._original_stdout is None:
-      raise InvalidUsageError(
-          "Object must be used as a context manager, in a `with:` statement.")
-
     # Clear the end of each terminal lines before moving to the next line.
     endline = '\033[K' + os.linesep
     string = endline.join(string.split(os.linesep))
 
     with self._mutex:
-      self._original_stdout.write(string + self.get_status_string())
-      self._original_stdout.flush()
+      super().stdout.write(string + self.get_status_string())
+      super().stdout.flush()
       self._last_update_time = time.time()
 
   def start_task(self, category: int, task: str, status: str = '') -> Task:

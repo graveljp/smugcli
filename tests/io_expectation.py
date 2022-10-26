@@ -365,8 +365,7 @@ class Or(ExpectBase):
              if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
-    else:
-      return ' or '.join(parts)
+    return ' or '.join(parts)
 
 
 class Not(ExpectBase):
@@ -470,10 +469,9 @@ class ExpectSequenceBase(ExpectBase):
              if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
-    else:
-      name = type(self).__name__
-      args = ', '.join(parts)
-      return f'{name}({args})'
+    name = type(self).__name__
+    args = ', '.join(parts)
+    return f'{name}({args})'
 
 
 class InOrder(ExpectSequenceBase):
@@ -526,7 +524,7 @@ class InOrder(ExpectSequenceBase):
         if expected.saturated:
           self._expected_list.remove(expected)
         return result
-      elif not expected.fulfilled:
+      if not expected.fulfilled:
         return None
     return None
 
@@ -593,7 +591,7 @@ class Reply(ExpectBase):
     return f'{name}({args})'
 
 
-class ExpectedInputOutput(object):
+class ExpectedInputOutput():
   """File object for overriding stdin/out, mocking inputs & checking outputs."""
 
   def __init__(self):

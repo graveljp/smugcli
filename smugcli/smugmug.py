@@ -163,7 +163,8 @@ class Node():
       smugmug: 'SmugMug',
       json,
       parent: Optional['Node'] = None,
-      child_nodes_by_name: Optional[MutableMapping[str, List['Node']]] = None):
+      child_nodes_by_name: Optional[MutableMapping[str, List['Node']]] = None
+  ) -> None:
     self._smugmug = smugmug
     self._json = json
     self._parent = parent
@@ -181,7 +182,7 @@ class Node():
     value = self._json.get('FileName') or self._json['Name']
     if not isinstance(value, str):
       raise UnexpectedResponseError(
-        f'Expected node name to be a string, but got {value}.')
+          f'Expected node name to be a string, but got {value}.')
     return value
 
   @property
@@ -229,7 +230,7 @@ class Node():
       raise UnexpectedResponseError(f'Node does not have a "{url_name}" uri.')
     if not isinstance(uri, str):
       raise UnexpectedResponseError(
-        f'Expected uri "{url_name}" to be a string, but got: "{repr(uri)}".')
+          f'Expected uri "{url_name}" to be a string, but got: "{repr(uri)}".')
     return uri
 
   def __getitem__(self, key: str):
@@ -254,8 +255,9 @@ class Node():
 
     params = params or {}
     params = {
-      'start': params.get('start', 1),
-      'count': params.get('count', self._smugmug.config.get('page_size', 1000))}
+        'start': params.get('start', 1),
+        'count': params.get('count',
+                            self._smugmug.config.get('page_size', 1000))}
 
     if self._json['Type'] == 'Album':
       return self.get_node('Album').get_list('AlbumImages', params=params)
@@ -275,8 +277,8 @@ class Node():
     node_type = self._json['Type']
     if node_type != 'Folder':
       raise InvalidArgumentError(
-        'Nodes can only be created in folders.\n'
-        f'"{self.name}" is of type "{node_type}".')
+          'Nodes can only be created in folders.\n'
+          f'"{self.name}" is of type "{node_type}".')
 
     if name in self._get_child_nodes_by_name():
       raise InvalidArgumentError(
@@ -284,10 +286,10 @@ class Node():
 
     remote_name = name.strip()
     node_params = {
-      'Name': remote_name,
-      'Privacy': 'Public',
-      'SortDirection': 'Ascending',
-      'SortMethod': 'Name',
+        'Name': remote_name,
+        'Privacy': 'Public',
+        'SortDirection': 'Ascending',
+        'SortMethod': 'Name',
     }
     node_params.update(params or {})
 
@@ -299,8 +301,8 @@ class Node():
       response_json = response.json()
     except requests.exceptions.JSONDecodeError as exc:
       raise UnexpectedResponseError(
-        f'Error creating node "{name}".\n'
-        'Expected a JSON response from SmugMug service.') from exc
+          f'Error creating node "{name}".\n'
+          'Expected a JSON response from SmugMug service.') from exc
 
     node_json = response_json.get('Response', {}).get('Node')
     if not node_json:
@@ -325,7 +327,7 @@ class Node():
 
     if len(match) > 1:
       raise RemoteDataError(
-        f'Multiple remote nodes matches "{name}" in node "{self.name}".')
+          f'Multiple remote nodes matches "{name}" in node "{self.name}".')
 
     return match[0]
 
@@ -338,7 +340,7 @@ class Node():
 
     if len(match) > 1:
       raise RemoteDataError(
-        f'Multiple remote nodes matches "{name}" in node "{self.name}".')
+          f'Multiple remote nodes matches "{name}" in node "{self.name}".')
 
     return match[0]
 
@@ -350,6 +352,7 @@ class Node():
 
 class StreamingUpload():
   """Helper for uploading a data stream to SmugMug."""
+
   def __init__(self, data, progress_fn):
     self._data = io.BytesIO(data)
     self._len = len(data)
@@ -411,7 +414,7 @@ class SmugMug():
       if 'api_key' in self.config:
         key, secret = self.config['api_key']
         self._smugmug_oauth = smugmug_oauth.SmugMugOAuth(
-          smugmug_oauth.ApiKey(key, secret))
+            smugmug_oauth.ApiKey(key, secret))
       else:
         print('No API key provided.')
         print(f'Please request an API key at {API_REQUEST}')
@@ -426,7 +429,7 @@ class SmugMug():
       if self.service and 'access_token' in self.config:
         key, secret = self.config['access_token']
         self._oauth = self.service.get_oauth(
-          smugmug_oauth.AccessToken(key, secret))
+            smugmug_oauth.AccessToken(key, secret))
       else:
         print('User not logged in. Please run the "login" command')
         raise NotLoggedInError
@@ -455,8 +458,8 @@ class SmugMug():
       nickname = self.get_node('/api/v2!authuser')['NickName']
       if not isinstance(nickname, str):
         raise UnexpectedResponseError(
-          'Expected auth user nickname to be a string, but '
-          f'got "{repr(nickname)}".')
+            'Expected auth user nickname to be a string, but '
+            f'got "{repr(nickname)}".')
       self.config['authuser'] = nickname
     return self.config['authuser']
 
@@ -497,17 +500,18 @@ class SmugMug():
       return resp.json()
     except requests.exceptions.JSONDecodeError as exc:
       raise UnexpectedResponseError(
-        f'Error parsing responses from "{path}".\n'
-        'Expected a JSON response from SmugMug service.') from exc
+          f'Error parsing responses from "{path}".\n'
+          'Expected a JSON response from SmugMug service.') from exc
 
   def get_node(
-      self, path: str, parent: Optional[Node] = None, **kwargs) -> Node:
+      self, path: str, parent: Optional[Node] = None, **kwargs
+  ) -> Node:
     """Queries the specified path and return its content as a `Node`."""
     reply = self.get_json(path, **kwargs)
     response = reply['Response']
     if 'Pages' in reply['Response']:
       raise UnexpectedResponseError(
-        f'Expected {path} to be a node, not a list.')
+          f'Expected {path} to be a node, not a list.')
     locator = response['Locator']
     endpoint = response[locator]
     return Node(self, endpoint, parent)
@@ -517,7 +521,7 @@ class SmugMug():
     reply = self.get_json(path, **kwargs)
     if 'Pages' not in reply['Response']:
       raise UnexpectedResponseError(
-        f'Expected {path} to be a list.')
+          f'Expected {path} to be a list.')
     return NodeList(self, reply, parent)
 
   def post(self, path: str, data=None, json=None, **kwargs):
@@ -586,6 +590,7 @@ class SmugMug():
 
 class FakeSmugMug(SmugMug):
   """Fake SmugMug object, for unit testing purpose."""
+
   def __init__(self, config=None):
     config = config or {}
     config['page_size'] = 10

@@ -72,8 +72,8 @@ def _get_terminal_size_linux():
   def ioctl_gwinsz(file):
     try:
       return struct.unpack(
-        'hh', pkgutil.resolve_name('fcntl.ioctl')(
-          file, pkgutil.resolve_name('termios.TIOCGWINSZ'), '1234'))
+          'hh', pkgutil.resolve_name('fcntl.ioctl')(
+              file, pkgutil.resolve_name('termios.TIOCGWINSZ'), '1234'))
     except Exception:  # pylint: disable=broad-except
       pass
   size = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)

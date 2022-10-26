@@ -28,8 +28,8 @@ NonWrappableTypeVar = TypeVar('NonWrappableTypeVar',
 
 
 def _maybe_wrap(
-  persistent_dict: 'PersistentDict',
-  item: Union[WrappableTypeVar, NonWrappableTypeVar]
+    persistent_dict: 'PersistentDict',
+    item: Union[WrappableTypeVar, NonWrappableTypeVar]
 ) -> Union['_PersistentDictWrapper[WrappableTypeVar]', NonWrappableTypeVar]:
   if isinstance(item, (MutableSequence, MutableMapping)):
     return _PersistentDictWrapper(persistent_dict, item)
@@ -97,7 +97,7 @@ class PersistentDict():
       raise InvalidFileError('Invalid config file.') from exc
     except Exception as exc:
       raise UnknownError(
-        'An unknown error occurred reading config file.') from exc
+          'An unknown error occurred reading config file.') from exc
 
   def save_to_disk(self):
     """Save this `PersistentDict` to disk"""

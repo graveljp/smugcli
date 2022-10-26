@@ -38,9 +38,9 @@ class IntegrationTestBase(unittest.TestCase):
     with open(CONFIG_FILE, encoding=locale.getpreferredencoding()) as file:
       self._config = json.load(file)
     self._config.update({
-      'folder_threads': 1,
-      'file_threads': 1,
-      'upload_threads': 1,
+        'folder_threads': 1,
+        'file_threads': 1,
+        'upload_threads': 1,
     })
 
     cache_folder = self._get_cache_base_folder()
@@ -55,9 +55,9 @@ class IntegrationTestBase(unittest.TestCase):
     sys.stdout = self._io
 
     self._api_url_re = re.compile(
-      r'https://api\.smugmug\.com/api/v2[\!/](?P<path>.*)')
+        r'https://api\.smugmug\.com/api/v2[\!/](?P<path>.*)')
     self._upload_url_re = re.compile(
-      r'https://(?P<path>upload)\.smugmug\.com/')
+        r'https://(?P<path>upload)\.smugmug\.com/')
     self._path_replace_re = re.compile(r'[!/?]')
 
     self._command_index = 0
@@ -74,8 +74,8 @@ class IntegrationTestBase(unittest.TestCase):
 
     if self._pending:
       raise AssertionError(
-        'Not all requests have been executed:\n%s' % (
-          '\n'.join(sorted(self._pending))))
+          'Not all requests have been executed:\n%s' % (
+              '\n'.join(sorted(self._pending))))
 
     self._io.close()
 
@@ -114,11 +114,11 @@ class IntegrationTestBase(unittest.TestCase):
   def _get_cache_base_folder(self):
     test_file, test_name = self.id().split('.', 1)
     return os.path.join(
-      TEST_DIR, 'testdata', 'request_cache', test_file, test_name)
+        TEST_DIR, 'testdata', 'request_cache', test_file, test_name)
 
   def _get_cache_folder(self, args: Sequence[str]):
     return os.path.join(
-      self._get_cache_base_folder(), f'{self._command_index:02d}_{args[0]}')
+        self._get_cache_base_folder(), f'{self._command_index:02d}_{args[0]}')
 
   def _encode_body(self, body):
     if body:
@@ -153,11 +153,11 @@ class IntegrationTestBase(unittest.TestCase):
               'response': {'status': response.status_code,
                            'text': response.text}}
       data_path = os.path.join(
-        cache_folder, f'{i:02d}.{self._url_path(request)}.json')
+          cache_folder, f'{i:02d}.{self._url_path(request)}.json')
       with open(data_path, 'w',
                 encoding=locale.getpreferredencoding()) as file:
         file.write(json.dumps(
-          data, sort_keys=True, indent=2, separators=(',', ': ')))
+            data, sort_keys=True, indent=2, separators=(',', ': ')))
 
   def _mock_requests(self,
                      cache_folder: str,
@@ -177,11 +177,11 @@ class IntegrationTestBase(unittest.TestCase):
       req = req_resp['request']
       resp = req_resp['response']
       rsps.add_callback(
-        match=[responses.matchers.query_string_matcher(
-          urlsplit(req['url']).query)],
-        method=req['method'],
-        url=req['url'],
-        callback=lambda x, req=req, res=resp, n=name: callback(x, req, res, n))
+          match=[responses.matchers.query_string_matcher(
+              urlsplit(req['url']).query)],
+          method=req['method'],
+          url=req['url'],
+          callback=lambda x, rq=req, rs=resp, n=name: callback(x, rq, rs, n))
 
   def _do(self, command: str, expected_io=None):
     command = self._format_path(command)

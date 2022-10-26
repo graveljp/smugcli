@@ -25,7 +25,7 @@ class TaskManagerTests(unittest.TestCase):
                                  r'\r').repeatedly()
     return expect.InOrder([expect_escape] +
                           list(itertools.chain.from_iterable(
-                           [s, expect_escape] for s in status_string)))
+                              [s, expect_escape] for s in status_string)))
 
   def test_update_progress(self):
     """Tests that status strings are printed, but not if they go too fast."""

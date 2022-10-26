@@ -226,6 +226,7 @@ class ExpectBase(object):
 
 class ExpectStringBase(ExpectBase):
   """Base class for all string expectations."""
+
   def __init__(self, expected: str):
     super(ExpectStringBase, self).__init__()
     self._expected = expected
@@ -302,6 +303,7 @@ class Anything(ExpectBase):
 
 class And(ExpectBase):
   """Matcher succeeding when all its sub matcher succeed."""
+
   def __init__(self, *args):
     super(And, self).__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
@@ -336,6 +338,7 @@ class And(ExpectBase):
 
 class Or(ExpectBase):
   """Matcher succeeding when one of its sub matcher succeed."""
+
   def __init__(self, *args):
     super(Or, self).__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
@@ -370,6 +373,7 @@ class Or(ExpectBase):
 
 class Not(ExpectBase):
   """Matcher succeeding when it's sub-matcher fails."""
+
   def __init__(self, expected):
     super(Not, self).__init__()
     self._expected = expected
@@ -671,8 +675,8 @@ class ExpectedInputOutput(object):
     reply = self._expected_io.produce()
     if not reply:
       raise AssertionError(
-        'Unexpected user input prompt request. Expected:\n' +
-        self._expected_io.description(saturated=False))
+          'Unexpected user input prompt request. Expected:\n' +
+          self._expected_io.description(saturated=False))
     reply += '\n'
     self._original_stdout.write(reply)
     return reply
@@ -738,7 +742,8 @@ class ExpectedInputOutput(object):
           raise AssertionError(f'No more output expected, but got: \'{line}\'')
         if not self._expected_io.consume(line):
           raise AssertionError(
-            'Unexpected output:\n'
-            '%s' % '\n'.join(difflib.ndiff(
-              self._expected_io.description(saturated=False).splitlines(True),
-              repr(line).splitlines(True))))
+              'Unexpected output:\n'
+              '%s' % '\n'.join(difflib.ndiff(
+                  self._expected_io.description(
+                      saturated=False).splitlines(True),
+                  repr(line).splitlines(True))))

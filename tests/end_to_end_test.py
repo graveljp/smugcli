@@ -20,8 +20,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     """Test for `smugcli get`."""
     self._do('get \\/api\\/v2\\/user',
              expect.Somewhere(
-               ['"Code": 200,',
-                '"Message": "Ok",']))
+                 ['"Code": 200,',
+                  '"Message": "Ok",']))
 
   def test_ls(self):
     """Test for `smugcli ls`."""
@@ -245,25 +245,25 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     # Can upload to album.
     self._do('mkalbum -p {root}/folder/album')
     self._do(
-      'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
-      ['Uploading "{testdata}/SmugCLI_1.jpg" to "{root}/folder/album"...'])
+        'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
+        ['Uploading "{testdata}/SmugCLI_1.jpg" to "{root}/folder/album"...'])
 
     # Can't upload duplicate.
     self._do(
-      'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
-      ['Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
-       '"{root}/folder/album".'])
+        'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
+        ['Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
+         '"{root}/folder/album".'])
 
     # Can upload multiple files
     self._do(
-      'upload {testdata}/Sm?gCLI_1.* {testdata}/SmugCLI_2.jpg '
-      '{root}/folder/album',
-      ['Uploading "{testdata}/SmugCLI_1.gif" to "{root}/folder/album"...',
-       'Uploading "{testdata}/SmugCLI_1.heic" to "{root}/folder/album"...',
-       'Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
-       '"{root}/folder/album".',
-       'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
-       'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
+        'upload {testdata}/Sm?gCLI_1.* {testdata}/SmugCLI_2.jpg '
+        '{root}/folder/album',
+        ['Uploading "{testdata}/SmugCLI_1.gif" to "{root}/folder/album"...',
+         'Uploading "{testdata}/SmugCLI_1.heic" to "{root}/folder/album"...',
+         'Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
+         '"{root}/folder/album".',
+         'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
+         'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
 
   def test_sync(self):
     """Test for `smugcli sync`."""
@@ -277,57 +277,58 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Folder "{root}/dir".',
-                'Creating Album "{root}/dir/Images from folder dir".',
-                'Creating Album "{root}/dir/album".',
-                'Uploaded "{root}/dir/SmugCLI_1.jpg".',
-                'Uploaded "{root}/dir/SmugCLI_2.jpg".',
-                'Uploaded "{root}/dir/SmugCLI_3.jpg".',
-                'Uploaded "{root}/dir/album/SmugCLI_4.jpg".',
-                'Uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Folder "{root}/dir".',
+                  'Creating Album "{root}/dir/Images from folder dir".',
+                  'Creating Album "{root}/dir/album".',
+                  'Uploaded "{root}/dir/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/dir/SmugCLI_2.jpg".',
+                  'Uploaded "{root}/dir/SmugCLI_3.jpg".',
+                  'Uploaded "{root}/dir/album/SmugCLI_4.jpg".',
+                  'Uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
     self._do(
-      'sync {root} /',
-      ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes\\/no)?',
-       expect.Reply('yes'),
-       expect.AnyOrder(
-         expect.Anything().repeatedly(),
-         'Found matching remote album "{root}/dir/Images from folder dir".',
-         'Found matching remote album "{root}/dir/album".')])
-
-    with self._set_cwd(self._format_path('{root}')):
-      self._do(
-        'sync dir {root}',
-        ['Syncing "dir" to SmugMug folder "/{root}".',
+        'sync {root} /',
+        ['Syncing "{root}" to SmugMug folder "/".',
          'Proceed (yes\\/no)?',
          expect.Reply('yes'),
          expect.AnyOrder(
-           expect.Anything().repeatedly(),
-           'Found matching remote album "{root}/dir/Images from folder dir".',
-           'Found matching remote album "{root}/dir/album".')])
+             expect.Anything().repeatedly(),
+             'Found matching remote album "{root}/dir/Images from folder dir".',
+             'Found matching remote album "{root}/dir/album".')])
+
+    with self._set_cwd(self._format_path('{root}')):
+      self._do(
+          'sync dir {root}',
+          ['Syncing "dir" to SmugMug folder "/{root}".',
+           'Proceed (yes\\/no)?',
+           expect.Reply('yes'),
+           expect.AnyOrder(
+               expect.Anything().repeatedly(),
+               'Found matching remote album '
+               '"{root}/dir/Images from folder dir".',
+               'Found matching remote album "{root}/dir/album".')])
 
     self._stage_files('{root}/dir',
                       [('{testdata}/SmugCLI_5.jpg', 'SmugCLI_2.jpg')])
     self._stage_files('{root}/dir/album',
                       [('{testdata}/SmugCLI_2.jpg', 'SmugCLI_5.jpg')])
     self._do(
-      'sync {root} /',
-      ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes\\/no)?',
-       expect.Reply('yes'),
-       expect.AnyOrder(
-         expect.Anything().repeatedly(),
-         'Found matching remote album "{root}/dir/Images from folder dir".',
-         'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.'
-         ' Deleting old version.',
-         'Re-uploaded "{root}/dir/SmugCLI_2.jpg".',
-         'Found matching remote album "{root}/dir/album".',
-         'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
-         ' Deleting old version.',
-         'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
+        'sync {root} /',
+        ['Syncing "{root}" to SmugMug folder "/".',
+         'Proceed (yes\\/no)?',
+         expect.Reply('yes'),
+         expect.AnyOrder(
+             expect.Anything().repeatedly(),
+             'Found matching remote album "{root}/dir/Images from folder dir".',
+             'File "{root}/dir/SmugCLI_2.jpg" exists, but has changed.'
+             ' Deleting old version.',
+             'Re-uploaded "{root}/dir/SmugCLI_2.jpg".',
+             'Found matching remote album "{root}/dir/album".',
+             'File "{root}/dir/album/SmugCLI_5.jpg" exists, but has changed.'
+             ' Deleting old version.',
+             'Re-uploaded "{root}/dir/album/SmugCLI_5.jpg".')])
 
   def test_sync_heic(self):
     """Test `smugcli sync` for HEIC files."""
@@ -339,31 +340,32 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Album "{root}/album".',
-                'Uploaded "{root}/album/SmugCLI_1.heic".',
-                'Uploaded "{root}/album/SmugCLI_2.HEIC".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Album "{root}/album".',
+                  'Uploaded "{root}/album/SmugCLI_1.heic".',
+                  'Uploaded "{root}/album/SmugCLI_2.HEIC".')])
 
     self._stage_files('{root}/album', [
-      # Modify SmugCLI_1.heic
-      ('{testdata}/SmugCLI_2.heic', 'SmugCLI_1.heic'),
-      # Add a new HEIC file.
-      ('{testdata}/SmugCLI_1.heic', 'SmugCLI_3.hEiC')])
+        # Modify SmugCLI_1.heic
+        ('{testdata}/SmugCLI_2.heic', 'SmugCLI_1.heic'),
+        # Add a new HEIC file.
+        ('{testdata}/SmugCLI_1.heic', 'SmugCLI_3.hEiC')])
 
-    self._do('sync {root} /',
-             ['Syncing "{root}" to SmugMug folder "/".',
-              'Proceed (yes\\/no)?',
-              expect.Reply('yes'),
-              expect.AnyOrder(
-                'Found matching remote album "{root}/album".',
-                'Uploaded "{root}/album/SmugCLI_3.hEiC".',
-                # Even though SmugCLI_1.heic changed, there is no way to detect
-                # this because SmugMug doesn't keep HEIC image metadata.  Hence,
-                # HEIC files are considered immutable and are never re-uploaded.
-                expect.Not(expect.Or(
-                  'Uploaded "{root}/album/SmugCLI_1.heic".',
-                  'Uploaded "{root}/album/SmugCLI_2.HEIC".')).repeatedly())])
+    self._do(
+        'sync {root} /',
+        ['Syncing "{root}" to SmugMug folder "/".',
+         'Proceed (yes\\/no)?',
+         expect.Reply('yes'),
+         expect.AnyOrder(
+             'Found matching remote album "{root}/album".',
+             'Uploaded "{root}/album/SmugCLI_3.hEiC".',
+             # Even though SmugCLI_1.heic changed, there is no way to detect
+             # this because SmugMug doesn't keep HEIC image metadata. Hence,
+             # HEIC files are considered immutable and are never re-uploaded.
+             expect.Not(expect.Or(
+                 'Uploaded "{root}/album/SmugCLI_1.heic".',
+                 'Uploaded "{root}/album/SmugCLI_2.HEIC".')).repeatedly())])
 
   def test_sync_privacy(self):
     """Test the `--privacy` option of `smugcli sync`."""
@@ -395,19 +397,19 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     """Test SmugMug's folder nesting limit when using `smugcli sync`."""
     self._stage_files('{root}/1/2/3/4/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do(
-      'sync {root}',
-      ['Syncing "{root}" to SmugMug folder "/".',
-       'Proceed (yes\\/no)?',
-       expect.Reply('yes'),
-       expect.AnyOrder(
-         expect.Anything().repeatedly(),
-         'Creating Folder "{root}".',
-         'Creating Folder "{root}/1".',
-         'Creating Folder "{root}/1/2".',
-         'Creating Folder "{root}/1/2/3".',
-         'Creating Folder "{root}/1/2/3/4".',
-         'Creating Album "{root}/1/2/3/4/album".',
-         'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".')])
+        'sync {root}',
+        ['Syncing "{root}" to SmugMug folder "/".',
+         'Proceed (yes\\/no)?',
+         expect.Reply('yes'),
+         expect.AnyOrder(
+             expect.Anything().repeatedly(),
+             'Creating Folder "{root}".',
+             'Creating Folder "{root}/1".',
+             'Creating Folder "{root}/1/2".',
+             'Creating Folder "{root}/1/2/3".',
+             'Creating Folder "{root}/1/2/3/4".',
+             'Creating Album "{root}/1/2/3/4/album".',
+             'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".')])
 
     with self._set_cwd(self._format_path('{root}/1')):
       self._do('sync 2 {root}/1',
@@ -415,8 +417,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
                 'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
-                  expect.Anything().repeatedly(),
-                  'Found matching remote album "{root}/1/2/3/4/album".')])
+                    expect.Anything().repeatedly(),
+                    'Found matching remote album "{root}/1/2/3/4/album".')])
 
     self._stage_files('{root}/1/2/3/4/5/album', ['{testdata}/SmugCLI_1.jpg'])
     self._do('sync {root}',
@@ -424,9 +426,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
-                ' support folder more than 5 level deep.')])
+                  expect.Anything().repeatedly(),
+                  'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+                  ' support folder more than 5 level deep.')])
 
     with self._set_cwd(self._format_path('{root}/1')):
       self._do('sync 2 {root}/1',
@@ -434,9 +436,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
                 'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
-                  expect.Anything().repeatedly(),
-                  'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
-                  ' support folder more than 5 level deep.')])
+                    expect.Anything().repeatedly(),
+                    'Cannot create "{root}/1/2/3/4/5/album", SmugMug does not'
+                    ' support folder more than 5 level deep.')])
 
   def test_sync_whitespace(self):
     """Test `smugcli sync` when files or folders contain whitespaces."""
@@ -453,18 +455,18 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Folder "{root}/folder".',
-                'Creating Album "{root}/folder/album".',
-                f'Uploaded "{folder}/{filename}".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Folder "{root}/folder".',
+                  'Creating Album "{root}/folder/album".',
+                  f'Uploaded "{folder}/{filename}".')])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/folder/album".')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/folder/album".')])
 
   def test_sync_confirmation(self):
     """Test the different ways `smugcli sync` operation can be confirmed."""
@@ -474,18 +476,18 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)? ',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Album "{root}/album".',
-                'Uploaded "{root}/album/SmugCLI_1.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Album "{root}/album".',
+                  'Uploaded "{root}/album/SmugCLI_1.jpg".')])
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/album".')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".')])
 
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
@@ -503,16 +505,16 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do('sync -f {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Album "{root}/album".',
-                'Uploaded "{root}/album/SmugCLI_1.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Album "{root}/album".',
+                  'Uploaded "{root}/album/SmugCLI_1.jpg".')])
 
     self._do('sync --force {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/album".')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".')])
 
   def test_sync_sub_folders(self):
     """Test syncing to sub-folders."""
@@ -523,9 +525,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Album "{root}/Pics/album".',
-                'Uploaded "{root}/local/album/SmugCLI_1.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Album "{root}/Pics/album".',
+                  'Uploaded "{root}/local/album/SmugCLI_1.jpg".')])
 
     self._do('sync {root}/local/album/ {root}/Pics/album',
              ['Syncing "{root}/local/album/" to SmugMug album '
@@ -533,8 +535,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)? ',
               expect.Reply('y'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/Pics/album".')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/Pics/album".')])
 
   def test_sync_invalid_src(self):
     """Test invalid source file handling for `smugcli sync`."""
@@ -574,12 +576,12 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Album "{root}/dst/album1".',
-                'Uploaded "{root}/src/album1/SmugCLI_1.jpg".',
-                'Uploaded "{root}/src/album1/SmugCLI_2.jpg".',
-                'Creating Album "{root}/dst/album2".',
-                'Uploaded "{root}/src/album2/SmugCLI_3.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Creating Album "{root}/dst/album1".',
+                  'Uploaded "{root}/src/album1/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/src/album1/SmugCLI_2.jpg".',
+                  'Creating Album "{root}/dst/album2".',
+                  'Uploaded "{root}/src/album2/SmugCLI_3.jpg".')])
 
   def test_sync_multiple_files(self):
     """Test `smugcli sync` with multiple input files."""
@@ -601,14 +603,14 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/album".',
-                'Uploaded "{root}/dir1/SmugCLI_1.jpg".',
-                'Uploaded "{root}/dir2/SmugCLI_1.jpg".',
-                'Uploaded "{root}/dir2/SmugCLI_2.jpg".',
-                'Uploaded "{root}/dir2/SmugCLI_3.jpg".',
-                'Uploaded "{root}/dir3/SmugCLI_1.jpg".',
-                'Sync complete.')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".',
+                  'Uploaded "{root}/dir1/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/dir2/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/dir2/SmugCLI_2.jpg".',
+                  'Uploaded "{root}/dir2/SmugCLI_3.jpg".',
+                  'Uploaded "{root}/dir3/SmugCLI_1.jpg".',
+                  'Sync complete.')])
 
   def test_sync_multiple_folders(self):
     """Test `smugcli sync` for multiple input folders."""
@@ -627,15 +629,15 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Creating Album "{root}/folder/album1".',
-                'Creating Album "{root}/folder/album2".',
-                'Creating Folder "{root}/folder/subdir3".',
-                'Creating Album "{root}/folder/subdir3/album3".',
-                'Uploaded "{root}/album1/SmugCLI_1.jpg".',
-                'Uploaded "{root}/dir2/album2/SmugCLI_2.jpg".',
-                'Uploaded "{root}/dir3/subdir3/album3/SmugCLI_3.jpg".',
-                'Sync complete.')])
+                  expect.Anything().repeatedly(),
+                  'Creating Album "{root}/folder/album1".',
+                  'Creating Album "{root}/folder/album2".',
+                  'Creating Folder "{root}/folder/subdir3".',
+                  'Creating Album "{root}/folder/subdir3/album3".',
+                  'Uploaded "{root}/album1/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/dir2/album2/SmugCLI_2.jpg".',
+                  'Uploaded "{root}/dir3/subdir3/album3/SmugCLI_3.jpg".',
+                  'Sync complete.')])
 
   def test_sync_paths_to_album(self):
     """Test `smugcli sync` for a list of source paths to an album node."""
@@ -650,10 +652,10 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/album".',
-                'Uploaded "{root}/dir1/SmugCLI_1.jpg".',
-                'Uploaded "{root}/dir1/SmugCLI_2.jpg".')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".',
+                  'Uploaded "{root}/dir1/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/dir1/SmugCLI_2.jpg".')])
 
   def test_sync_files_to_album(self):
     """Test `smugcli sync` for a list of source files to an album node."""
@@ -669,10 +671,10 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
                 'Proceed (yes\\/no)?',
                 expect.Reply('yes'),
                 expect.AnyOrder(
-                  expect.Anything().repeatedly(),
-                  'Found matching remote album "{root}/album".',
-                  'Uploaded "./SmugCLI_1.jpg".',
-                  'Uploaded "./SmugCLI_2.jpg".')])
+                    expect.Anything().repeatedly(),
+                    'Found matching remote album "{root}/album".',
+                    'Uploaded "./SmugCLI_1.jpg".',
+                    'Uploaded "./SmugCLI_2.jpg".')])
 
   def test_sync_files_to_folder(self):
     """Test that `smugcli sync` rejects syncing files to a folder node."""
@@ -758,16 +760,16 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Not(expect.Or(
-                  'Creating Album "{root}/album2".',
-                  'Uploaded "{root}/album1/SmugCLI_2.jpg".',
-                  'Uploaded "{root}/album2/SmugCLI_4.jpg".',
-                  'Uploaded "{root}/album2/SmugCLI_5.jpg".')).repeatedly(),
-                'Creating Folder "{root}".',
-                'Creating Album "{root}/album1".',
-                'Uploaded "{root}/album1/SmugCLI_1.jpg".',
-                'Uploaded "{root}/album1/SmugCLI_3.jpg".',
-                'Sync complete.')])
+                  expect.Not(expect.Or(
+                      'Creating Album "{root}/album2".',
+                      'Uploaded "{root}/album1/SmugCLI_2.jpg".',
+                      'Uploaded "{root}/album2/SmugCLI_4.jpg".',
+                      'Uploaded "{root}/album2/SmugCLI_5.jpg".')).repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Album "{root}/album1".',
+                  'Uploaded "{root}/album1/SmugCLI_1.jpg".',
+                  'Uploaded "{root}/album1/SmugCLI_3.jpg".',
+                  'Sync complete.')])
 
     self._do('include {root}/album1/SmugCLI_2.jpg {root}/album2', [])
     self._do('sync {root} /',
@@ -775,13 +777,13 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               'Proceed (yes\\/no)?',
               expect.Reply('yes'),
               expect.AnyOrder(
-                expect.Anything().repeatedly(),
-                'Found matching remote album "{root}/album1".',
-                'Creating Album "{root}/album2".',
-                'Uploaded "{root}/album1/SmugCLI_2.jpg".',
-                'Uploaded "{root}/album2/SmugCLI_4.jpg".',
-                'Uploaded "{root}/album2/SmugCLI_5.jpg".',
-                'Sync complete.')])
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album1".',
+                  'Creating Album "{root}/album2".',
+                  'Uploaded "{root}/album1/SmugCLI_2.jpg".',
+                  'Uploaded "{root}/album2/SmugCLI_4.jpg".',
+                  'Uploaded "{root}/album2/SmugCLI_5.jpg".',
+                  'Sync complete.')])
 
 
 if __name__ == '__main__':

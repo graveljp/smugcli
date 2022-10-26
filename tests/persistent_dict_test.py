@@ -40,13 +40,13 @@ class TestPersistentDict(unittest.TestCase):
     self.assertTrue(path.isfile(filename))
 
   @parameterized.expand([
-    ('int', 10),
-    ('str', 'foo'),
-    ('Unicode', '\xef'),
-    ('list', [1, 2]),
-    ('dict', {'foo': 1, 'bar': 'baz'}),
-    ('complex_list', [1, {'foo': [3, 4]}]),
-    ('complex_dict', {'foo': 1, 'bar': [2, 3]})])
+      ('int', 10),
+      ('str', 'foo'),
+      ('Unicode', '\xef'),
+      ('list', [1, 2]),
+      ('dict', {'foo': 1, 'bar': 'baz'}),
+      ('complex_list', [1, {'foo': [3, 4]}]),
+      ('complex_dict', {'foo': 1, 'bar': [2, 3]})])
   def test_load_from_existing_file(self, test_name, value):
     """Tests that existent files are loaded."""
     del test_name  # Unused.
@@ -57,14 +57,14 @@ class TestPersistentDict(unittest.TestCase):
     self.assertEqual(pdict, {'a': value})
 
   @parameterized.expand([
-    ('int', 10, 10),
-    ('str', 'foo', 'foo'),
-    ('Unicode', '\xef', '\xef'),
-    ('list', [1, 2], [1, 2]),
-    ('tuple', (1, 2), [1, 2]),
-    ('dict', {'foo': 1, 'bar': 2}, {'foo': 1, 'bar': 2}),
-    ('complex_list', [1, {'foo': (3, 4)}], [1, {'foo': [3, 4]}]),
-    ('complex_dict', {'foo': 1, 'bar': [2, 3]}, {'foo': 1, 'bar': [2, 3]})])
+      ('int', 10, 10),
+      ('str', 'foo', 'foo'),
+      ('Unicode', '\xef', '\xef'),
+      ('list', [1, 2], [1, 2]),
+      ('tuple', (1, 2), [1, 2]),
+      ('dict', {'foo': 1, 'bar': 2}, {'foo': 1, 'bar': 2}),
+      ('complex_list', [1, {'foo': (3, 4)}], [1, {'foo': [3, 4]}]),
+      ('complex_dict', {'foo': 1, 'bar': [2, 3]}, {'foo': 1, 'bar': [2, 3]})])
   def test_automatically_save_added_fields(self, test_name, value, result):
     """Tests that the dict is saved to disk when fields are added."""
     del test_name  # Unused.

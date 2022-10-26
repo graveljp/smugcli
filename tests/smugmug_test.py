@@ -9,6 +9,7 @@ from smugcli import smugmug
 
 class MockNode(object):
   """A mock version of `smugmug.Node`."""
+
   def __init__(self):
     self._reset_count = 0
 

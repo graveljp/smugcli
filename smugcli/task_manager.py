@@ -157,7 +157,8 @@ class TaskManager():
     return Task(self, category, task, status)
 
   def update_status(
-      self, category: int, task: str, status: str = '') -> None:
+      self, category: int, task: str, status: str = ''
+  ) -> None:
     """Update the status of a task"""
     with self._mutex:
       self._tasks_in_progress[category][task] = status
@@ -181,12 +182,12 @@ class TaskManager():
 
     with self._mutex:
       text = (
-        endline +
-        (endline * 2).join(
-          endline.join(self.clip_long_line(f'{t}{s}', terminal_width)
-                       for t, s in sorted(tasks.items()))
-          for _, tasks in sorted(self._tasks_in_progress.items())) +
-        endline)
+          endline +
+          (endline * 2).join(
+              endline.join(self.clip_long_line(f'{t}{s}', terminal_width)
+                           for t, s in sorted(tasks.items()))
+              for _, tasks in sorted(self._tasks_in_progress.items())) +
+          endline)
 
       # Print the status text, clear the remaining of the console and move
       # the cursor up to the first status line, ready for the next print.

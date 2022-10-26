@@ -1,5 +1,6 @@
 """File-system-like API for SmugMug."""
 
+import contextlib
 from typing import DefaultDict, List, Optional, Sequence, Tuple, Union
 
 import collections
@@ -50,14 +51,15 @@ class ExtractMetadataError(Error):
 
 class SmugMugFS(object):
   """File-system-like API for SmugMug."""
+
   def __init__(self, smugmug: smugmug_lib.SmugMug) -> None:
     self._smugmug = smugmug
     self._aborting = False
 
     # Pre-compute some common variables.
     self._media_ext = [
-      ext.lower() for ext in
-      self.smugmug.config.get('media_extensions', DEFAULT_MEDIA_EXT)]
+        ext.lower() for ext in
+        self.smugmug.config.get('media_extensions', DEFAULT_MEDIA_EXT)]
 
   @property
   def smugmug(self) -> smugmug_lib.SmugMug:
@@ -99,19 +101,20 @@ class SmugMugFS(object):
       matched_nodes: List[smugmug_lib.Node],
       dirs: List[str],
       node_type: str,
-      privacy: str) -> List[smugmug_lib.Node]:
+      privacy: str
+  ) -> List[smugmug_lib.Node]:
     folder_depth = len(matched_nodes) + len(dirs)
     folder_depth -= 1 if node_type == 'Album' else 0
     if folder_depth >= 7:  # matched_nodes include an extra node for the root.
       raise SmugMugLimitsError(
-        f'Cannot create "{os.sep.join([matched_nodes[-1].path] + dirs)}", '
-        'SmugMug does not support folder more than 5 level deep.')
+          f'Cannot create "{os.sep.join([matched_nodes[-1].path] + dirs)}", '
+          'SmugMug does not support folder more than 5 level deep.')
 
     all_nodes = list(matched_nodes)
     for i, child in enumerate(dirs):
       params = {
-        'Type': node_type if i == len(dirs) - 1 else 'Folder',
-        'Privacy': privacy,
+          'Type': node_type if i == len(dirs) - 1 else 'Folder',
+          'Privacy': privacy,
       }
       all_nodes.append(all_nodes[-1].get_or_create_child(child, params))
     return all_nodes
@@ -150,7 +153,8 @@ class SmugMugFS(object):
       configs['ignore'] = updated_ignore
 
   def ls(  # pylint: disable=invalid-name
-      self, user: Optional[str], path: str, details: bool) -> None:
+      self, user: Optional[str], path: str, details: bool
+  ) -> None:
     """Lists the content of a SmugMug folder."""
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
@@ -192,10 +196,14 @@ class SmugMugFS(object):
         continue
 
       self._match_or_create_nodes(
-        matched_nodes, unmatched_dirs, node_type, privacy)
+          matched_nodes, unmatched_dirs, node_type, privacy)
 
   def rmdir(  # pylint: disable=invalid-name
-      self, user: Optional[str], parents: bool, dirs: Sequence[str]) -> None:
+      self,
+      user: Optional[str],
+      parents: bool,
+      dirs: Sequence[str]
+  ) -> None:
     """Deletes a folder in SmugMug."""
     user = user or self._smugmug.get_auth_user()
     for name in dirs:
@@ -325,14 +333,14 @@ class SmugMugFS(object):
     # Approximate worse case: each folder and file threads work on a different
     # folders, and all folders are 5 level deep.
     self._smugmug.garbage_collector.set_max_children_cache(
-      folder_threads + file_threads + 5)
+        folder_threads + file_threads + 5)
 
     # Make sure that the source paths exist.
     globed = [(source, glob.glob(source)) for source in sources]
     not_found = [g[0] for g in globed if not g[1]]
     if not_found:
       print('File%s not found:\n  %s' % (
-        's' if len(not_found) > 1 else '', '\n  '.join(not_found)))
+          's' if len(not_found) > 1 else '', '\n  '.join(not_found)))
       return
     all_sources = list(itertools.chain.from_iterable([g[1] for g in globed]))
 
@@ -340,7 +348,7 @@ class SmugMugFS(object):
     dir_sources = [s for s in all_sources if os.path.isdir(s)]
 
     files_by_path = collections.defaultdict(
-      list)  # type: DefaultDict[str, List[str]]
+        list)  # type: DefaultDict[str, List[str]]
     for file_source in file_sources:
       path, filename = os.path.split(file_source)
       files_by_path[path or '.'].append(filename)
@@ -373,11 +381,13 @@ class SmugMugFS(object):
     if not force and not self._ask('Proceed (yes/no)? '):
       return
 
-    with task_manager.TaskManager() as manager, \
-         thread_safe_print.ThreadSafePrint(), \
-         thread_pool.ThreadPool(upload_threads) as upload_pool, \
-         thread_pool.ThreadPool(file_threads) as file_pool, \
-         thread_pool.ThreadPool(folder_threads) as folder_pool:
+    with contextlib.ExitStack() as stack:
+      manager = stack.enter_context(task_manager.TaskManager())
+      stack.enter_context(thread_safe_print.ThreadSafePrint())
+      upload_pool = stack.enter_context(thread_pool.ThreadPool(upload_threads))
+      file_pool = stack.enter_context(thread_pool.ThreadPool(file_threads))
+      folder_pool = stack.enter_context(thread_pool.ThreadPool(folder_threads))
+
       empty_list = []  # type: List[str]
       for source, walk_steps in sorted(
           [(d, os.walk(d)) for d in dir_sources] +
@@ -431,7 +441,7 @@ class SmugMugFS(object):
     if media_files:
       rel_subdir = os.path.relpath(subdir, os.path.split(source)[0])
       target_dirs = os.path.normpath(
-        os.path.join(target, rel_subdir)).split(os.sep)
+          os.path.join(target, rel_subdir)).split(os.sep)
       target_dirs = [d.strip() for d in target_dirs]
 
       if dirs:
@@ -442,7 +452,7 @@ class SmugMugFS(object):
 
       if unmatched:
         matched = self._match_or_create_nodes(
-          matched, unmatched, 'Album', privacy)
+            matched, unmatched, 'Album', privacy)
       else:
         print(f'Found matching remote album "{os.path.join(*target_dirs)}".')
 
@@ -482,15 +492,15 @@ class SmugMugFS(object):
           # the MD5 to check if the file needs a re-sync. Use the last
           # modification time instead.
           remote_time = datetime.datetime.strptime(
-            remote_file.get_node('ImageMetadata')['DateTimeModified'],
-            '%Y-%m-%dT%H:%M:%S')
+              remote_file.get_node('ImageMetadata')['DateTimeModified'],
+              '%Y-%m-%dT%H:%M:%S')
 
           try:
             parser = guessParser(StringInputStream(file_content))
             metadata = extractMetadata(parser)
             if metadata is None:
               raise ExtractMetadataError(
-                f'Failed extracting metadata from video file "{file_path}".')
+                  f'Failed extracting metadata from video file "{file_path}".')
             file_time = max(metadata.getValues('last_modification') +
                             metadata.getValues('creation_date'))
           except Exception:  # pylint: disable=broad-except

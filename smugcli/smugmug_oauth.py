@@ -128,7 +128,8 @@ class SmugMugOAuth(object):
     return state.access_token
 
   def get_oauth(
-      self, access_token: AccessToken) -> requests_oauthlib.OAuth1:
+      self, access_token: AccessToken
+  ) -> requests_oauthlib.OAuth1:
     """Returns an OAuth1 instance."""
     return requests_oauthlib.OAuth1(
         self._service.consumer_key,
@@ -138,20 +139,20 @@ class SmugMugOAuth(object):
 
   def _create_service(self, api_key: ApiKey) -> rauth.OAuth1Service:
     return rauth.OAuth1Service(
-      name='smugcli',
-      consumer_key=api_key.key,
-      consumer_secret=api_key.secret,
-      request_token_url=REQUEST_TOKEN_URL,
-      access_token_url=ACCESS_TOKEN_URL,
-      authorize_url=AUTHORIZE_URL,
-      base_url=API_ORIGIN + '/api/v2')
+        name='smugcli',
+        consumer_key=api_key.key,
+        consumer_secret=api_key.secret,
+        request_token_url=REQUEST_TOKEN_URL,
+        access_token_url=ACCESS_TOKEN_URL,
+        authorize_url=AUTHORIZE_URL,
+        base_url=API_ORIGIN + '/api/v2')
 
   def _index(self, state: _State) -> None:
     """Route initiating the authorization process."""
     request_token, request_token_secret = self._service.get_request_token(
-       params={'oauth_callback': f'http://localhost:{state.port}/callback'})
+        params={'oauth_callback': f'http://localhost:{state.port}/callback'})
     state.request_token = RequestToken(
-      token=request_token, secret=request_token_secret)
+        token=request_token, secret=request_token_secret)
 
     auth_url = self._service.get_authorize_url(request_token)
     auth_url = self._add_auth_params(
@@ -165,8 +166,8 @@ class SmugMugOAuth(object):
 
     oauth_verifier = bottle.request.query['oauth_verifier']  # type: ignore
     (token, secret) = self._service.get_access_token(
-       state.request_token.token, state.request_token.secret,
-       params={'oauth_verifier': oauth_verifier})
+        state.request_token.token, state.request_token.secret,
+        params={'oauth_verifier': oauth_verifier})
     state.access_token = AccessToken(token, secret)
 
     state.app.close()
@@ -174,14 +175,15 @@ class SmugMugOAuth(object):
     return 'Login successful. You may close this window.'
 
   def _add_auth_params(
-      self, auth_url: str, access: str, permissions: str) -> str:
+      self, auth_url: str, access: str, permissions: str
+  ) -> str:
     parts = parse.urlsplit(auth_url)
     query = parse.parse_qsl(parts.query, True)
     query.append(('Access', access))
     query.append(('Permissions', permissions))
     new_query = parse.urlencode(query, True)
     return parse.urlunsplit(
-      (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
+        (parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
 
   def _is_cygwin(self) -> bool:
     try:

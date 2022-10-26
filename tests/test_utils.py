@@ -19,7 +19,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'user.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/user/cmac'
@@ -27,7 +27,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_node.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/node/zx4Fx'
@@ -35,7 +35,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_children.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=1'
@@ -43,7 +43,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'root_children_page2.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/node/zx4Fx!children?count=10&start=11'
@@ -51,7 +51,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'folder_children.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/node/n83bK!children?count=10&start=1'
@@ -59,7 +59,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'folder_children_page2.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/node/n83bK!children?count=10&start=11'
@@ -67,7 +67,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/album/DDnhRD'
@@ -75,7 +75,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album_images.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=1'
@@ -83,7 +83,7 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])
   with open(os.path.join(testdir, 'testdata', 'album_images_page2.json'),
             encoding=locale.getpreferredencoding()) as handle:
     url = API_ROOT + '/api/v2/album/DDnhRD!images?count=10&start=11'
@@ -91,4 +91,4 @@ def add_mock_requests(responses):
         responses.GET, url,
         json=json.load(handle),
         match=[responses.matchers.query_string_matcher(
-          urlsplit(url).query)])
+            urlsplit(url).query)])

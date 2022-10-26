@@ -37,7 +37,7 @@ class SmugMugShell(cmd.Cmd):
     matches = SmugMugShell._cmd_list_re.match(usage)
     if matches is None:
       raise InitializationError(
-        'Failed creating shell commands from `smugcli` parser.')
+          'Failed creating shell commands from `smugcli` parser.')
     commands = matches.group(1).split(',')
 
     def do_handler(command):

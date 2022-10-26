@@ -93,14 +93,14 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertEqual(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-      'cmac', os.path.normpath('/Photography'))
+        'cmac', os.path.normpath('/Photography'))
     self.assertEqual(matched_nodes[-1].name, 'Photography')
     self.assertEqual(matched_nodes[-1]['Name'], 'Photography')
     self.assertEqual(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-      'cmac',
-      os.path.normpath('/Photography/San Francisco by helicopter 2014'))
+        'cmac',
+        os.path.normpath('/Photography/San Francisco by helicopter 2014'))
     self.assertEqual(len(matched_nodes), 3)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(matched_nodes[1]['Name'], 'Photography')
@@ -109,13 +109,13 @@ class TestSmugMugFS(unittest.TestCase):
     self.assertEqual(unmatched_dirs, [])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-      'cmac', os.path.normpath('/invalid1'))
+        'cmac', os.path.normpath('/invalid1'))
     self.assertEqual(len(matched_nodes), 1)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(unmatched_dirs, ['invalid1'])
 
     matched_nodes, unmatched_dirs = self._fs.path_to_node(
-      'cmac', os.path.normpath('/Photography/invalid2'))
+        'cmac', os.path.normpath('/Photography/invalid2'))
     self.assertEqual(len(matched_nodes), 2)
     self.assertTrue(matched_nodes[0]['IsRoot'])
     self.assertEqual(matched_nodes[1].name, 'Photography')
@@ -133,56 +133,59 @@ class TestSmugMugFS(unittest.TestCase):
                        json.load(handle))
 
   @parameterized.expand([
-    ('/Photography/',
-     'San Francisco by helicopter 2014\n'
-     'SmugMug homepage slide show\n'
-     'New Journal style: Big photos!\n'
-     'Samples from my new 200-400\n'
-     'Paris and San Francisco videos by night\n'
-     'Jackson Hole\n'
-     'San Francisco skyline\n'
-     'Giant prints for SmugMug\'s walls\n'
-     'Testing video on the new Canon 7D\n'
-     'Pictures I loved from the week\n'
-     'Baldy\'s first experiments with HDR\n'
-     'Canon 30D versus Fuji S5 image comparisons\n'
-     'Mac color tests\n'
-     'Ofoto, Shutterfly, EZprints compared\n'
-     'Printing services test prints\n'
-     'Quantum Q Flash 5D\n'),
+      ('/Photography/',
+       'San Francisco by helicopter 2014\n'
+       'SmugMug homepage slide show\n'
+       'New Journal style: Big photos!\n'
+       'Samples from my new 200-400\n'
+       'Paris and San Francisco videos by night\n'
+       'Jackson Hole\n'
+       'San Francisco skyline\n'
+       'Giant prints for SmugMug\'s walls\n'
+       'Testing video on the new Canon 7D\n'
+       'Pictures I loved from the week\n'
+       'Baldy\'s first experiments with HDR\n'
+       'Canon 30D versus Fuji S5 image comparisons\n'
+       'Mac color tests\n'
+       'Ofoto, Shutterfly, EZprints compared\n'
+       'Printing services test prints\n'
+       'Quantum Q Flash 5D\n'),
 
-    ('/Photography/San Francisco by helicopter 2014',
-     'DSC_5752.jpg\n'
-     'DSC_5903.jpg\n'
-     'DSC_5932.jpg\n'
-     'DSC_5947.jpg\n'
-     'DSC_5978.jpg\n'
-     'SF by air for 48 inch print-5978.jpg\n'
-     'DSC_6023.jpg\n'
-     'DSC_6069.jpg\n'
-     'DSC_6110.jpg\n'
-     'DSC_5626.jpg\n'
-     'DSC_5657.jpg\n'
-     'Von Wong-2807.jpg\n'
-     'Von Wong-009783.jpg\n'
-     'Von Wong-009789.jpg\n'
-     'Von Wong-009812.jpg\n'
-     'Von Wong-009906.jpg\n'
-     'DSC_4933.jpg\n'
-     'Logan Leia wave pool.jpg\n'),
+      ('/Photography/San Francisco by helicopter 2014',
+       'DSC_5752.jpg\n'
+       'DSC_5903.jpg\n'
+       'DSC_5932.jpg\n'
+       'DSC_5947.jpg\n'
+       'DSC_5978.jpg\n'
+       'SF by air for 48 inch print-5978.jpg\n'
+       'DSC_6023.jpg\n'
+       'DSC_6069.jpg\n'
+       'DSC_6110.jpg\n'
+       'DSC_5626.jpg\n'
+       'DSC_5657.jpg\n'
+       'Von Wong-2807.jpg\n'
+       'Von Wong-009783.jpg\n'
+       'Von Wong-009789.jpg\n'
+       'Von Wong-009812.jpg\n'
+       'Von Wong-009906.jpg\n'
+       'DSC_4933.jpg\n'
+       'Logan Leia wave pool.jpg\n'
+       ),
 
-    ('/Photography/invalid',
-     '"invalid" not found in "/Photography".\n'),
+      ('/Photography/invalid',
+       '"invalid" not found in "/Photography".\n'
+       ),
 
-    ('/Photography/invalid\xef',
-     '"invalid\xef" not found in "/Photography".\n')])
+      ('/Photography/invalid\xef',
+       '"invalid\xef" not found in "/Photography".\n'
+       )])
   @responses.activate
   def test_ls(self, folder, expected_message):
     """Tests the `ls` method."""
     self._fs.ls(None, os.path.normpath(folder), False)
     self.assertEqual(
-      self._cmd_output.getvalue(),
-      os.path.normpath(expected_message))
+        self._cmd_output.getvalue(),
+        os.path.normpath(expected_message))
 
 
 if __name__ == '__main__':

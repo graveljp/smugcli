@@ -204,5 +204,4 @@ class TaskManager():
       prefix = int(max_length * 5 / 8)
       suffix = len(string) - (max_length - prefix - len(clipped))
       return string[:prefix] + clipped + string[suffix:]
-    else:
-      return string
+    return string

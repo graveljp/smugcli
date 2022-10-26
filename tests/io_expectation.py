@@ -79,15 +79,14 @@ def default_expectation(expected_io):
   """
   if isinstance(expected_io, (list, tuple)):
     return InOrder(*expected_io)
-  elif isinstance(expected_io, set):
+  if isinstance(expected_io, set):
     return AnyOrder(*expected_io)
-  elif isinstance(expected_io, str):
+  if isinstance(expected_io, str):
     return Contains(expected_io)
-  else:
-    return expected_io
+  return expected_io
 
 
-class ExpectBase(object):
+class ExpectBase():
   """Base class for all expected response string matchers."""
 
   def __init__(self):
@@ -228,7 +227,7 @@ class ExpectStringBase(ExpectBase):
   """Base class for all string expectations."""
 
   def __init__(self, expected: str):
-    super(ExpectStringBase, self).__init__()
+    super().__init__()
     self._expected = expected
 
   def consume(self, string: str) -> bool:
@@ -305,7 +304,7 @@ class And(ExpectBase):
   """Matcher succeeding when all its sub matcher succeed."""
 
   def __init__(self, *args):
-    super(And, self).__init__()
+    super().__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
 
   @property
@@ -332,15 +331,14 @@ class And(ExpectBase):
              if not a.consumed or a.saturated == saturated]
     if len(parts) == 1:
       return parts[0]
-    else:
-      return ' and '.join(parts)
+    return ' and '.join(parts)
 
 
 class Or(ExpectBase):
   """Matcher succeeding when one of its sub matcher succeed."""
 
   def __init__(self, *args):
-    super(Or, self).__init__()
+    super().__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
 
   @property
@@ -375,7 +373,7 @@ class Not(ExpectBase):
   """Matcher succeeding when it's sub-matcher fails."""
 
   def __init__(self, expected):
-    super(Not, self).__init__()
+    super().__init__()
     self._expected = expected
     self._thrifty = True
 
@@ -399,7 +397,7 @@ class Repeatedly(ExpectBase):
   """Wraps an expectation to make it repeat a given number of times."""
 
   def __init__(self, sub_expectation, min_repetition=0, max_repetition=None):
-    super(Repeatedly, self).__init__()
+    super().__init__()
     self._min_repetition = min_repetition
     self._max_repetition = max_repetition
     self._sub_expectation = default_expectation(sub_expectation)
@@ -452,7 +450,7 @@ class ExpectSequenceBase(ExpectBase):
   """Base class for all sequence-based expectations."""
 
   def __init__(self, *args):
-    super(ExpectSequenceBase, self).__init__()
+    super().__init__()
     self._expected_list = [default_expectation(expected) for expected in args]
 
   @property
@@ -514,7 +512,7 @@ class InOrder(ExpectSequenceBase):
     for expected in self._expected_list:
       if expected.test_consume(string):
         return True
-      elif not expected.fulfilled:
+      if not expected.fulfilled:
         return False
     return False
 
@@ -579,7 +577,7 @@ class Reply(ExpectBase):
   """Expects a read to the input pipe and replies with a specific string."""
 
   def __init__(self, reply_string):
-    super(Reply, self).__init__()
+    super().__init__()
     self._reply_string = reply_string
 
   def produce(self):

@@ -49,7 +49,7 @@ class ExtractMetadataError(Error):
   """Error raised when metadata extraction fails."""
 
 
-class SmugMugFS(object):
+class SmugMugFS():
   """File-system-like API for SmugMug."""
 
   def __init__(self, smugmug: smugmug_lib.SmugMug) -> None:
@@ -366,8 +366,8 @@ class SmugMugFS(object):
     if target_type == 'folder' and file_sources:
       print('Can\'t upload files to folder. Please sync to an album node.')
       return
-    elif (target_type == 'album' and
-          any(not d.endswith(os.sep) for d in dir_sources)):
+    if (target_type == 'album' and
+        any(not d.endswith(os.sep) for d in dir_sources)):
       print('Can\'t upload folders to an album. Please sync to a folder node.')
       return
 

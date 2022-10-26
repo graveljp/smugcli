@@ -190,8 +190,7 @@ class Node():
     """Returns the path to this node in the node hierarchy."""
     if self._parent is not None:
       return os.path.join(self._parent.path, self.name)
-    else:
-      return self.name
+    return self.name
 
   def get_node(self, url_name, **kwargs) -> 'Node':
     """Queries this node's `url_name` child, expecting it to be a node."""
@@ -261,8 +260,7 @@ class Node():
 
     if self._json['Type'] == 'Album':
       return self.get_node('Album').get_list('AlbumImages', params=params)
-    else:
-      return self.get_list('ChildNodes', params=params)
+    return self.get_list('ChildNodes', params=params)
 
   def _get_child_nodes_by_name(self) -> MutableMapping[str, List['Node']]:
     if self._child_nodes_by_name is None:
@@ -483,8 +481,7 @@ class SmugMug():
     """Returns the specified user's root node."""
     if user == self.get_auth_user():
       return self.get_auth_user_root_node()
-    else:
-      return self.get_node(self.get_user_uri(user))
+    return self.get_node(self.get_user_uri(user))
 
   def get_json(self, path: str, **kwargs):
     """Queries the specified path and return its JSON payload."""
@@ -594,7 +591,7 @@ class FakeSmugMug(SmugMug):
   def __init__(self, config=None):
     config = config or {}
     config['page_size'] = 10
-    super(FakeSmugMug, self).__init__(config or {})
+    super().__init__(config or {})
 
   @property
   def service(self):

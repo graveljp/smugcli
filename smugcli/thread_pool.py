@@ -9,7 +9,7 @@ class Worker(threading.Thread):
   """Worker thread processing tasks."""
 
   def __init__(self, thread_pool, task_queue):
-    super(Worker, self).__init__()
+    super().__init__()
     self._task_queue = task_queue
     self._thread_pool = thread_pool
 

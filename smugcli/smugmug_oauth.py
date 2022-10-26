@@ -61,7 +61,7 @@ class _State:
   access_token: Optional[AccessToken] = None
 
 
-class SmugMugOAuth(object):
+class SmugMugOAuth():
   """SumgMug OAuth client."""
 
   def __init__(self, api_key: ApiKey):

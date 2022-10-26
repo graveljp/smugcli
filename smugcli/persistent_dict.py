@@ -33,8 +33,7 @@ def _maybe_wrap(
 ) -> Union['_PersistentDictWrapper[WrappableTypeVar]', NonWrappableTypeVar]:
   if isinstance(item, (MutableSequence, MutableMapping)):
     return _PersistentDictWrapper(persistent_dict, item)
-  else:
-    return item
+  return item
 
 
 class _PersistentDictWrapper(Generic[WrappableTypeVar]):
@@ -54,8 +53,7 @@ class _PersistentDictWrapper(Generic[WrappableTypeVar]):
         self._persistent_dict.save_to_disk()
         return _maybe_wrap(self._persistent_dict, result)
       return wrapped_function
-    else:
-      return _maybe_wrap(self._persistent_dict, attribute)
+    return _maybe_wrap(self._persistent_dict, attribute)
 
   def __delitem__(self, key):
     self._value.__delitem__(key)
@@ -119,8 +117,7 @@ class PersistentDict():
         self.save_to_disk()
         return _maybe_wrap(self, result)
       return wrapped_function
-    else:
-      return _maybe_wrap(self, attribute)
+    return _maybe_wrap(self, attribute)
 
   def __delitem__(self, key):
     self._dict.__delitem__(key)

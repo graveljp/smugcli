@@ -76,6 +76,7 @@ def _get_terminal_size_linux():
               file, pkgutil.resolve_name('termios.TIOCGWINSZ'), '1234'))
     except Exception:  # pylint: disable=broad-except
       pass
+    return None
   size = ioctl_gwinsz(0) or ioctl_gwinsz(1) or ioctl_gwinsz(2)
   if not size:
     try:

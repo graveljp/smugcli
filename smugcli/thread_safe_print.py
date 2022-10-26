@@ -21,7 +21,7 @@ class InvalidUsageError(Error):
   """Error raised on incorrect API uses."""
 
 
-class ThreadSafePrint(object):
+class ThreadSafePrint():
   """Context manager allow multiple threads to print to the same console.
 
   When used in a `with:` statement, ThreadSafePrint replaces the global

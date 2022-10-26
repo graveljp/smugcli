@@ -1,0 +1,7 @@
+# Packages required by the unit tests.
+
+pytest
+mock
+parameterized
+responses >= 0.17.0
+freezegun

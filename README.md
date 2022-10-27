@@ -1,4 +1,5 @@
 # smugcli
+[![Github release](https://img.shields.io/github/v/release/graveljp/smugcli.svg)](https://github.com/graveljp/smugcli/releases)
 [![Linting: pylint](https://github.com/graveljp/smugcli/actions/workflows/pylint.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/pylint.yml)
 [![Linting: flake8](https://github.com/graveljp/smugcli/actions/workflows/flake8.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/flake8.yml)
 [![Unit tests](https://github.com/graveljp/smugcli/actions/workflows/tests.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/tests.yml)

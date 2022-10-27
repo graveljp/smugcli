@@ -43,7 +43,7 @@ class ThreadSafePrint(stdout_interceptor.StdoutInterceptor):
       for line in lines:
         if '\n' in line:
           # There is a strange bug where if multiple threads print at the same
-          # time, some of the printed lines get's prefixed with a whitespace. I
+          # time, some of the printed lines get prefixed with a white space. I
           # could not find where that space is coming from, so I'm stripping it
           # away for now.
           super().stdout.write(line.strip() + os.linesep)

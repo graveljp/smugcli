@@ -46,18 +46,18 @@ class ThreadPool:
 
   @property
   def aborting(self):
-    """Returns whether the threadpool is aborting."""
+    """Returns whether the thread pool is aborting."""
     return self._aborting
 
-  def add(self, func, *args, **kwargs) -> None:
+  def add(self, callback, *args, **kwargs) -> None:
     """Add a task thread pool.
 
     Args:
-      func: function to be executed in the thread pool.
+      callback: function to be executed in the thread pool.
       args: argument list for `func`.
       kwargs: keyword arguments for `func`.
     """
-    self._tasks.put((func, args, kwargs))
+    self._tasks.put((callback, args, kwargs))
 
   def join(self) -> None:
     """Wait for all the tasks to be executed in the thread pool."""

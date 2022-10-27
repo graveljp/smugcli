@@ -1,0 +1,14 @@
+name: Spelling
+
+on: [push, pull_request]
+
+jobs:
+  spellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: cspell-action
+        uses: streetsidesoftware/cspell-action@d7d21c0a79dfe7b8f5037da07bc73d3a36c8da4c
+        with:
+          config: './cspell.json'
+          incremental_files_only: false

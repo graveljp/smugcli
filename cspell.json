@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "dictionaries": ["smugcli"],
+  "dictionaryDefinitions": [
+    { "name": "smugcli", "path": "./spelling_dictionary.txt" }
+  ],
+  "ignorePaths": ["tests/testdata"]
+}

@@ -441,7 +441,7 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
                     ' support folder more than 5 level deep.')])
 
   def test_sync_whitespace(self):
-    """Test `smugcli sync` when files or folders contain whitespaces."""
+    """Test `smugcli sync` when files or folders contain white spaces."""
     if os.name == 'nt':
       folder = '{root}/ folder/ album'
       filename = ' file . jpg'

@@ -38,7 +38,7 @@ class TestThreadSafePrint(unittest.TestCase):
     sys.stdout.write('\n')
 
   def test_multi_threaded_interleaved_write(self):
-    """Tests that multithreaded interleaved IOs get printed correctly."""
+    """Tests that multi-threaded interleaved I/Os get printed correctly."""
     mock_io = expect.ExpectedInputOutput()
     sys.stdout = mock_io
 

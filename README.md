@@ -1,9 +1,11 @@
 # smugcli
 [![Linting: pylint](https://github.com/graveljp/smugcli/actions/workflows/pylint.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/pylint.yml)
+[![Linting: flake8](https://github.com/graveljp/smugcli/actions/workflows/flake8.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/flake8.yml)
 [![Unit tests](https://github.com/graveljp/smugcli/actions/workflows/tests.yml/badge.svg)](https://github.com/graveljp/smugcli/actions/workflows/tests.yml)
 [![Pypi version](https://img.shields.io/pypi/v/smugcli)](https://pypi.org/project/smugcli/)
 [![Python versions](https://img.shields.io/pypi/pyversions/smugcli)](https://pypi.org/project/smugcli/)
 [![Pipy Wheels](https://img.shields.io/pypi/wheel/smugcli)](https://pypi.org/project/smugcli/)
+[![Downloads](https://pepy.tech/badge/smugcli)](https://pepy.tech/project/smugcli)
 
 Command line tool for SmugMug, useful for automatically synchronizing a local
 folder hierarchy with a SmugMug account.

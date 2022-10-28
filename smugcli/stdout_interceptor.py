@@ -17,7 +17,7 @@ class StdoutInterceptor():
   def __init__(self):
     self._original_stdout = None
 
-  def __enter__(self) -> 'StdoutInterceptor':
+  def __enter__(self):
     """Replaces global stdout and starts printing status after last write."""
     self._original_stdout = sys.stdout
     sys.stdout = self

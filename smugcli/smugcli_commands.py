@@ -276,7 +276,7 @@ def run(args,
                                  'defaults to be used next time.'))
   sync_parser.add_argument('--in_place',
                            action='store_true',
-                           help=('Upload replacments in-place instead of '
+                           help=('Upload replacements in-place instead of '
                                  'deleting and re-uploading.'))
 
   # ---------------

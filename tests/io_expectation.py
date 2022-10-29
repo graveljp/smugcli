@@ -700,7 +700,7 @@ class ExpectedInputOutput():
     self._original_stdout.write(reply)
     return reply
 
-  def assert_expectations_fulfilled(self):
+  def assert_expectations_fulfilled(self) -> io.StringIO:
     """Asserts that all expectation are fulfilled.
 
     Resets this object, ready to restart with a new set_expected_io.
@@ -708,6 +708,7 @@ class ExpectedInputOutput():
     Raises:
       AssertionError: raised when IOs do not match expectations.
     """
+    cmd_output = self._cmd_output
     self._match_pending_outputs()
     if self._expected_io:
       if not self._expected_io.fulfilled:
@@ -715,6 +716,7 @@ class ExpectedInputOutput():
                              self._expected_io.description(saturated=False))
 
     self.set_expected_io(None)
+    return cmd_output
 
   def assert_output_was(self, expected_output):
     """Asserts that the previous outputs matched the specified expectation.

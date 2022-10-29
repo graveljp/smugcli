@@ -524,6 +524,53 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
                   expect.Anything().repeatedly(),
                   'Found matching remote album "{root}/album".')])
 
+  def test_sync_in_place(self):
+    """Test the `--in_place` option of `smugcli sync`."""
+    self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
+    self._do('sync {root}',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                  expect.Anything().repeatedly(),
+                  'Creating Folder "{root}".',
+                  'Creating Album "{root}/album".',
+                  'Uploaded "{root}/album/SmugCLI_1.jpg".')])
+
+    web_uri = self._do('ls -l -q WebUri {root}/album/SmugCLI_1.jpg')
+
+    self._stage_files(
+        '{root}/album/SmugCLI_1.jpg', ['{testdata}/SmugCLI_2.jpg'])
+    self._do('sync --in_place {root}',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".',
+                  'File "{root}/album/SmugCLI_1.jpg" exists, but has changed.'
+                  ' Upload in place.',
+                  'Re-uploaded "{root}/album/SmugCLI_1.jpg".')])
+
+    self._do('ls -l -q WebUri {root}/album/SmugCLI_1.jpg',
+             expect.Url(expect.Equals(web_uri)))
+
+    self._stage_files(
+        '{root}/album/SmugCLI_1.jpg', ['{testdata}/SmugCLI_3.jpg'])
+    self._do('sync {root}',
+             ['Syncing "{root}" to SmugMug folder "/".',
+              'Proceed (yes\\/no)?',
+              expect.Reply('yes'),
+              expect.AnyOrder(
+                  expect.Anything().repeatedly(),
+                  'Found matching remote album "{root}/album".',
+                  'File "{root}/album/SmugCLI_1.jpg" exists, but has changed.'
+                  ' Deleting old version.',
+                  'Re-uploaded "{root}/album/SmugCLI_1.jpg".')])
+
+    self._do('ls -l -q WebUri {root}/album/SmugCLI_1.jpg',
+             expect.Url(expect.Not(expect.Equals(web_uri))))
+
   def test_sync_sub_folders(self):
     """Test syncing to sub-folders."""
     self._stage_files('{root}/local/album', ['{testdata}/SmugCLI_1.jpg'])

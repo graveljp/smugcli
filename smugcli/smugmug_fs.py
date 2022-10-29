@@ -16,6 +16,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import guessParser
 from hachoir.stream import StringInputStream
 from hachoir.core import config as hachoir_config
+import jsonpath_ng
 
 from . import persistent_dict
 from . import smugmug as smugmug_lib
@@ -153,9 +154,21 @@ class SmugMugFS():
       configs['ignore'] = updated_ignore
 
   def ls(  # pylint: disable=invalid-name
-      self, user: Optional[str], path: str, details: bool
+      self,
+      user: Optional[str],
+      path: str,
+      details: bool,
+      query: Optional[str] = None
   ) -> None:
     """Lists the content of a SmugMug folder."""
+    parsed_query = None
+    if query:
+      try:
+        parsed_query = jsonpath_ng.parse(query)
+      except jsonpath_ng.JSONPathError as exc:
+        print(f'Invalid query string "{query}": {exc}')
+        return
+
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if unmatched_dirs:
@@ -168,7 +181,11 @@ class SmugMugFS():
              [(child.name, child) for child in node.get_children()])
 
     for name, node in nodes:
-      if details:
+      if parsed_query is not None:
+        matches = parsed_query.find(node.json)
+        for match in matches or []:
+          print(match.value)
+      elif details:
         print(json.dumps(node.json, sort_keys=True, indent=2,
                          separators=(',', ': ')))
       else:

@@ -43,9 +43,17 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do('ls -l {root}',
              expect.Somewhere('"Name": "foo",'))
 
-    # Lists other user's folder
+    # Lists other user's folder:
     self._do('ls -u cmac',
              expect.Somewhere('Photography'))
+
+    # Query a field from the node's JSON:
+    self._do('ls -q "WebUri" {root}',
+             expect.Url(expect.Regex(r'https://.*/Foo')))
+
+    # Invalid query string:
+    self._do('ls -q foo^bar {root}',
+             expect.Contains('Invalid query string'))
 
   def test_mkdir(self):
     """Test for `smugcli mkdir`."""

@@ -9,3 +9,6 @@ colorama>=0.3.9; platform_system=="Windows"
 
 # For parsing metadata from local files:
 hachoir>=3.0
+
+# To query JSON content with `ls --query`:
+jsonpath-ng >= 1.5.3

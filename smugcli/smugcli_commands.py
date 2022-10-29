@@ -94,7 +94,7 @@ def run(args,
       help='List the content of a folder or album.',
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   ls_parser.set_defaults(
-      func=lambda a: file_system.ls(a.user, a.path, a.l))
+      func=lambda a: file_system.ls(a.user, a.path, a.l, a.query))
   ls_parser.add_argument('path',
                          type=str,
                          nargs='?',
@@ -111,6 +111,14 @@ def run(args,
                          default='',
                          help=('User whose SmugMug account is to be accessed. '
                                'Uses the logged-in user by default.'))
+  ls_parser.add_argument('-q', '--query',
+                         type=str,
+                         default='',
+                         help=('Fetch the full JSON description of the node '
+                               'and return the fields that are matching the '
+                               'specified query. See '
+                               'https://pypi.org/project/jsonpath-ng/ for '
+                               'the details on the query language.'))
   # ---------------
   for cmd, node_type in (('mkdir', 'Folder'), ('mkalbum', 'Album')):
     mkdir_parser = subparsers.add_parser(

@@ -866,6 +866,35 @@ class IoExpectationTest(unittest.TestCase):
                        print('Some more output.')),
           error_message=None),
 
+      # ==== Url ====
+      param(
+          'expect_url_equals',
+          expected_io=expect.Url(expect.Equals('http://foo.com/bar')),
+          ios=lambda: print('http://foo.com/bar'),
+          error_message=None),
+
+      param(
+          'expect_url_equals_error',
+          expected_io=expect.Url(expect.Equals('http://foo.com/bar')),
+          ios=lambda: print('http://bar.com/bar'),
+          error_message=("Unexpected output:\n"
+                         "- Url(Equals('http://foo.com/bar'))\n"
+                         "+ 'http://bar.com/bar\\n'")),
+
+      param(
+          'expect_url_default_sub_expectation',
+          expected_io=expect.Url('foo.com'),
+          ios=lambda: print('http://foo.com/bar'),
+          error_message=None),
+
+      param(
+          'expect_url_in_order',
+          expected_io=expect.Url(['http://foo.com/for',
+                                  'http://bar.com/bar']),
+          ios=lambda: (print('http://foo.com/for'),
+                       print('http://bar.com/bar')),
+          error_message=None),
+
       # ==== Reply ====
       param(
           'expect_reply',

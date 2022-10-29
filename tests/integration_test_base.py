@@ -183,7 +183,7 @@ class IntegrationTestBase(unittest.TestCase):
           url=req['url'],
           callback=lambda x, rq=req, rs=resp, n=name: callback(x, rq, rs, n))
 
-  def _do(self, command: str, expected_io=None):
+  def _do(self, command: str, expected_io=None) -> str:
     command = self._format_path(command)
     print(f'$ {command}')
     self._io.set_expected_io(expected_io)
@@ -209,7 +209,7 @@ class IntegrationTestBase(unittest.TestCase):
       self._save_requests(cache_folder, requests_sent)
 
     self._command_index += 1
-    self._io.assert_expectations_fulfilled()
+    return self._io.assert_expectations_fulfilled().getvalue()
 
   def _stage_files(self, dest, files):
     dest_path = self._format_path(dest)

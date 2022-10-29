@@ -16,6 +16,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import guessParser
 from hachoir.stream import StringInputStream
 from hachoir.core import config as hachoir_config
+import jsonpath_ng
 
 from . import persistent_dict
 from . import smugmug as smugmug_lib
@@ -153,9 +154,21 @@ class SmugMugFS():
       configs['ignore'] = updated_ignore
 
   def ls(  # pylint: disable=invalid-name
-      self, user: Optional[str], path: str, details: bool
+      self,
+      user: Optional[str],
+      path: str,
+      details: bool,
+      query: Optional[str] = None
   ) -> None:
     """Lists the content of a SmugMug folder."""
+    parsed_query = None
+    if query:
+      try:
+        parsed_query = jsonpath_ng.parse(query)
+      except jsonpath_ng.JSONPathError as exc:
+        print(f'Invalid query string "{query}": {exc}')
+        return
+
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, path)
     if unmatched_dirs:
@@ -168,7 +181,11 @@ class SmugMugFS():
              [(child.name, child) for child in node.get_children()])
 
     for name, node in nodes:
-      if details:
+      if parsed_query is not None:
+        matches = parsed_query.find(node.json)
+        for match in matches or []:
+          print(match.value)
+      elif details:
         print(json.dumps(node.json, sort_keys=True, indent=2,
                          separators=(',', ': ')))
       else:
@@ -306,7 +323,8 @@ class SmugMugFS():
            folder_threads: int,
            file_threads: int,
            upload_threads: int,
-           set_defaults: bool) -> None:
+           set_defaults: bool,
+           in_place: bool) -> None:
     """Synchronize a local folder with a folder in SmugMug"""
     if set_defaults:
       self.smugmug.config['folder_threads'] = folder_threads
@@ -421,6 +439,7 @@ class SmugMugFS():
                           source,
                           target,
                           privacy,
+                          in_place,
                           walk_step,
                           matched)
     print('Sync complete.')
@@ -432,6 +451,7 @@ class SmugMugFS():
                    source: str,
                    target: str,
                    privacy: str,
+                   in_place: bool,
                    walk_step: Tuple[str, List[str], List[str]],
                    matched: Sequence[smugmug_lib.Node]) -> None:
     if self._aborting:
@@ -464,13 +484,15 @@ class SmugMugFS():
                       manager,
                       os.path.join(subdir, file),
                       matched[-1],
-                      upload_pool)
+                      upload_pool,
+                      in_place)
 
   def _sync_file(self,
                  manager: task_manager.TaskManager,
                  file_path: str,
                  node: smugmug_lib.Node,
-                 upload_pool: thread_pool.ThreadPool) -> None:
+                 upload_pool: thread_pool.ThreadPool,
+                 in_place: bool = False) -> None:
     if self._aborting:
       return
     with manager.start_task(category=1,
@@ -533,7 +555,8 @@ class SmugMugFS():
                       remote_file,
                       file_path,
                       file_name,
-                      file_content)
+                      file_content,
+                      in_place)
 
   def _upload_media(self,
                     manager: task_manager.TaskManager,
@@ -541,13 +564,18 @@ class SmugMugFS():
                     remote_file: Union[smugmug_lib.Node, None],
                     file_path: str,
                     file_name: str,
-                    file_content: bytes) -> None:
+                    file_content: bytes,
+                    in_place: bool = False) -> None:
     if self._aborting:
       return
     if remote_file:
-      print(f'File "{file_path}" exists, but has changed. '
-            'Deleting old version.')
-      remote_file.delete()
+      if in_place:
+        print(f'File "{file_path}" exists, but has changed. '
+              'Upload in place.')
+      else:
+        print(f'File "{file_path}" exists, but has changed. '
+              'Deleting old version.')
+        remote_file.delete()
       task_str = f'+ Re-uploading "{file_path}"'
     else:
       task_str = f'+ Uploading "{file_path}"'
@@ -558,8 +586,15 @@ class SmugMugFS():
           task.update_status(f': {percent:.1f}%')
           return self._aborting
         return progress_fn
+
+      additional_headers = None
+      if in_place and remote_file:
+        additional_headers = {
+          'X-Smug-ImageUri': remote_file.uri('Image'),
+        }
       node.upload('Album', file_name, file_content,
-                  progress_fn=get_progress_fn(task))
+                  progress_fn=get_progress_fn(task),
+                  headers=additional_headers)
 
     if remote_file:
       print(f'Re-uploaded "{file_path}".')

@@ -571,6 +571,29 @@ def Somewhere(expectation):  # pylint: disable=invalid-name
                  Anything().repeatedly())
 
 
+class Url(ExpectBase):
+  """Matches a URL. This matcher won't replace '/' to '\' on Windows."""
+
+  def __init__(self, sub_expectation):
+    super().__init__()
+    self._expected = default_expectation(sub_expectation)
+
+  def consume(self, string):
+    self._consumed = True
+    self._fulfilled = self._expected.consume(string)
+    self._saturated = self._expected.saturated
+    return self._fulfilled
+
+  def test_consume(self, string):
+    return self._expected.test_consume(string)
+
+  def apply_transform(self, callback: Callable[[str], str]) -> None:
+    del callback  # Unused.
+
+  def description(self, saturated):
+    return f'Url({self._expected.description(saturated)})'
+
+
 class Reply(ExpectBase):
   """Expects a read to the input pipe and replies with a specific string."""
 
@@ -677,7 +700,7 @@ class ExpectedInputOutput():
     self._original_stdout.write(reply)
     return reply
 
-  def assert_expectations_fulfilled(self):
+  def assert_expectations_fulfilled(self) -> io.StringIO:
     """Asserts that all expectation are fulfilled.
 
     Resets this object, ready to restart with a new set_expected_io.
@@ -685,6 +708,7 @@ class ExpectedInputOutput():
     Raises:
       AssertionError: raised when IOs do not match expectations.
     """
+    cmd_output = self._cmd_output
     self._match_pending_outputs()
     if self._expected_io:
       if not self._expected_io.fulfilled:
@@ -692,6 +716,7 @@ class ExpectedInputOutput():
                              self._expected_io.description(saturated=False))
 
     self.set_expected_io(None)
+    return cmd_output
 
   def assert_output_was(self, expected_output):
     """Asserts that the previous outputs matched the specified expectation.

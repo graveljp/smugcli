@@ -571,6 +571,29 @@ def Somewhere(expectation):  # pylint: disable=invalid-name
                  Anything().repeatedly())
 
 
+class Url(ExpectBase):
+  """Matches a URL. This matcher won't replace '/' to '\' on Windows."""
+
+  def __init__(self, sub_expectation):
+    super().__init__()
+    self._expected = default_expectation(sub_expectation)
+
+  def consume(self, string):
+    self._consumed = True
+    self._fulfilled = self._expected.consume(string)
+    self._saturated = self._expected.saturated
+    return self._fulfilled
+
+  def test_consume(self, string):
+    return self._expected.test_consume(string)
+
+  def apply_transform(self, callback: Callable[[str], str]) -> None:
+    del callback  # Unused.
+
+  def description(self, saturated):
+    return f'Url({self._expected.description(saturated)})'
+
+
 class Reply(ExpectBase):
   """Expects a read to the input pipe and replies with a specific string."""
 

@@ -39,6 +39,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
              ['bar',
               'baz'])
 
+    # Lists root node by default:
+    self._do('ls', expect.Somewhere('{root}'))
+
     # Shows full node JSON info in -l mode:
     self._do('ls -l {root}',
              expect.Somewhere('"Name": "foo",'))
@@ -55,6 +58,12 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do('ls -q foo^bar {root}',
              expect.Contains('Invalid query string'))
 
+    # Gracefully handle folders that are actually files.
+    self._do('upload -p {testdata}/SmugCLI_1.jpg {root}/album')
+    self._do(
+        'ls {root}/album/SmugCLI_1.jpg/foo',
+        '"/{root}/album/SmugCLI_1.jpg" is a file, it can\'t have child nodes.')
+
   def test_mkdir(self):
     """Test for `smugcli mkdir`."""
     # Missing parent.
@@ -63,7 +72,7 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
 
     # Creating root folder.
     self._do('mkdir {root}',
-             'Creating Folder "{root}".')
+             'Creating folder "{root}".')
 
     # Cannot create existing folder.
     self._do('mkdir {root}',
@@ -75,9 +84,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
 
     # Creates all missing parents.
     self._do('mkdir -p {root}/foo/bar/baz',
-             ['Creating Folder "{root}/foo".',
-              'Creating Folder "{root}/foo/bar".',
-              'Creating Folder "{root}/foo/bar/baz".'])
+             ['Creating folder "{root}/foo".',
+              'Creating folder "{root}/foo/bar".',
+              'Creating folder "{root}/foo/bar/baz".'])
 
     # Check that all folders were properly created.
     self._do('ls {root}/foo/bar',
@@ -87,19 +96,31 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
 
     # Can create many folders in one command.
     self._do('mkdir {root}/buz {root}/biz',
-             ['Creating Folder "{root}/buz".',
-              'Creating Folder "{root}/biz".'])
+             ['Creating folder "{root}/buz".',
+              'Creating folder "{root}/biz".'])
 
     self._do('mkdir {root}/baz/biz {root}/buz {root}/baz',
              ['"baz" not found in "/{root}".',
               'Path "{root}/buz" already exists.',
-              'Creating Folder "{root}/baz".'])
+              'Creating folder "{root}/baz".'])
 
     self._do('ls {root}',
              ['baz',
               'biz',
               'buz',
               'foo'])
+
+    # Can't create a folder in an album.
+    self._do('mkalbum {root}/album')
+    self._do('mkdir {root}/album/folder',
+             ['Folders can only be created in folders.',
+              '"album" is of type "Album"'])
+
+    # Can't create folders as a child of a file.
+    self._do('upload {testdata}/SmugCLI_1.jpg {root}/album')
+    self._do(
+        'mkdir {root}/album/SmugCLI_1.jpg/folder',
+        '"/{root}/album/SmugCLI_1.jpg" is a file, it can\'t have child nodes.')
 
   def test_mkdir_privacy(self):
     """Test the `--privacy` option of `smugcli mkdir`."""
@@ -123,28 +144,40 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     """Test SmugMug's folder nesting limit when using `smugcli mkdir`."""
     # Can't create more than 5 folder deep.
     self._do('mkdir -p {root}/1/2/3/4',
-             ['Creating Folder "{root}".',
-              'Creating Folder "{root}/1".',
-              'Creating Folder "{root}/1/2".',
-              'Creating Folder "{root}/1/2/3".',
-              'Creating Folder "{root}/1/2/3/4".'])
+             ['Creating folder "{root}".',
+              'Creating folder "{root}/1".',
+              'Creating folder "{root}/1/2".',
+              'Creating folder "{root}/1/2/3".',
+              'Creating folder "{root}/1/2/3/4".'])
     self._do('mkdir -p {root}/1/2/3/4/5',
              ['Cannot create "{root}/1/2/3/4/5", SmugMug does not support '
               'folder more than 5 level deep.'])
     self._do('mkalbum -p {root}/1/2/3/4/5',
-             ['Creating Album "{root}/1/2/3/4/5".'])
+             ['Creating album "{root}/1/2/3/4/5".'])
 
   def test_mkalbum(self):
-    """The for `smugcli mkalbum`."""
+    """Test for `smugcli mkalbum`."""
     # Missing parent.
     self._do('mkalbum {root}/folder/album',
              ['"{root}" not found in "".'])
 
     # Create all missing folders.
     self._do('mkalbum -p {root}/folder/album',
-             ['Creating Folder "{root}".',
-              'Creating Folder "{root}/folder".',
-              'Creating Album "{root}/folder/album".'])
+             ['Creating folder "{root}".',
+              'Creating folder "{root}/folder".',
+              'Creating album "{root}/folder/album".'])
+
+    # Can't create a album in an album.
+    self._do('mkalbum {root}/album')
+    self._do('mkalbum {root}/album/folder',
+             ['Albums can only be created in folders.',
+              '"album" is of type "Album"'])
+
+    # Can't create albums as a child of a file.
+    self._do('upload {testdata}/SmugCLI_1.jpg {root}/album')
+    self._do(
+        'mkalbum {root}/album/SmugCLI_1.jpg/folder',
+        '"/{root}/album/SmugCLI_1.jpg" is a file, it can\'t have child nodes.')
 
   def test_mkalbum_privacy(self):
     """Test the `--privacy` option of `smugcli mkalbum`."""
@@ -176,7 +209,7 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
 
     # Can't remove non-empty folders.
     self._do('rmdir {root}/foo/bar',
-             ['Cannot delete Folder: "{root}/foo/bar" is not empty.'])
+             ['Cannot delete folder: "{root}/foo/bar" is not empty.'])
 
     # Can delete simple folder.
     self._do('rmdir {root}/foo/bar/baz',
@@ -190,54 +223,204 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do('rmdir -p {root}/foo/bar',
              ['Deleting "{root}/foo/bar".',
               'Deleting "{root}/foo".',
-              'Cannot delete Folder: "{root}" is not empty.'])
+              'Cannot delete folder: "{root}" is not empty.'])
 
     self._do('ls {root}/foo',
              ['"foo" not found in "/{root}".'])
     self._do('ls {root}',
              ['buz'])
 
-  def test_rm(self):
-    """Test for `smugcli rm`."""
-    self._do('mkdir -p {root}/foo/bar/baz')
-    self._do('mkdir -p {root}/fuz/buz/biz')
+    # Can't rmdir a file.
+    self._do('upload -p {testdata}/SmugCLI_1.jpg {root}/album')
+    self._do('rmdir {root}/album/SmugCLI_1.jpg',
+             'Cannot delete file "{root}/album/SmugCLI_1.jpg", rmdir can only '
+             'delete empty folder or album.')
 
-    # Not found.
+  def test_rm_file(self):
+    """Test `smugcli rm` for file nodes."""
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{testdata}/SmugCLI_2.jpg '
+             '{root}/album')
+
+    # Handles file not found errors.
     self._do('rm {root}/does_not_exists',
              ['"{root}/does_not_exists" not found.'])
 
-    # Not empty.
-    self._do('rm -f {root}/foo/bar',
-             ['Folder "{root}/foo/bar" is not empty.'])
+    # Asks for confirmation by default.
+    self._do('rm {root}/album/SmugCLI_1.jpg',
+             ['Remove file "{root}/album/SmugCLI_1.jpg"? ',
+              expect.Reply('n')])
+    self._do('ls {root}/album',
+             ["SmugCLI_1.jpg",
+              "SmugCLI_2.jpg"])
 
-    # Remove leaf.
-    self._do('rm -f {root}/foo/bar/baz',
-             ['Removing "{root}/foo/bar/baz".'])
-
-    # Doesn't remove non-empty folder by default.
-    self._do('rm -f {root}/fuz/buz',
-             ['Folder "{root}/fuz/buz" is not empty.'])
-
-    # Can be forced to delete non-empty folders.
-    self._do('rm -f -r {root}/fuz/buz',
-             ['Removing "{root}/fuz/buz".'])
-
-    # Can remove multiple nodes.
-    # Ask for confirmation by default.
-    self._do('rm -r {root}/foo {root}/fuz',
-             ['Remove Folder node "{root}/foo"? ',
-              expect.Reply('n'),
-              'Remove Folder node "{root}/fuz"? ',
+    self._do('rm {root}/album/SmugCLI_1.jpg',
+             ['Remove file "{root}/album/SmugCLI_1.jpg"? ',
               expect.Reply('y'),
-              'Removing "{root}/fuz".'])
-    self._do('rm -r {root}/foo {root}/fuz {root}',
-             ['Remove Folder node "{root}/foo"? ',
+              'Removing file "{root}/album/SmugCLI_1.jpg".'])
+    self._do('ls {root}/album',
+             ["SmugCLI_2.jpg"])
+
+  def test_rm_album(self):
+    """Test `smugcli rm` for album nodes."""
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{root}/album1')
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{root}/album2')
+
+    # Can't remove album by default.
+    self._do('rm {root}/album1',
+             ['Cannot remove, "{root}/album1" is of type "Album".'])
+    self._do('ls {root}/album1', ["SmugCLI_1.jpg"])
+
+    # Albums can be removed in recursive mode, ask for confirmation by default.
+    self._do('rm -r {root}/album1',
+             ['Remove album "{root}/album1"? ',
+              expect.Reply('n')])
+    self._do('ls {root}', ['album1', 'album2'])
+    self._do('ls {root}/album1', ["SmugCLI_1.jpg"])
+
+    self._do('rm -r {root}/album1',
+             ['Remove album "{root}/album1"? ',
+              expect.Reply('y'),
+              'Removing album "{root}/album1".'])
+    self._do('ls {root}', ['album2'])
+
+    # Albums and their content can be removed in recursive mode.
+    # Operation can be forced.
+    self._do('rm -r -f {root}/album2',
+             ['Removing album "{root}/album2".'])
+    self._do('ls {root}', [])
+
+  def test_rm_folder(self):
+    """Test `smugcli rm` for folder/album nodes."""
+    self._do('mkdir -p {root}/foo/bar/baz')
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{root}/dir/album')
+
+    # Can't remove directory by default.
+    self._do('rm {root}/foo/bar/baz',
+             ['Cannot remove, "{root}/foo/bar/baz" is of type "Folder".'])
+    self._do('ls {root}/foo/bar', ["baz"])
+
+    # Can remove directory in recursive mode, ask for confirmation by default.
+    self._do('rm -r {root}/foo/bar/baz',
+             ['Remove folder "{root}/foo/bar/baz"? ',
+              expect.Reply('n')])
+    self._do('ls {root}/foo/bar', ["baz"])
+
+    self._do('rm -r {root}/foo/bar/baz',
+             ['Remove folder "{root}/foo/bar/baz"? ',
+              expect.Reply('y'),
+              'Removing folder "{root}/foo/bar/baz".'])
+    self._do('ls {root}/foo/bar', [])
+
+    # Can remove non-empty directory in recursive mode:
+    self._do('rm -f -r {root}/foo',
+             ['Removing folder "{root}/foo".'])
+
+  def test_rm_confirmations(self):
+    """Test confirmation messages for `smugcli rm`."""
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{testdata}/SmugCLI_2.jpg '
+             '{testdata}/SmugCLI_3.jpg '
+             '{testdata}/SmugCLI_4.jpg '
+             '{root}/album')
+
+    # Reject operation.
+    self._do('rm {root}/album/SmugCLI_1.jpg',
+             ['Remove file "{root}/album/SmugCLI_1.jpg"? ',
+              expect.Reply('n')])
+    self._do('rm {root}/album/SmugCLI_1.jpg',
+             ['Remove file "{root}/album/SmugCLI_1.jpg"? ',
+              expect.Reply('anything')])
+    self._do('ls {root}/album',
+             ["SmugCLI_1.jpg",
+              "SmugCLI_2.jpg",
+              "SmugCLI_3.jpg",
+              "SmugCLI_4.jpg"])
+
+    # Accept operation.
+    self._do('rm {root}/album/SmugCLI_1.jpg',
+             ['Remove file "{root}/album/SmugCLI_1.jpg"? ',
+              expect.Reply('y'),
+              'Removing file "{root}/album/SmugCLI_1.jpg"'])
+    self._do('ls {root}/album',
+             ["SmugCLI_2.jpg",
+              "SmugCLI_3.jpg",
+              "SmugCLI_4.jpg"])
+
+    self._do('rm {root}/album/SmugCLI_2.jpg',
+             ['Remove file "{root}/album/SmugCLI_2.jpg"? ',
               expect.Reply('yes'),
-              'Removing "{root}/foo".',
-              '"{root}/fuz" not found.',
-              'Remove Folder node "{root}"? ',
+              'Removing file "{root}/album/SmugCLI_2.jpg"'])
+    self._do('ls {root}/album',
+             ["SmugCLI_3.jpg",
+              "SmugCLI_4.jpg"])
+
+    self._do('rm {root}/album/SmugCLI_3.jpg',
+             ['Remove file "{root}/album/SmugCLI_3.jpg"? ',
               expect.Reply('YES'),
-              'Removing "{root}".'])
+              'Removing file "{root}/album/SmugCLI_3.jpg"'])
+    self._do('ls {root}/album',
+             ["SmugCLI_4.jpg"])
+
+  def test_rm_multiple_nodes(self):
+    """Test that `smugcli rm` can remove multiple nodes in one command."""
+    self._do('upload -p '
+             '{testdata}/SmugCLI_1.jpg '
+             '{testdata}/SmugCLI_2.jpg '
+             '{testdata}/SmugCLI_3.jpg '
+             '{testdata}/SmugCLI_4.jpg '
+             '{root}/album1')
+    self._do('mkalbum -p {root}/album2')
+    self._do('mkdir -p {root}/dir')
+
+    # Can remove multiple files.
+    self._do('rm {root}/album1/SmugCLI_1.jpg {root}/album1/SmugCLI_2.jpg',
+             ['Remove file "{root}/album1/SmugCLI_1.jpg"? ',
+              expect.Reply('n'),
+              'Remove file "{root}/album1/SmugCLI_2.jpg"? ',
+              expect.Reply('y'),
+              'Removing file "{root}/album1/SmugCLI_2.jpg".'])
+    self._do('ls {root}/album1',
+             ["SmugCLI_1.jpg", "SmugCLI_3.jpg", "SmugCLI_4.jpg"])
+
+    # Can remove files, but won't remove folders/albums.
+    self._do('rm {root}/album1/SmugCLI_1.jpg {root}/album2 {root}/dir',
+             ['Remove file "{root}/album1/SmugCLI_1.jpg"? ',
+              expect.Reply('y'),
+              'Removing file "{root}/album1/SmugCLI_1.jpg".',
+              'Cannot remove, "{root}/album2" is of type "Album".',
+              'Cannot remove, "{root}/dir" is of type "Folder".'])
+    self._do('ls {root}/album1',
+             ["SmugCLI_3.jpg", "SmugCLI_4.jpg"])
+    self._do('ls {root}',
+             ["dir", "album1", "album2"])
+
+    # Folders/albums can be removed in recursive mode:
+    self._do('rm -r {root}/album1 {root}/album2 {root}/dir',
+             ['Remove album "{root}/album1"? ',
+              expect.Reply('no'),
+              'Remove album "{root}/album2"? ',
+              expect.Reply('yes'),
+              'Removing album "{root}/album2".',
+              'Remove folder "{root}/dir"? ',
+              expect.Reply('no')])
+    self._do('ls {root}',
+             ["dir", "album1"])
+
+    # Removing multiple nodes can be forced:
+    self._do('rm -r -f {root}/album1 {root}/dir',
+             ['Removing album "{root}/album1".',
+              'Removing folder "{root}/dir".'])
+    self._do('ls {root}',
+             [])
 
   def test_upload(self):
     """Test for `smugcli upload`."""
@@ -255,12 +438,20 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do(
         'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
         ['Uploading "{testdata}/SmugCLI_1.jpg" to "{root}/folder/album"...'])
+    self._do('ls {root}/folder/album', ['SmugCLI_1.jpg'])
 
     # Can't upload duplicate.
     self._do(
         'upload {testdata}/SmugCLI_1.jpg {root}/folder/album',
         ['Skipping "{testdata}/SmugCLI_1.jpg", file already exists in Album '
          '"{root}/folder/album".'])
+    self._do('ls {root}/folder/album', ['SmugCLI_1.jpg'])
+
+    # Can't upload over existing file.
+    self._do(
+        'upload {testdata}/SmugCLI_2.jpg {root}/folder/album/SmugCLI_1.jpg',
+        ['Cannot upload images in node of type "File".'])
+    self._do('ls {root}/folder/album', ['SmugCLI_1.jpg'])
 
     # Can upload multiple files
     self._do(
@@ -272,6 +463,12 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
          '"{root}/folder/album".',
          'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
          'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
+    self._do('ls {root}/folder/album',
+             ['SmugCLI_1.gif',
+              'SmugCLI_1.jpg',
+              'SmugCLI_1.png',
+              'SmugCLI_2.jpg',
+              'SmugCLI_1.JPG'])
 
     # Can automatically create album with `-p`.
     self._do(
@@ -281,6 +478,13 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
          'Uploading "{testdata}/SmugCLI_1.jpg" to '
          '"{root}/new_folder/new_album"...'])
     self._do('ls {root}/new_folder/new_album', ['SmugCLI_1.jpg'])
+
+    # Gracefully aborts if trying to create a child of a file node.
+    self._do(
+        'upload -p {testdata}/SmugCLI_2.jpg '
+        '{root}/folder/album/SmugCLI_1.jpg/foo',
+        ['"/{root}/folder/album/SmugCLI_1.jpg" is a file, it can\'t have '
+         'child nodes.'])
 
   def test_sync(self):
     """Test for `smugcli sync`."""
@@ -295,10 +499,10 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Folder "{root}/dir".',
-                  'Creating Album "{root}/dir/Images from folder dir".',
-                  'Creating Album "{root}/dir/album".',
+                  'Creating folder "{root}".',
+                  'Creating folder "{root}/dir".',
+                  'Creating album "{root}/dir/Images from folder dir".',
+                  'Creating album "{root}/dir/album".',
                   'Uploaded "{root}/dir/SmugCLI_1.jpg".',
                   'Uploaded "{root}/dir/SmugCLI_2.jpg".',
                   'Uploaded "{root}/dir/SmugCLI_3.jpg".',
@@ -358,8 +562,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Album "{root}/album".',
+                  'Creating folder "{root}".',
+                  'Creating album "{root}/album".',
                   'Uploaded "{root}/album/SmugCLI_1.heic".',
                   'Uploaded "{root}/album/SmugCLI_2.HEIC".')])
 
@@ -420,12 +624,12 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
          expect.Reply('yes'),
          expect.AnyOrder(
              expect.Anything().repeatedly(),
-             'Creating Folder "{root}".',
-             'Creating Folder "{root}/1".',
-             'Creating Folder "{root}/1/2".',
-             'Creating Folder "{root}/1/2/3".',
-             'Creating Folder "{root}/1/2/3/4".',
-             'Creating Album "{root}/1/2/3/4/album".',
+             'Creating folder "{root}".',
+             'Creating folder "{root}/1".',
+             'Creating folder "{root}/1/2".',
+             'Creating folder "{root}/1/2/3".',
+             'Creating folder "{root}/1/2/3/4".',
+             'Creating album "{root}/1/2/3/4/album".',
              'Uploaded "{root}/1/2/3/4/album/SmugCLI_1.jpg".')])
 
     with self._set_cwd(self._format_path('{root}/1')):
@@ -473,9 +677,9 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Folder "{root}/folder".',
-                  'Creating Album "{root}/folder/album".',
+                  'Creating folder "{root}".',
+                  'Creating folder "{root}/folder".',
+                  'Creating album "{root}/folder/album".',
                   f'Uploaded "{folder}/{filename}".')])
     self._do('sync {root}',
              ['Syncing "{root}" to SmugMug folder "/".',
@@ -494,8 +698,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Album "{root}/album".',
+                  'Creating folder "{root}".',
+                  'Creating album "{root}/album".',
                   'Uploaded "{root}/album/SmugCLI_1.jpg".')])
 
     self._do('sync {root}',
@@ -523,8 +727,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
              ['Syncing "{root}" to SmugMug folder "/".',
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Album "{root}/album".',
+                  'Creating folder "{root}".',
+                  'Creating album "{root}/album".',
                   'Uploaded "{root}/album/SmugCLI_1.jpg".')])
 
     self._do('sync --force {root}',
@@ -542,8 +746,8 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Album "{root}/album".',
+                  'Creating folder "{root}".',
+                  'Creating album "{root}/album".',
                   'Uploaded "{root}/album/SmugCLI_1.jpg".')])
 
     web_uri = self._do('ls -l -q WebUri {root}/album/SmugCLI_1.jpg')
@@ -590,7 +794,7 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('y'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Album "{root}/Pics/album".',
+                  'Creating album "{root}/Pics/album".',
                   'Uploaded "{root}/local/album/SmugCLI_1.jpg".')])
 
     self._do('sync {root}/local/album/ {root}/Pics/album',
@@ -641,10 +845,10 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Album "{root}/dst/album1".',
+                  'Creating album "{root}/dst/album1".',
                   'Uploaded "{root}/src/album1/SmugCLI_1.jpg".',
                   'Uploaded "{root}/src/album1/SmugCLI_2.jpg".',
-                  'Creating Album "{root}/dst/album2".',
+                  'Creating album "{root}/dst/album2".',
                   'Uploaded "{root}/src/album2/SmugCLI_3.jpg".')])
 
   def test_sync_multiple_files(self):
@@ -694,10 +898,10 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
-                  'Creating Album "{root}/folder/album1".',
-                  'Creating Album "{root}/folder/album2".',
-                  'Creating Folder "{root}/folder/subdir3".',
-                  'Creating Album "{root}/folder/subdir3/album3".',
+                  'Creating album "{root}/folder/album1".',
+                  'Creating album "{root}/folder/album2".',
+                  'Creating folder "{root}/folder/subdir3".',
+                  'Creating album "{root}/folder/subdir3/album3".',
                   'Uploaded "{root}/album1/SmugCLI_1.jpg".',
                   'Uploaded "{root}/dir2/album2/SmugCLI_2.jpg".',
                   'Uploaded "{root}/dir3/subdir3/album3/SmugCLI_3.jpg".',
@@ -755,6 +959,19 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
     self._do('mkalbum -p {root}/album')
     self._do('sync {root}/* {root}/album',
              'Can\'t upload folders to an album. Please sync to a folder node.')
+
+  def test_sync_to_file_node(self):
+    """Test that `smugcli sync` rejects syncing to a target file node."""
+    # Can't sync to a file.
+    self._stage_files('{root}/album', ['{testdata}/SmugCLI_1.jpg'])
+    self._do('upload -p {root}/album/SmugCLI_1.jpg {root}/album')
+    self._do('sync . {root}/album/SmugCLI_1.jpg',
+             'Can\'t sync to a file node.')
+
+    # File nodes can't have child nodes.
+    self._do(
+        'sync . {root}/album/SmugCLI_1.jpg/foo',
+        '"/{root}/album/SmugCLI_1.jpg" is a file, it can\'t have child nodes.')
 
   def test_sync_default_arguments(self):
     """Test default arguments for `smugcli sync`."""
@@ -825,12 +1042,12 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.Reply('yes'),
               expect.AnyOrder(
                   expect.Not(expect.Or(
-                      'Creating Album "{root}/album2".',
+                      'Creating album "{root}/album2".',
                       'Uploaded "{root}/album1/SmugCLI_2.jpg".',
                       'Uploaded "{root}/album2/SmugCLI_4.jpg".',
                       'Uploaded "{root}/album2/SmugCLI_5.jpg".')).repeatedly(),
-                  'Creating Folder "{root}".',
-                  'Creating Album "{root}/album1".',
+                  'Creating folder "{root}".',
+                  'Creating album "{root}/album1".',
                   'Uploaded "{root}/album1/SmugCLI_1.jpg".',
                   'Uploaded "{root}/album1/SmugCLI_3.jpg".',
                   'Sync complete.')])
@@ -843,7 +1060,7 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
               expect.AnyOrder(
                   expect.Anything().repeatedly(),
                   'Found matching remote album "{root}/album1".',
-                  'Creating Album "{root}/album2".',
+                  'Creating album "{root}/album2".',
                   'Uploaded "{root}/album1/SmugCLI_2.jpg".',
                   'Uploaded "{root}/album2/SmugCLI_4.jpg".',
                   'Uploaded "{root}/album2/SmugCLI_5.jpg".',

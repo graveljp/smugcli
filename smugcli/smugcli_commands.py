@@ -332,7 +332,5 @@ def run(args,
 
   try:
     parsed.func(parsed)
-  except smugmug_fs.Error as exc:
+  except (smugmug_fs.Error, smugmug_lib.Error) as exc:
     print(exc)
-  except smugmug_lib.NotLoggedInError:
-    return

@@ -249,11 +249,10 @@ class Node():
 
   def get_children(self, params=None) -> NodeList:
     """Get the children list of this node."""
-    if 'Type' not in self._json:
-      if 'FileName' in self._json:
-        # it's a single image, which has no children
-        return []
-      raise UnexpectedResponseError('Node does not have a "Type" attribute.')
+    node_type = self.node_type()
+    if node_type not in ('Album', 'Folder'):
+      raise UnexpectedResponseError(
+        "Can't get node's children, expected a Folder or Album node.")
 
     params = params or {}
     params = {
@@ -261,9 +260,42 @@ class Node():
         'count': params.get('count',
                             self._smugmug.config.get('page_size', 1000))}
 
-    if self._json['Type'] == 'Album':
+    if node_type == 'Album':
       return self.get_node('Album').get_list('AlbumImages', params=params)
     return self.get_list('ChildNodes', params=params)
+
+  def is_file(self) -> bool:
+    """Returns True if this node is a file. False if it's an Album or Folder.
+
+    Raises UnexpectedResponseError if note type is unrecognized.
+    """
+    filename = self._json.get('FileName')
+    node_type = self._json.get('Type')
+    if filename is not None and node_type not in ('Album', 'Folder'):
+      return True
+    if filename is None and node_type in ('Album', 'Folder'):
+      return False
+    raise UnexpectedResponseError(
+      'Unrecognized node type received from SmugMug.')
+
+  def node_type(self) -> str:
+    """Returns this node's type as a str that can be printed to the shell.
+
+    Raises UnexpectedResponseError if note type is unrecognized.
+    """
+    filename = self._json.get('FileName')
+    node_type = self._json.get('Type')
+    if filename is not None and node_type not in ('Album', 'Folder'):
+      return 'File'
+    if filename is None and node_type in ('Album', 'Folder'):
+      return node_type
+    raise UnexpectedResponseError(
+      'Unrecognized node type received from SmugMug.')
+
+  def has_children(self) -> bool:
+    """Returns true if this node contains children."""
+    children = self.get_children({'count': 1})
+    return children is not None and len(children) == 1
 
   def _get_child_nodes_by_name(self) -> MutableMapping[str, List['Node']]:
     if self._child_nodes_by_name is None:
@@ -274,11 +306,12 @@ class Node():
     self._smugmug.garbage_collector.visited(self)
     return self._child_nodes_by_name
 
-  def _create_child_node(self, name: str, params) -> 'Node':
-    node_type = self._json['Type']
+  def _create_child_node(
+      self, name: str, child_node_type: str, privacy: str) -> 'Node':
+    node_type = self.node_type()
     if node_type != 'Folder':
       raise InvalidArgumentError(
-          'Nodes can only be created in folders.\n'
+          f'{child_node_type}s can only be created in folders.\n'
           f'"{self.name}" is of type "{node_type}".')
 
     if name in self._get_child_nodes_by_name():
@@ -288,14 +321,14 @@ class Node():
     remote_name = name.strip()
     node_params = {
         'Name': remote_name,
-        'Privacy': 'Public',
+        'Type': child_node_type,
+        'Privacy': privacy,
         'SortDirection': 'Ascending',
         'SortMethod': 'Name',
     }
-    node_params.update(params or {})
 
-    child_type = params['Type']
-    print(f'Creating {child_type} "{os.path.join(self.path, remote_name)}".')
+    node_path = os.path.join(self.path, remote_name)
+    print(f'Creating {child_node_type.lower()} "{node_path}".')
     response = self.post('ChildNodes', data=sorted(node_params.items()))
 
     try:
@@ -314,7 +347,7 @@ class Node():
     self._smugmug.garbage_collector.visited(node)
     self._get_child_nodes_by_name()[name] = [node]
 
-    if node['Type'] == 'Album':
+    if node.node_type() == 'Album':
       node.patch('Album', json={'SortMethod': 'DateTimeOriginal'})
     return node
 
@@ -332,12 +365,13 @@ class Node():
 
     return match[0]
 
-  def get_or_create_child(self, name: str, params) -> 'Node':
+  def get_or_create_child(
+      self, name: str, node_type: str, privacy: str) -> 'Node':
     """Returns this node's `name` child, create it if not found."""
     with self._lock:
       match = self._get_child_nodes_by_name().get(name)
       if not match:
-        return self._create_child_node(name, params)
+        return self._create_child_node(name, node_type, privacy)
 
     if len(match) > 1:
       raise RemoteDataError(

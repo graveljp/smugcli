@@ -42,12 +42,12 @@ class SmugMugLimitsError(Error):
   """Error raised when SmugMug limits are reached (folder depth, size. etc.)"""
 
 
-class UnexpectedResponseError(Error):
-  """Error raised when encountering unexpected data returned by SmugMug."""
-
-
 class ExtractMetadataError(Error):
   """Error raised when metadata extraction fails."""
+
+
+class InvalidPathError(Error):
+  """Error raised when invalid paths are specified by the user."""
 
 
 class SmugMugFS():
@@ -88,7 +88,12 @@ class SmugMugFS():
       self, matched_nodes: List[smugmug_lib.Node], dirs: Sequence[str]
   ) -> Tuple[List[smugmug_lib.Node], List[str]]:
     unmatched_dirs = collections.deque(dirs)
+    path = ''
     for child in dirs:
+      if matched_nodes[-1].node_type() == 'File':
+        raise InvalidPathError(
+            f'"{path}" is a file, it can\'t have child nodes.')
+      path = path + os.sep + child
       child_node = matched_nodes[-1].get_child(child)
       if not child_node:
         break
@@ -113,11 +118,9 @@ class SmugMugFS():
 
     all_nodes = list(matched_nodes)
     for i, child in enumerate(dirs):
-      params = {
-          'Type': node_type if i == len(dirs) - 1 else 'Folder',
-          'Privacy': privacy,
-      }
-      all_nodes.append(all_nodes[-1].get_or_create_child(child, params))
+      child_node_type = node_type if i == len(dirs) - 1 else 'Folder'
+      all_nodes.append(all_nodes[-1].get_or_create_child(
+          child, child_node_type, privacy))
     return all_nodes
 
   def get(self, url: str) -> None:
@@ -233,8 +236,13 @@ class SmugMugFS():
       while matched_nodes:
         current_dir = os.sep.join(m.name for m in matched_nodes)
         node = matched_nodes.pop()
-        if len(node.get_children({'count': 1})):
-          node_type = node['Type']
+        if node.is_file():
+          print(f'Cannot delete file "{current_dir}", rmdir can only delete '
+                'empty folder or album.')
+          break
+
+        if node.has_children():
+          node_type = node.node_type().lower()
           print(f'Cannot delete {node_type}: "{current_dir}" is not empty.')
           break
 
@@ -264,13 +272,13 @@ class SmugMugFS():
         continue
 
       node = matched_nodes[-1]
-      if recursive or len(node.get_children({'count': 1})) == 0:
-        node_type = node['Type']
-        if force or self._ask(f'Remove {node_type} node "{path}"? '):
-          print(f'Removing "{path}".')
+      node_type = node.node_type()
+      if node.is_file() or recursive:
+        if force or self._ask(f'Remove {node_type.lower()} "{path}"? '):
+          print(f'Removing {node_type.lower()} "{path}".')
           node.delete()
       else:
-        print(f'Folder "{path}" is not empty.')
+        print(f'Cannot remove, "{path}" is of type "{node_type}".')
 
   def upload(self,
              user: Optional[str],
@@ -289,7 +297,7 @@ class SmugMugFS():
           matched_nodes, unmatched_dirs, 'Album', privacy)
 
     node = matched_nodes[-1]
-    node_type = node['Type']
+    node_type = node.node_type()
     if node_type != 'Album':
       print(f'Cannot upload images in node of type "{node_type}".')
       return
@@ -383,7 +391,7 @@ class SmugMugFS():
     if unmatched_dirs:
       print(f'Target folder not found: "{target}".')
       return
-    target_type = matched[-1]['Type'].lower()
+    target_type = matched[-1].node_type().lower()
 
     # Abort if invalid operations are requested.
     if target_type == 'folder' and file_sources:
@@ -392,6 +400,9 @@ class SmugMugFS():
     if (target_type == 'album' and
         any(not d.endswith(os.sep) for d in dir_sources)):
       print('Can\'t upload folders to an album. Please sync to a folder node.')
+      return
+    if target_type == 'file':
+      print('Can\'t sync to a file node.')
       return
 
     # Request confirmation before proceeding.

@@ -250,6 +250,9 @@ class Node():
   def get_children(self, params=None) -> NodeList:
     """Get the children list of this node."""
     if 'Type' not in self._json:
+      if 'FileName' in self._json:
+        # it's a single image, which has no children
+        return []
       raise UnexpectedResponseError('Node does not have a "Type" attribute.')
 
     params = params or {}

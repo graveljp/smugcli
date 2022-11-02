@@ -187,7 +187,8 @@ def run(args,
   upload_parser = subparsers.add_parser(
       'upload', help='Upload files to SmugMug.')
   upload_parser.set_defaults(
-      func=lambda a: file_system.upload(a.user, a.src, a.album))
+      func=lambda a: file_system.upload(
+          a.user, a.src, a.album, a.p, a.privacy.title()))
   upload_parser.add_argument('src',
                              type=str,
                              nargs='+', help='Files to upload.')
@@ -200,6 +201,16 @@ def run(args,
                              help=('User whose SmugMug account is to be '
                                    'accessed. Uses the logged-in user by '
                                    'default.'))
+  upload_parser.add_argument('-p',
+                             action='store_true',
+                             help='Create parents if they are missing.')
+  upload_parser.add_argument('--privacy',
+                             type=str,
+                             default='public',
+                             choices=[
+                                 'public', 'private', 'unlisted'],
+                             help=('Access control for the created folders, if '
+                                   '"-p" is used.'))
   # ---------------
   sync_parser = subparsers.add_parser(
       'sync',

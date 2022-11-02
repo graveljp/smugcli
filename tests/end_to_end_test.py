@@ -273,6 +273,15 @@ class EndToEndTest(integration_test_base.IntegrationTestBase):
          'Uploading "{testdata}/SmugCLI_1.png" to "{root}/folder/album"...',
          'Uploading "{testdata}/SmugCLI_2.jpg" to "{root}/folder/album"...'])
 
+    # Can automatically create album with `-p`.
+    self._do(
+        'upload -p {testdata}/SmugCLI_1.jpg {root}/new_folder/new_album',
+        ['Creating Folder "{root}/new_folder".',
+         'Creating Album "{root}/new_folder/new_album".',
+         'Uploading "{testdata}/SmugCLI_1.jpg" to '
+         '"{root}/new_folder/new_album"...'])
+    self._do('ls {root}/new_folder/new_album', ['SmugCLI_1.jpg'])
+
   def test_sync(self):
     """Test for `smugcli sync`."""
     self._stage_files('{root}/dir', ['{testdata}/SmugCLI_1.jpg',

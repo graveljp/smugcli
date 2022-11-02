@@ -275,13 +275,18 @@ class SmugMugFS():
   def upload(self,
              user: Optional[str],
              filenames: Sequence[str],
-             album: str) -> None:
+             album: str,
+             create_parents: bool,
+             privacy: str) -> None:
     """Upload a file to SmugMug."""
     user = user or self._smugmug.get_auth_user()
     matched_nodes, unmatched_dirs = self.path_to_node(user, album)
     if unmatched_dirs:
-      print(f'Album not found: "{album}".')
-      return
+      if not create_parents:
+        print(f'Album not found: "{album}".')
+        return
+      matched_nodes = self._match_or_create_nodes(
+          matched_nodes, unmatched_dirs, 'Album', privacy)
 
     node = matched_nodes[-1]
     node_type = node['Type']
